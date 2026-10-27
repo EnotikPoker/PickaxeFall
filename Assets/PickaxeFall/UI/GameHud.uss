@@ -1,0 +1,49 @@
+.screen { flex-grow: 1; color: rgb(236, 240, 235); -unity-font-style: normal; }
+.safe { flex-grow: 1; padding: 32px 40px 16px; }
+.header { background-color: rgba(15, 23, 32, 0.97); padding: 26px 30px 24px; border-top-width: 3px; border-top-color: rgb(115, 239, 193); }
+.brand-row { flex-direction: row; align-items: center; }
+.brand { font-size: 35px; -unity-font-style: bold; letter-spacing: 3px; }
+.brand-accent { font-size: 35px; -unity-font-style: bold; color: rgb(115, 239, 193); margin-left: 10px; letter-spacing: 3px; }
+.header-buttons { flex-grow: 1; flex-direction: row; justify-content: flex-end; }
+.small-button { color: rgb(173, 190, 194); font-size: 20px; background-color: rgb(32, 44, 56); border-width: 0; border-radius: 0; min-width: 62px; height: 58px; margin-left: 12px; }
+.stats-row { flex-direction: row; margin-top: 28px; }
+.stat { flex-grow: 1; border-left-width: 2px; border-left-color: rgb(50, 66, 77); padding-left: 18px; }
+.stat-title { font-size: 19px; color: rgb(144, 163, 170); letter-spacing: 2px; }
+.stat-value { font-size: 46px; -unity-font-style: bold; margin-top: 2px; }
+.scene-info { flex-direction: row; justify-content: space-between; padding: 18px 4px; }
+.micro { font-size: 18px; letter-spacing: 1px; color: rgb(181, 199, 203); }
+.muted { color: rgb(137, 157, 166); }
+.mint { color: rgb(115, 239, 193); }
+.air { flex-grow: 1; min-height: 70px; }
+.card { background-color: rgba(15, 23, 32, 0.98); padding: 34px; border-width: 2px; border-color: rgb(54, 71, 82); border-top-color: rgb(115, 239, 193); }
+.eyebrow { color: rgb(115, 239, 193); font-size: 20px; letter-spacing: 3px; margin-bottom: 16px; }
+.title { font-size: 58px; -unity-font-style: bold; white-space: normal; margin-bottom: 16px; }
+.description { color: rgb(168, 186, 192); font-size: 25px; white-space: normal; margin-bottom: 25px; }
+.roulette { flex-direction: row; margin-bottom: 22px; height: 135px; }
+.slot { flex-grow: 1; flex-basis: 0; align-items: center; justify-content: center; background-color: rgb(28, 39, 51); margin-left: 4px; margin-right: 4px; border-width: 2px; border-color: rgb(43, 58, 70); }
+.slot.selected { background-color: rgb(34, 62, 58); border-color: rgb(115, 239, 193); }
+.slot-icon { width: 79px; height: 79px; }
+.slot-odds { font-size: 20px; color: rgb(156, 175, 183); }
+.hero { flex-direction: row; align-items: center; padding: 12px 0 22px; }
+.hero-icon { width: 90px; height: 90px; margin-right: 20px; }
+.hero-info { flex-shrink: 1; }
+.hero-name { font-size: 31px; -unity-font-style: bold; color: rgb(115, 239, 193); }
+.hero-detail { font-size: 19px; color: rgb(164, 181, 188); margin-top: 6px; white-space: normal; }
+.primary { background-color: rgb(115, 239, 193); color: rgb(16, 37, 34); height: 100px; font-size: 29px; -unity-font-style: bold; border-width: 0; border-radius: 0; margin: 0; }
+.primary:hover { background-color: rgb(153, 255, 216); }
+.primary:active { background-color: rgb(83, 198, 159); }
+.primary:disabled { background-color: rgb(55, 84, 78); color: rgb(161, 185, 177); }
+.card-footnote { font-size: 16px; color: rgb(124, 146, 154); -unity-text-align: middle-center; margin-top: 17px; letter-spacing: 1px; }
+.footer { font-size: 17px; color: rgb(137, 158, 162); -unity-text-align: middle-center; margin-top: 22px; letter-spacing: 3px; }
+.controls { background-color: rgba(15, 23, 32, 0.97); padding: 28px; border-top-width: 2px; border-top-color: rgb(72, 101, 105); }
+.tool-row { flex-direction: row; justify-content: space-between; margin-bottom: 15px; }
+.health-track { height: 10px; background-color: rgb(44, 58, 67); margin-bottom: 25px; }
+.health-fill { height: 10px; background-color: rgb(115, 239, 193); }
+.steer { flex-direction: row; align-items: center; justify-content: space-between; }
+.steer-button { flex-grow: 1; height: 100px; background-color: rgb(40, 58, 69); color: rgb(224, 239, 235); font-size: 28px; border-width: 1px; border-color: rgb(78, 107, 113); border-radius: 0; }
+.steer-button:active { background-color: rgb(59, 103, 95); }
+.steer-hint { font-size: 17px; color: rgb(150, 174, 178); -unity-text-align: middle-center; margin: 0 25px; }
+.toast { position: absolute; top: 30%; align-self: center; background-color: rgba(15, 23, 32, 0.95); color: rgb(115, 239, 193); padding: 15px 22px; font-size: 22px; border-left-width: 3px; border-left-color: rgb(115, 239, 193); }
+.result { font-size: 24px; color: rgb(236, 208, 142); margin-bottom: 24px; white-space: normal; }
+.pause-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(9, 16, 23, 0.85); justify-content: center; padding: 55px; }
+.pause-card { background-color: rgb(20, 31, 42); padding: 40px; border-top-width: 3px; border-top-color: rgb(115, 239, 193); }

@@ -1,0 +1,94 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using System;
+using System.Collections;
+using System.IO;
+using UnityEngine;
+
+namespace PickaxeFall
+{
+    // Runs against the real scene and physics in a Development player, never in release APKs.
+    public class RuntimeSmokeTest : MonoBehaviour
+    {
+        GameController game;
+        void OnEnable() => Application.logMessageReceived += OnLog;
+        void OnDisable() => Application.logMessageReceived -= OnLog;
+        void OnLog(string message, string stack, LogType type)
+        { if (type == LogType.Exception || type == LogType.Error) { Debug.Log("PICKAXEFALL_SMOKE_FAILED: " + message); Application.Quit(1); } }
+
+        IEnumerator Start()
+        {
+            game = GetComponent<GameController>();
+            yield return null;
+            Check(game.Phase == RunPhase.Ready, "Scene starts ready.");
+            yield return Capture("01-roulette");
+            game.Spin();
+            float deadline = Time.realtimeSinceStartup + 8;
+            while (game.Phase == RunPhase.Spinning && Time.realtimeSinceStartup < deadline) yield return null;
+            Check(game.Phase == RunPhase.Equipped, "Roulette must equip a pickaxe.");
+            Check(game.Pickaxe.Durability > 0, "Equipped pickaxe has durability.");
+            yield return Capture("02-equipped");
+            game.Drop();
+            Check(game.Pickaxe.Body.simulated, "Drop enables real physics.");
+            for (int i = 0; i < 60 && game.Phase == RunPhase.Mining; i++)
+            {
+                if (i % 8 == 0) game.Pickaxe.Nudge(i % 16 == 0 ? 1 : -1);
+                yield return new WaitForSeconds(0.15f);
+            }
+            Check(game.BlocksBroken > 0, "Physical collisions break blocks.");
+            Check(game.Depth >= 2, "Mining advances below the surface.");
+            Check(game.Pickaxe.Durability < game.Pickaxe.MaxDurability, "Strikes consume durability.");
+            Check(game.Coins > 0, "Blocks award coins.");
+            yield return Capture("03-mining");
+            if (game.Phase == RunPhase.Mining)
+            {
+                game.TogglePause(); Check(Time.timeScale == 0 && game.Paused, "Pause freezes physics.");
+                game.TogglePause(); Check(Time.timeScale == 1 && !game.Paused, "Resume restores physics.");
+                int oldTier = game.Pickaxe.Tier;
+                var benchObject = new GameObject("Test workbench"); var bench = benchObject.AddComponent<MineBlock>();
+                bench.Setup(game.World, BlockKind.Workbench, 0, 10000, 1);
+                game.OnBlockBroken(bench);
+                Check(game.Pickaxe.Tier == Mathf.Min(oldTier + 1, game.Balance.pickaxes.Length - 1), "Workbench upgrades the pickaxe.");
+                Check(game.Pickaxe.Durability == game.Pickaxe.MaxDurability, "Workbench repairs to full durability.");
+                Destroy(benchObject);
+            }
+            int wallet = game.Wallet;
+            if (game.Phase == RunPhase.Mining)
+            {
+                // A very short-lived tool exercises actual collision-driven exhaustion.
+                int[] durability = new int[game.Balance.pickaxes.Length];
+                for (int i = 0; i < durability.Length; i++)
+                { durability[i] = game.Balance.pickaxes[i].durability; game.Balance.pickaxes[i].durability = 1; }
+                game.Pickaxe.Equip(0); game.Pickaxe.Launch();
+                deadline = Time.realtimeSinceStartup + 12;
+                while (game.Phase == RunPhase.Mining && Time.realtimeSinceStartup < deadline) yield return null;
+                for (int i = 0; i < durability.Length; i++) game.Balance.pickaxes[i].durability = durability[i];
+                Check(game.Phase == RunPhase.Finished && game.Pickaxe.Durability == 0, "Real strikes exhaust durability and end the run.");
+                Check(game.Wallet == wallet + game.Coins, "Run rewards persist once.");
+            }
+            int coins = game.Coins;
+            int savedWallet = game.Wallet; game.FinishRun();
+            Check(game.Wallet == savedWallet, "Duplicate finish cannot award coins twice.");
+            yield return Capture("04-results");
+            for (int d = 20; d <= 1500; d += 20) game.World.Stream(d);
+            Check(game.World.ActiveBlocks <= game.Balance.worldWidth * (game.Balance.rowsAhead + game.Balance.rowsBehind + 1), "Streaming keeps active blocks bounded.");
+            game.NewRun();
+            Check(game.Phase == RunPhase.Ready && game.Coins == 0 && game.Depth == 0 && game.BlocksBroken == 0, "Retry resets the run.");
+            Check(game.Wallet == savedWallet, "Retry preserves the wallet.");
+            Debug.Log($"PICKAXEFALL_SMOKE_OK: roulette, physical mining, depth, durability, rewards, workbench, pause, bounded streaming, results and retry. Previous run: {coins} coins.");
+            Application.Quit(0);
+        }
+
+        static IEnumerator Capture(string name)
+        {
+            // Screenshots only when running with a graphics device.
+            if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null) yield break;
+            yield return new WaitForEndOfFrame();
+            string dir = Path.Combine(Environment.CurrentDirectory, "Docs/Screenshots"); Directory.CreateDirectory(dir);
+            ScreenCapture.CaptureScreenshot(Path.Combine(dir, name + ".png"));
+            yield return new WaitForSecondsRealtime(0.2f);
+        }
+        static void Check(bool condition, string message)
+        { if (!condition) throw new Exception(message); Debug.Log("SMOKE PASS: " + message); }
+    }
+}
+#endif
