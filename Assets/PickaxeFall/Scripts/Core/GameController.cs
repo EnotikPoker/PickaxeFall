@@ -20,6 +20,7 @@ namespace PickaxeFall
         public int BlocksBroken { get; private set; }
         public int BestDepth { get; private set; }
         public int Wallet { get; private set; }
+        public int WorkbenchesUsed { get; private set; }
         public int Seed { get; private set; }
         public bool Paused { get; private set; }
         public readonly int[] OreCounts = new int[Enum.GetValues(typeof(BlockKind)).Length];
@@ -52,13 +53,16 @@ namespace PickaxeFall
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test"))
                 gameObject.AddComponent<RuntimeSmokeTest>();
+            if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe"))
+                gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
 
         public void NewRun()
         {
-            StopAllCoroutines(); Time.timeScale = 1; Paused = false;
+            StopAllCoroutines(); Time.timeScale = 1; Paused = false; Effects.Clear();
             Depth = Coins = BlocksBroken = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
+            WorkbenchesUsed = 0;
             int previousSeed = Seed;
             do { Seed = Guid.NewGuid().GetHashCode() & int.MaxValue; } while (Seed == 0 || Seed == previousSeed);
             World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); cameraFollow.ResetView();
@@ -106,8 +110,10 @@ namespace PickaxeFall
 
         public void OnBlockBroken(MineBlock block)
         {
+            if (Phase != RunPhase.Mining) return;
             if (block.Kind == BlockKind.Workbench)
             {
+                WorkbenchesUsed++;
                 Pickaxe.RepairAndUpgrade();
                 Effects.Impact(block.transform.position, new Color32(105, 239, 196, 255), 18, true);
                 hud.Toast("ВЕРСТАК  ·  УЛУЧШЕНИЕ + ПОЛНЫЙ РЕМОНТ");
@@ -126,11 +132,27 @@ namespace PickaxeFall
         public void FinishRun()
         {
             if (Phase != RunPhase.Mining) return;
-            Phase = RunPhase.Finished; Pickaxe.Stop();
+            Phase = RunPhase.Breaking; Paused = false; Time.timeScale = 1;
+            Depth = Mathf.Max(Depth, Mathf.FloorToInt(-Pickaxe.transform.position.y));
+            Pickaxe.BreakApart(); hud.Toast("КИРКА РАССЫПАЛАСЬ");
             BestDepth = Mathf.Max(BestDepth, Depth); Wallet += Coins;
             PlayerPrefs.SetInt("bestDepth", BestDepth); PlayerPrefs.SetInt("wallet", Wallet); PlayerPrefs.Save();
-            Notify();
+            Notify(); StartCoroutine(FinishAnimation());
         }
+
+        IEnumerator FinishAnimation()
+        {
+            yield return new WaitForSeconds(0.85f);
+            Phase = RunPhase.Finished; Notify();
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        public void BeginProbeRun(int tier, int seed)
+        {
+            NewRun(); Seed = seed; World.ResetWorld(seed); Pickaxe.Equip(tier);
+            Phase = RunPhase.Equipped; Drop();
+        }
+#endif
 
         public void TogglePause()
         {

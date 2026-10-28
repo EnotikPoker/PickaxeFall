@@ -92,10 +92,10 @@ namespace PickaxeFall
         void Refresh()
         {
             if (!game.Pickaxe) return;
-            bool mining = game.Phase == RunPhase.Mining;
+            bool mining = game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking;
             card.style.display = mining ? DisplayStyle.None : DisplayStyle.Flex;
             controls.style.display = mining ? DisplayStyle.Flex : DisplayStyle.None;
-            pause.style.display = mining ? DisplayStyle.Flex : DisplayStyle.None;
+            pause.style.display = game.Phase == RunPhase.Mining ? DisplayStyle.Flex : DisplayStyle.None;
             pauseOverlay.style.display = game.Paused ? DisplayStyle.Flex : DisplayStyle.None;
             best.text = $"{game.BestDepth} м";
             sound.text = game.Effects.Muted ? "ТИХО" : "ЗВУК";

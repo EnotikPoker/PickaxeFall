@@ -9,6 +9,10 @@ namespace PickaxeFall
         Rigidbody2D body;
         SpriteRenderer visual;
         PhysicsMaterial2D material;
+        float nextStrikeTime;
+        System.Random physicsRandom;
+        public int TotalStrikes { get; private set; }
+        public bool IsVisible => visual && visual.enabled;
         public int Tier { get; private set; }
         public int Durability { get; private set; }
         public int MaxDurability => game.Balance.pickaxes[Tier].durability;
@@ -19,26 +23,20 @@ namespace PickaxeFall
         {
             game = owner; body = GetComponent<Rigidbody2D>(); visual = GetComponent<SpriteRenderer>();
             visual.sortingOrder = 10;
-            transform.localScale = Vector3.one * 1.65f;
+            transform.localScale = Vector3.one * PixelArt.PickaxeScale;
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
             body.angularDamping = 0.15f; body.linearDamping = 0.05f;
             body.sleepMode = RigidbodySleepMode2D.NeverSleep;
             material = new PhysicsMaterial2D("Pickaxe bounce") { friction = 0.25f, bounciness = 0.32f };
             var head = gameObject.AddComponent<PolygonCollider2D>();
-            head.points = new[]
-            {
-                new Vector2(-0.32f, 0.35f), new Vector2(0.09f, 0.35f),
-                new Vector2(0.36f, 0.10f), new Vector2(0.36f, -0.17f),
-                new Vector2(0.22f, -0.17f), new Vector2(0.22f, 0.03f),
-                new Vector2(0.03f, 0.20f), new Vector2(-0.32f, 0.20f)
-            };
+            head.points = PixelArt.PickaxeHeadOutline();
             head.sharedMaterial = material;
             // A child collider follows the diagonal wooden handle.
             var handleObject = new GameObject("Handle collider"); handleObject.transform.SetParent(transform, false);
-            handleObject.transform.localPosition = new Vector3(-0.09f, -0.15f); handleObject.transform.localRotation = Quaternion.Euler(0, 0, -45);
+            handleObject.transform.localPosition = new Vector3(-0.067f, -0.067f); handleObject.transform.localRotation = Quaternion.Euler(0, 0, -45);
             var handleCollider = handleObject.AddComponent<CapsuleCollider2D>();
-            handleCollider.size = new Vector2(0.13f, 0.70f); handleCollider.sharedMaterial = material;
+            handleCollider.size = new Vector2(0.09f, 0.68f); handleCollider.sharedMaterial = material;
             body.simulated = false;
         }
 
@@ -46,7 +44,8 @@ namespace PickaxeFall
         {
             Tier = Mathf.Clamp(tier, 0, game.Balance.pickaxes.Length - 1);
             Durability = MaxDurability;
-            visual.sprite = PixelArt.Pickaxe(Stats.color); visual.color = Color.white;
+            visual.sprite = PixelArt.Pickaxe(Stats.color); visual.color = Color.white; visual.enabled = true;
+            TotalStrikes = 0; physicsRandom = new System.Random(unchecked(game.Seed ^ tier * 73856093));
             body.mass = Stats.mass;
             ResetPose();
         }
@@ -62,6 +61,7 @@ namespace PickaxeFall
             transform.SetPositionAndRotation(spawn, Quaternion.Euler(0, 0, -12));
             body.position = spawn; body.rotation = -12;
             body.linearVelocity = Vector2.zero; body.angularVelocity = 0;
+            nextStrikeTime = Time.time;
             Physics2D.SyncTransforms();
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
         }
@@ -70,8 +70,8 @@ namespace PickaxeFall
         {
             ResetPose();
             body.simulated = true;
-            body.AddForce(new Vector2(Random.Range(-0.35f, 0.35f), -0.3f), ForceMode2D.Impulse);
-            body.AddTorque(Random.value < 0.5f ? -1.8f : 1.8f, ForceMode2D.Impulse);
+            body.AddForce(new Vector2((float)physicsRandom.NextDouble() * 0.7f - 0.35f, -0.3f), ForceMode2D.Impulse);
+            body.AddTorque(physicsRandom.NextDouble() < 0.5 ? -1.8f : 1.8f, ForceMode2D.Impulse);
         }
 
         void FixedUpdate()
@@ -90,18 +90,19 @@ namespace PickaxeFall
         {
             if (game.Phase != RunPhase.Mining || Durability <= 0) return;
             var block = collision.collider.GetComponent<MineBlock>();
-            if (!block || block.IsBroken || Time.time < block.NextStrikeTime) return;
-            block.NextStrikeTime = Time.time + game.Balance.strikeInterval;
+            if (!block || block.IsBroken || Time.time < nextStrikeTime) return;
+            // One impact per tool, even when several block colliders touch it at once.
+            nextStrikeTime = Time.time + game.Balance.strikeInterval;
             if (block.Kind == BlockKind.Workbench || block.Kind == BlockKind.Tnt)
             {
                 block.Hit(int.MaxValue);
                 return;
             }
             block.Hit(Stats.damage);
-            Durability--;
+            Durability--; TotalStrikes++;
             game.Effects.Impact(collision.GetContact(0).point, block.BaseColor, 3);
             // Wake sleeping bodies so resting contact still mines a hard block.
-            body.WakeUp(); body.AddTorque(Random.Range(-0.12f, 0.12f), ForceMode2D.Impulse);
+            body.WakeUp(); body.AddTorque((float)physicsRandom.NextDouble() * 0.24f - 0.12f, ForceMode2D.Impulse);
             if (Durability <= 0) game.FinishRun();
         }
 
@@ -113,6 +114,11 @@ namespace PickaxeFall
         }
 
         public void Stop() { body.linearVelocity = Vector2.zero; body.angularVelocity = 0; body.simulated = false; }
+        public void BreakApart()
+        {
+            game.Effects.Shatter(visual.sprite, transform, body.linearVelocity);
+            visual.enabled = false; Stop();
+        }
         void OnDestroy() { if (material) Destroy(material); }
     }
 }

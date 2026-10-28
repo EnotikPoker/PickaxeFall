@@ -30,6 +30,21 @@ namespace PickaxeFall
             Check(font && font.HasCharacter('Я') && font.HasCharacter('ё'), "Pixel font includes Cyrillic glyphs.");
             Check(PixelArt.BlockColor(BlockKind.Iron, true) == PixelArt.BlockColor(BlockKind.Deepstone), "Deep ore uses the surrounding deepstone color.");
             Check(PixelArt.Block(BlockKind.Iron, 1, true) != PixelArt.Block(BlockKind.Iron, 1, false), "Surface and deep ores have distinct sprites.");
+            var damageObject = new GameObject("Damage overlay test");
+            var damageBlock = damageObject.AddComponent<MineBlock>();
+            damageBlock.Setup(game.World, BlockKind.Stone, 80, 10000, 0);
+            int lastStage = 0;
+            while (damageBlock.Health > 1)
+            {
+                damageBlock.Hit(1);
+                Check(damageBlock.DamageStage > lastStage, "Each hit grows the crack overlay.");
+                Check(damageObject.GetComponent<SpriteRenderer>().color == Color.white, "Damage never fades or tints the base block.");
+                lastStage = damageBlock.DamageStage;
+            }
+            damageBlock.Setup(game.World, BlockKind.Stone, 80, 10000, 0);
+            Check(damageBlock.DamageStage == 0 && !damageObject.transform.GetChild(0).GetComponent<SpriteRenderer>().enabled,
+                "A reused block clears all previous cracks.");
+            Destroy(damageObject);
             yield return Capture("01-roulette");
             game.Spin();
             float deadline = Time.realtimeSinceStartup + 8;
@@ -50,7 +65,9 @@ namespace PickaxeFall
             Check(game.BlocksBroken > 0, "Physical collisions break blocks.");
             Check(game.Depth >= 2, "Mining advances below the surface.");
             Check(game.Pickaxe.Durability < game.Pickaxe.MaxDurability, "Strikes consume durability.");
-            Check(game.Coins > 0, "Blocks award coins.");
+            int earned = 0;
+            foreach (BlockKind kind in Enum.GetValues(typeof(BlockKind))) earned += game.OreCounts[(int)kind] * game.Balance.Block(kind).reward;
+            Check(game.Coins == earned, "Destroyed blocks award exactly the configured coins.");
             yield return Capture("03-mining");
             MineBlock tnt = null, chainedTnt = null, blastTarget = null;
             for (int row = 10; row < 25 && !tnt; row++)
@@ -96,15 +113,26 @@ namespace PickaxeFall
                 deadline = Time.realtimeSinceStartup + 12;
                 while (game.Phase == RunPhase.Mining && Time.realtimeSinceStartup < deadline) yield return null;
                 for (int i = 0; i < durability.Length; i++) game.Balance.pickaxes[i].durability = durability[i];
-                Check(game.Phase == RunPhase.Finished && game.Pickaxe.Durability == 0, "Real strikes exhaust durability and end the run.");
+                Check(game.Phase == RunPhase.Breaking && game.Pickaxe.Durability == 0, "Real strikes start the break animation at zero durability.");
+                Check(!game.Pickaxe.IsVisible && !game.Pickaxe.Body.simulated, "The broken pickaxe disappears and stops colliding.");
+                Check(game.Effects.LastShatterPieces > 10 && game.Effects.ActiveToolFragments > 0, "Breaking scatters fragments from the actual pickaxe sprite.");
+                yield return Capture("05-pickaxe-break");
                 Check(game.Wallet == wallet + game.Coins, "Run rewards persist once.");
             }
             int coins = game.Coins;
             int savedWallet = game.Wallet; game.FinishRun();
             Check(game.Wallet == savedWallet, "Duplicate finish cannot award coins twice.");
+            deadline = Time.realtimeSinceStartup + 3;
+            while (game.Phase == RunPhase.Breaking && Time.realtimeSinceStartup < deadline) yield return null;
+            Check(game.Phase == RunPhase.Finished, "Results appear after the fragments animation.");
             yield return Capture("04-results");
-            for (int d = 20; d <= 1500; d += 20) game.World.Stream(d);
+            var lateBlock = game.World.CellAt(16, 16);
+            if (lateBlock) game.OnBlockBroken(lateBlock);
+            Check(game.Coins == coins && game.Wallet == savedWallet, "Late destruction cannot change a completed run's rewards.");
+            game.World.Stream(1500);
             Check(game.World.ActiveBlocks <= game.Balance.worldWidth * (game.Balance.rowsAhead + game.Balance.rowsBehind + 1), "Streaming keeps active blocks bounded.");
+            Check(game.World.transform.childCount <= game.Balance.worldWidth * (game.Balance.rowsAhead + game.Balance.rowsBehind + 1) + 1,
+                "A large streaming jump also keeps the allocated block pool bounded.");
             // Reproduce the reported failure: both the tool and camera were deep underground.
             game.Pickaxe.transform.position = new Vector3(0, -120, 0);
             game.Pickaxe.Body.position = new Vector2(0, -120);
@@ -113,6 +141,7 @@ namespace PickaxeFall
             game.NewRun();
             Check(game.Phase == RunPhase.Ready && game.Coins == 0 && game.Depth == 0 && game.BlocksBroken == 0, "Retry resets the run.");
             Check(game.Wallet == savedWallet, "Retry preserves the wallet.");
+            Check(game.Effects.ActiveToolFragments == 0, "Retry clears fragments left by the previous pickaxe.");
             Check(game.Seed != previousSeed, "Retry changes the world seed.");
             AssertSafeSpawn();
             game.Spin();

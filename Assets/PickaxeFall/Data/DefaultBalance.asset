@@ -15,60 +15,63 @@ MonoBehaviour:
   worldWidth: 41
   rowsAhead: 32
   rowsBehind: 18
-  workbenchInterval: 14
-  caveChance: 0.075
+  workbenchMinimumDepth: 12
+  workbenchChance: 0.006
+  workbenchSpacing: 8
+  caveChance: 0.025
   spawnHeight: 7.5
   tntMinimumDepth: 8
-  tntChance: 0.012
-  explosionRadius: 2.6
+  tntChance: 0.004
+  tntSpacing: 2
+  explosionRadius: 2.1
   gravity: -15
   maxFallSpeed: 22
-  strikeInterval: 0.24
+  strikeInterval: 0.7
   blocks:
   - kind: 0
     health: 1
-    reward: 1
+    reward: 0
     minimumDepth: 0
     oreChance: 0
   - kind: 1
-    health: 3
+    health: 6
     reward: 1
     minimumDepth: 3
     oreChance: 0
   - kind: 2
-    health: 4
-    reward: 3
+    health: 8
+    reward: 2
     minimumDepth: 3
-    oreChance: 0.16
+    oreChance: 0.1
   - kind: 3
-    health: 5
-    reward: 5
+    health: 11
+    reward: 3
     minimumDepth: 10
-    oreChance: 0.09
+    oreChance: 0.055
   - kind: 4
-    health: 7
-    reward: 8
+    health: 14
+    reward: 5
     minimumDepth: 22
-    oreChance: 0.07
-  - kind: 5
-    health: 9
-    reward: 15
-    minimumDepth: 40
-    oreChance: 0.05
-  - kind: 6
-    health: 13
-    reward: 35
-    minimumDepth: 65
     oreChance: 0.035
+  - kind: 5
+    health: 18
+    reward: 8
+    minimumDepth: 40
+    oreChance: 0.02
+  - kind: 6
+    health: 22
+    reward: 12
+    minimumDepth: 65
+    oreChance: 0.009
   - kind: 7
-    health: 6
+    health: 10
     reward: 1
     minimumDepth: 55
     oreChance: 0
   - kind: 8
     health: 1
     reward: 0
-    minimumDepth: 14
+    minimumDepth: 12
     oreChance: 0
   - kind: 9
     health: 1
@@ -80,34 +83,34 @@ MonoBehaviour:
     rarity: "\u041E\u0411\u042B\u0427\u041D\u0410\u042F"
     color: {r: 0.72156864, g: 0.50980395, b: 0.30588236, a: 1}
     damage: 1
-    durability: 100
-    weight: 38
+    durability: 28
+    weight: 45
     mass: 1
   - title: "\u041A\u0430\u043C\u0435\u043D\u043D\u0430\u044F"
     rarity: "\u041D\u0415\u041E\u0411\u042B\u0427\u041D\u0410\u042F"
     color: {r: 0.6784314, g: 0.7372549, b: 0.7764706, a: 1}
     damage: 2
-    durability: 140
+    durability: 30
     weight: 30
     mass: 1.2
   - title: "\u0417\u043E\u043B\u043E\u0442\u0430\u044F"
     rarity: "\u0420\u0415\u0414\u041a\u0410\u042f"
     color: {r: 1, g: 0.79607844, b: 0.36078432, a: 1}
     damage: 3
-    durability: 160
-    weight: 9
-    mass: 1.6
+    durability: 32
+    weight: 15
+    mass: 1.3
   - title: "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F"
-    rarity: "\u041f\u0420\u041e\u0427\u041d\u0410\u042f"
+    rarity: "\u042d\u041f\u0418\u0427\u0415\u0421\u041a\u0410\u042f"
     color: {r: 0.8862745, g: 0.92156863, b: 0.9098039, a: 1}
     damage: 4
-    durability: 210
-    weight: 20
+    durability: 34
+    weight: 8
     mass: 1.4
   - title: "\u0410\u043B\u043C\u0430\u0437\u043D\u0430\u044F"
     rarity: "\u041B\u0415\u0413\u0415\u041D\u0414\u0410\u0420\u041D\u0410\u042F"
     color: {r: 0.37254903, g: 0.94509804, b: 0.8352941, a: 1}
-    damage: 6
-    durability: 260
-    weight: 3
+    damage: 5
+    durability: 36
+    weight: 2
     mass: 1.5

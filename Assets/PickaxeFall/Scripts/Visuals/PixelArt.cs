@@ -8,6 +8,8 @@ namespace PickaxeFall
     {
         static readonly Dictionary<int, Sprite> Blocks = new();
         static readonly Dictionary<Color32, Sprite> Pickaxes = new();
+        static readonly Sprite[] CrackSprites = new Sprite[9];
+        public const float PickaxeScale = 1.15f;
         static Sprite square;
         public static Sprite Square => square ? square : square = Make(1, 1, new[] { Color.white });
 
@@ -53,7 +55,11 @@ namespace PickaxeFall
                 {
                     int x = random.Next(2, 12), y = random.Next(2, 12);
                     for (int a = 0; a < 3; a++) for (int b = 0; b < 2; b++)
-                        pixels[(y + b) * 16 + x + a] = ore * (b == 0 ? 0.8f : 1);
+                    {
+                        Color fleck = ore * (b == 0 ? 0.8f : 1);
+                        fleck.a = 1;
+                        pixels[(y + b) * 16 + x + a] = fleck;
+                    }
                 }
             if (kind == BlockKind.Workbench)
             {
@@ -86,28 +92,73 @@ namespace PickaxeFall
         public static Sprite Pickaxe(Color32 color)
         {
             if (Pickaxes.TryGetValue(color, out var cached) && cached) return cached;
-            var pixels = new Color[16 * 16];
+            const int size = 32;
+            var pixels = new Color[size * size];
             Color outline = Color.Lerp(color, new Color32(29, 38, 33, 255), 0.76f);
-            // Long diagonal wooden handle and the familiar broad, curved pick head.
-            for (int i = 2; i <= 10; i++)
+            var handle = new bool[size * size];
+            var head = new bool[size * size];
+            for (int y = 0; y < size; y++) for (int x = 0; x < size; x++)
             {
-                Fill(pixels, 16, i - 1, i - 2, 3, 3, new Color32(74, 47, 27, 255));
-                pixels[(i - 1) * 16 + i] = new Color32(185, 135, 73, 255);
-                pixels[(i - 1) * 16 + i - 1] = new Color32(131, 85, 43, 255);
+                Vector2 p = new((x + 0.5f) / size - 0.5f, (y + 0.5f) / size - 0.5f);
+                float u = (p.x - p.y) * 0.70710678f, v = (p.x + p.y) * 0.70710678f;
+                handle[y * size + x] = Mathf.Abs(u) < 0.044f && v >= -0.43f && v <= 0.25f;
+                head[y * size + x] = Mathf.Abs(u) <= 0.44f && Mathf.Abs(v - HeadCurve(u)) <= HeadThickness(u);
             }
-            bool[] mask = new bool[256];
-            for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++)
-                mask[y * 16 + x] = (y == 12 && x >= 4 && x <= 10) || (y == 11 && x >= 3 && x <= 12) ||
-                    (y == 10 && x >= 10 && x <= 13) || (y == 9 && x >= 11 && x <= 13) ||
-                    (y >= 6 && y <= 8 && x >= 12 && x <= 13);
-            for (int y = 1; y < 15; y++) for (int x = 1; x < 15; x++)
-                if (mask[y * 16 + x])
+            for (int pass = 0; pass < 2; pass++)
+            {
+                bool[] mask = pass == 0 ? handle : head;
+                for (int y = 1; y < size - 1; y++) for (int x = 1; x < size - 1; x++)
+                    if (mask[y * size + x])
                     for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++)
-                        pixels[(y + dy) * 16 + x + dx] = outline;
-            for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++)
-                if (mask[y * 16 + x])
-                    pixels[y * 16 + x] = Color.Lerp(color, Color.white, y == 12 || x == 13 ? 0.28f : 0);
-            return Pickaxes[color] = Make(16, 16, pixels);
+                        pixels[(y + dy) * size + x + dx] = pass == 0 ? new Color32(66, 42, 25, 255) : outline;
+                for (int y = 0; y < size; y++) for (int x = 0; x < size; x++)
+                    if (mask[y * size + x])
+                        pixels[y * size + x] = pass == 0
+                            ? (Color)new Color32((byte)(x > y ? 187 : 140), (byte)(x > y ? 137 : 92), 58, 255)
+                            : Color.Lerp(color, Color.white, (x + y) % 3 == 0 ? 0.22f : 0);
+            }
+            return Pickaxes[color] = Make(size, size, pixels);
+        }
+
+        static float HeadCurve(float u) => 0.25f - 0.23f * Mathf.Pow(Mathf.Abs(u) / 0.44f, 1.7f);
+        static float HeadThickness(float u) => Mathf.Lerp(0.052f, 0.027f, Mathf.Abs(u) / 0.44f);
+        static Vector2 ToolPoint(float u, float v) => new((v + u) * 0.70710678f, (v - u) * 0.70710678f);
+
+        public static Vector2[] PickaxeHeadOutline()
+        {
+            const int steps = 9;
+            var points = new Vector2[steps * 2];
+            for (int i = 0; i < steps; i++)
+            {
+                float u = Mathf.Lerp(-0.44f, 0.44f, i / (float)(steps - 1));
+                points[i] = ToolPoint(u, HeadCurve(u) + HeadThickness(u));
+                points[steps * 2 - 1 - i] = ToolPoint(u, HeadCurve(u) - HeadThickness(u));
+            }
+            return points;
+        }
+
+        public static Sprite Cracks(int stage)
+        {
+            stage = Mathf.Clamp(stage, 1, 8);
+            if (CrackSprites[stage]) return CrackSprites[stage];
+            var pixels = new Color[256];
+            int[][] paths =
+            {
+                new[] { 135, 150, 166, 181, 180, 195, 211, 226, 242 },
+                new[] { 135, 136, 153, 154, 171, 172, 189, 190, 207 },
+                new[] { 135, 119, 120, 104, 89, 73, 74, 58, 43, 27, 12 },
+                new[] { 135, 134, 117, 116, 99, 98, 81, 80, 64 },
+                new[] { 135, 151, 167, 168, 184, 201, 217, 218, 235, 251 },
+                new[] { 135, 118, 102, 101, 85, 84, 68, 51, 35, 18, 2 }
+            };
+            foreach (var path in paths)
+                for (int i = 0; i < Mathf.CeilToInt(path.Length * stage / 8f); i++)
+                    pixels[path[i]] = new Color32(20, 18, 17, 245);
+            // A light lip on the right of each dark fissure gives it depth.
+            for (int y = 0; y < 16; y++) for (int x = 14; x >= 0; x--)
+                if (pixels[y * 16 + x].a > 0.9f && pixels[y * 16 + x + 1].a == 0)
+                    pixels[y * 16 + x + 1] = new Color32(193, 185, 165, 80);
+            return CrackSprites[stage] = Make(16, 16, pixels);
         }
 
         public static Sprite Landscape()
