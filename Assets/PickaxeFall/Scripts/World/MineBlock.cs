@@ -9,19 +9,21 @@ namespace PickaxeFall
         public int Row { get; private set; }
         public int Health { get; private set; }
         public bool IsBroken { get; private set; }
+        public bool IsDeep { get; private set; }
+        public Color BaseColor => PixelArt.BlockColor(Kind, IsDeep);
         public float NextStrikeTime { get; set; }
         SpriteRenderer visual;
         BoxCollider2D hitbox;
         MiningWorld world;
         int maxHealth;
 
-        public void Setup(MiningWorld owner, BlockKind kind, int x, int row, int variant)
+        public void Setup(MiningWorld owner, BlockKind kind, int x, int row, int variant, bool deep = false, bool surface = false)
         {
-            world = owner; Kind = kind; Row = row;
+            world = owner; Kind = kind; Row = row; IsDeep = deep;
             Health = maxHealth = owner.Balance.Block(kind).health; IsBroken = false; NextStrikeTime = 0;
             visual ??= GetComponent<SpriteRenderer>(); hitbox ??= GetComponent<BoxCollider2D>();
             transform.position = new Vector3(x, -row - 0.5f, 0);
-            visual.sprite = PixelArt.Block(kind, variant); visual.color = Color.white;
+            visual.sprite = PixelArt.Block(kind, variant, deep, surface); visual.color = Color.white;
             hitbox.size = new Vector2(0.99f, 0.99f); hitbox.enabled = true;
             gameObject.SetActive(true);
         }

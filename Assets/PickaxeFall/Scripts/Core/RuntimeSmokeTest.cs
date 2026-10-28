@@ -20,18 +20,31 @@ namespace PickaxeFall
             game = GetComponent<GameController>();
             yield return null;
             Check(game.Phase == RunPhase.Ready, "Scene starts ready.");
+            AssertSafeSpawn();
+            int firstSeed = game.Seed, firstMap = game.World.LayoutFingerprint();
+            game.World.ResetWorld(firstSeed);
+            Check(game.World.LayoutFingerprint() == firstMap, "The same world seed reproduces the same terrain.");
+            game.NewRun();
+            Check(game.Seed != firstSeed && game.World.LayoutFingerprint() != firstMap, "A new round generates a different procedural map.");
+            var font = Resources.Load<Font>("Fonts/Monocraft");
+            Check(font && font.HasCharacter('Я') && font.HasCharacter('ё'), "Pixel font includes Cyrillic glyphs.");
+            Check(PixelArt.BlockColor(BlockKind.Iron, true) == PixelArt.BlockColor(BlockKind.Deepstone), "Deep ore uses the surrounding deepstone color.");
+            Check(PixelArt.Block(BlockKind.Iron, 1, true) != PixelArt.Block(BlockKind.Iron, 1, false), "Surface and deep ores have distinct sprites.");
             yield return Capture("01-roulette");
             game.Spin();
             float deadline = Time.realtimeSinceStartup + 8;
             while (game.Phase == RunPhase.Spinning && Time.realtimeSinceStartup < deadline) yield return null;
             Check(game.Phase == RunPhase.Equipped, "Roulette must equip a pickaxe.");
             Check(game.Pickaxe.Durability > 0, "Equipped pickaxe has durability.");
+            AssertSafeSpawn();
             yield return Capture("02-equipped");
             game.Drop();
             Check(game.Pickaxe.Body.simulated, "Drop enables real physics.");
+            yield return new WaitForFixedUpdate();
+            yield return null;
+            Check(game.Pickaxe.transform.position.y > 5 && game.Depth == 0 && game.BlocksBroken == 0, "Drop starts in the sky, not inside the ground.");
             for (int i = 0; i < 60 && game.Phase == RunPhase.Mining; i++)
             {
-                if (i % 8 == 0) game.Pickaxe.Nudge(i % 16 == 0 ? 1 : -1);
                 yield return new WaitForSeconds(0.15f);
             }
             Check(game.BlocksBroken > 0, "Physical collisions break blocks.");
@@ -39,6 +52,27 @@ namespace PickaxeFall
             Check(game.Pickaxe.Durability < game.Pickaxe.MaxDurability, "Strikes consume durability.");
             Check(game.Coins > 0, "Blocks award coins.");
             yield return Capture("03-mining");
+            MineBlock tnt = null, chainedTnt = null, blastTarget = null;
+            for (int row = 10; row < 25 && !tnt; row++)
+                for (int x = 8; x < 16; x++)
+                {
+                    var a = game.World.CellAt(x, row); var b = game.World.CellAt(x + 1, row); var c = game.World.CellAt(x + 2, row);
+                    if (!a || !b || !c) continue;
+                    tnt = a; chainedTnt = b; blastTarget = c;
+                    a.Setup(game.World, BlockKind.Tnt, x, row, 0);
+                    b.Setup(game.World, BlockKind.Tnt, x + 1, row, 0);
+                    c.Setup(game.World, BlockKind.Gold, x + 2, row, 0);
+                    break;
+                }
+            Check(tnt && chainedTnt && blastTarget, "Explosion test finds neighboring real terrain cells.");
+            Physics2D.SyncTransforms();
+            int gold = game.OreCounts[(int)BlockKind.Gold];
+            tnt.Hit(1);
+            Check(tnt.IsBroken && chainedTnt.IsBroken && blastTarget.IsBroken, "A struck TNT triggers a chain explosion and destroys nearby blocks.");
+            Check(game.OreCounts[(int)BlockKind.Gold] > gold, "Explosions award ore rewards.");
+            int blastCoins = game.Coins;
+            tnt.Hit(1);
+            Check(game.Coins == blastCoins, "A spent TNT cannot explode or reward twice.");
             if (game.Phase == RunPhase.Mining)
             {
                 game.TogglePause(); Check(Time.timeScale == 0 && game.Paused, "Pause freezes physics.");
@@ -71,11 +105,38 @@ namespace PickaxeFall
             yield return Capture("04-results");
             for (int d = 20; d <= 1500; d += 20) game.World.Stream(d);
             Check(game.World.ActiveBlocks <= game.Balance.worldWidth * (game.Balance.rowsAhead + game.Balance.rowsBehind + 1), "Streaming keeps active blocks bounded.");
+            // Reproduce the reported failure: both the tool and camera were deep underground.
+            game.Pickaxe.transform.position = new Vector3(0, -120, 0);
+            game.Pickaxe.Body.position = new Vector2(0, -120);
+            Camera.main.transform.position = new Vector3(0, -120, -10);
+            int previousSeed = game.Seed;
             game.NewRun();
             Check(game.Phase == RunPhase.Ready && game.Coins == 0 && game.Depth == 0 && game.BlocksBroken == 0, "Retry resets the run.");
             Check(game.Wallet == savedWallet, "Retry preserves the wallet.");
+            Check(game.Seed != previousSeed, "Retry changes the world seed.");
+            AssertSafeSpawn();
+            game.Spin();
+            deadline = Time.realtimeSinceStartup + 8;
+            while (game.Phase == RunPhase.Spinning && Time.realtimeSinceStartup < deadline) yield return null;
+            Check(game.Phase == RunPhase.Equipped, "Retry roulette equips a tool.");
+            AssertSafeSpawn(); game.Drop();
+            yield return new WaitForFixedUpdate(); yield return null;
+            Check(game.Pickaxe.transform.position.y > 5 && game.Depth == 0, "Retry drop also begins above ground.");
             Debug.Log($"PICKAXEFALL_SMOKE_OK: roulette, physical mining, depth, durability, rewards, workbench, pause, bounded streaming, results and retry. Previous run: {coins} coins.");
             Application.Quit(0);
+        }
+
+        void AssertSafeSpawn()
+        {
+            Check(Mathf.Abs(game.Pickaxe.transform.position.y - game.Balance.spawnHeight) < 0.01f &&
+                Mathf.Abs(game.Pickaxe.Body.position.y - game.Balance.spawnHeight) < 0.01f,
+                "Visible and physics spawn poses agree high above the surface.");
+            Check(Camera.main.transform.position.y > 0, "The camera resets to the sky at the start of a round.");
+            Vector3 screen = Camera.main.WorldToViewportPoint(game.Pickaxe.transform.position);
+            Check(screen.x > 0 && screen.x < 1 && screen.y > 0.2f && screen.y < 0.85f,
+                "The spawn is visible below the top HUD.");
+            foreach (var collider in Physics2D.OverlapBoxAll(game.Pickaxe.transform.position, Vector2.one * 2, 0))
+                Check(!collider.GetComponent<MineBlock>(), "The spawn does not overlap any terrain.");
         }
 
         static IEnumerator Capture(string name)

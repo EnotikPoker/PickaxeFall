@@ -18,6 +18,8 @@ namespace PickaxeFall
         public GameHud(GameController owner, VisualElement document, StyleSheet style)
         {
             game = owner; root = document; root.styleSheets.Add(style); root.AddToClassList("screen"); root.pickingMode = PickingMode.Ignore;
+            var pixelFont = Resources.Load<Font>("Fonts/Monocraft");
+            if (pixelFont) root.style.unityFontDefinition = FontDefinition.FromFont(pixelFont);
             safe = Box(root, "safe"); safe.pickingMode = PickingMode.Ignore;
             var header = Box(safe, "header");
             var brandRow = Box(header, "brand-row");
@@ -41,12 +43,11 @@ namespace PickaxeFall
             {
                 var slot = slots[i] = Box(roulette, "slot");
                 var image = Box(slot, "slot-icon"); image.style.backgroundImage = Background.FromSprite(PixelArt.Pickaxe(game.Balance.pickaxes[i].color));
-                float total = 0; foreach (var tier in game.Balance.pickaxes) total += tier.weight;
-                Text(slot, $"{game.Balance.pickaxes[i].weight / total * 100:0.#}%", "slot-odds");
+                Text(slot, $"{game.Balance.RollChance(i) * 100:0.#}%", "slot-odds");
             }
             var hero = Box(card, "hero"); heroIcon = Box(hero, "hero-icon");
             var heroInfo = Box(hero, "hero-info"); heroName = Text(heroInfo, "Пять кирок. Один шанс.", "hero-name");
-            heroDetail = Text(heroInfo, "Редкость определяет силу и прочность", "hero-detail");
+            heroDetail = Text(heroInfo, "Материал определяет силу и прочность", "hero-detail");
             result = Text(card, "", "result");
             action = Button(card, "КРУТИТЬ РУЛЕТКУ  →", MainAction, "primary");
             Text(card, "БЕЗ СТАВОК · КАЖДЫЙ ЗАБЕГ БЕСПЛАТНЫЙ", "card-footnote");
@@ -54,11 +55,7 @@ namespace PickaxeFall
             controls = Box(safe, "controls");
             var toolRow = Box(controls, "tool-row"); Text(toolRow, "ПРОЧНОСТЬ", "micro"); healthText = Text(toolRow, "100 / 100", "micro mint");
             healthTrack = Box(controls, "health-track"); healthFill = Box(healthTrack, "health-fill");
-            var steer = Box(controls, "steer");
-            Button(steer, "←  ВЛЕВО", () => game.Pickaxe.Nudge(-1), "steer-button");
-            Text(steer, "НАПРАВЛЯЙ\nПАДЕНИЕ", "steer-hint");
-            Button(steer, "ВПРАВО  →", () => game.Pickaxe.Nudge(1), "steer-button");
-            Text(controls, "ВЕРСТАК = УЛУЧШЕНИЕ + ПОЛНЫЙ РЕМОНТ", "card-footnote");
+            Text(controls, "ВЕРСТАК: РЕМОНТ + УЛУЧШЕНИЕ  /  TNT: ВЗРЫВ", "card-footnote");
             Text(safe, "КОПАЙ ГЛУБЖЕ. ПАДАЙ ДАЛЬШЕ.", "footer");
 
             pauseOverlay = Box(root, "pause-overlay");
@@ -110,7 +107,7 @@ namespace PickaxeFall
                 case RunPhase.Ready:
                     eyebrow.text = "01 / НОВАЯ ЭКСПЕДИЦИЯ"; title.text = "Удача. Гравитация.\nИ немного алмазов.";
                     description.text = "Получи кирку и отправь её в глубину.\nКаждый удар приближает тебя к новой руде.";
-                    heroName.text = "Пять кирок. Один шанс."; heroDetail.text = "Редкость определяет силу и прочность";
+                    heroName.text = "Пять кирок. Один шанс."; heroDetail.text = "Материал определяет силу и прочность";
                     heroName.style.color = (Color)new Color32(115, 239, 193, 255);
                     heroIcon.style.backgroundImage = Background.FromSprite(PixelArt.Pickaxe(game.Balance.pickaxes[4].color));
                     action.text = "КРУТИТЬ РУЛЕТКУ  →";
@@ -121,7 +118,7 @@ namespace PickaxeFall
                     description.text = "От деревянной до алмазной.\nСейчас всё решит случай."; action.text = "ВРАЩАЕТСЯ…"; break;
                 case RunPhase.Equipped:
                     eyebrow.text = "03 / ГОТОВА К ПАДЕНИЮ"; title.text = "Твоя кирка.\nТвоя глубина.";
-                    description.text = "Толкай кирку влево и вправо.\nИщи руду и не пропускай верстаки.";
+                    description.text = "Кирка падает сама. TNT расчищает путь.\nВерстаки чинят и улучшают инструмент.";
                     ShowRouletteTier(game.Pickaxe.Tier); action.text = "В ШАХТУ  ↓"; break;
                 case RunPhase.Finished:
                     eyebrow.text = "04 / ЭКСПЕДИЦИЯ ЗАВЕРШЕНА"; title.text = $"{game.Depth} метров\nближе к сокровищам.";

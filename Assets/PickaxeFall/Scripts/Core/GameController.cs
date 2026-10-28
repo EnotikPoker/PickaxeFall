@@ -22,7 +22,7 @@ namespace PickaxeFall
         public int Wallet { get; private set; }
         public int Seed { get; private set; }
         public bool Paused { get; private set; }
-        public readonly int[] OreCounts = new int[9];
+        public readonly int[] OreCounts = new int[Enum.GetValues(typeof(BlockKind)).Length];
         public event Action Changed;
         GameHud hud;
         MineCamera cameraFollow;
@@ -39,7 +39,7 @@ namespace PickaxeFall
             Screen.orientation = ScreenOrientation.Portrait;
             Physics2D.gravity = new Vector2(0, balance.gravity);
             BestDepth = PlayerPrefs.GetInt("bestDepth", 0); Wallet = PlayerPrefs.GetInt("wallet", 0);
-            rouletteRandom = new System.Random();
+            rouletteRandom = new System.Random(Guid.NewGuid().GetHashCode());
             Effects = new GameObject("Mining effects").AddComponent<MiningEffects>(); Effects.transform.SetParent(transform); Effects.Initialize();
             World = new GameObject("Streamed mine").AddComponent<MiningWorld>(); World.transform.SetParent(transform); World.Initialize(this, balance);
             Pickaxe = new GameObject("Physical pickaxe").AddComponent<FallingPickaxe>(); Pickaxe.transform.SetParent(transform); Pickaxe.Initialize(this);
@@ -59,7 +59,8 @@ namespace PickaxeFall
         {
             StopAllCoroutines(); Time.timeScale = 1; Paused = false;
             Depth = Coins = BlocksBroken = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
-            Seed = rouletteRandom.Next(1, int.MaxValue);
+            int previousSeed = Seed;
+            do { Seed = Guid.NewGuid().GetHashCode() & int.MaxValue; } while (Seed == 0 || Seed == previousSeed);
             World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); cameraFollow.ResetView();
             Phase = RunPhase.Ready; Notify();
         }
@@ -74,9 +75,10 @@ namespace PickaxeFall
         IEnumerator SpinRoutine()
         {
             const int ticks = 24;
+            var animationRandom = new System.Random(Guid.NewGuid().GetHashCode());
             for (int i = 0; i < ticks; i++)
             {
-                hud.ShowRouletteTier(i == ticks - 1 ? selectedTier : i % balance.pickaxes.Length);
+                hud.ShowRouletteTier(i == ticks - 1 ? selectedTier : balance.Roll(animationRandom));
                 float progress = (float)i / (ticks - 1);
                 yield return new WaitForSecondsRealtime(Mathf.Lerp(0.035f, 0.20f, progress * progress));
             }
@@ -86,7 +88,8 @@ namespace PickaxeFall
         public void Drop()
         {
             if (Phase != RunPhase.Equipped) return;
-            Phase = RunPhase.Mining; Pickaxe.Launch(); Notify();
+            cameraFollow.ResetView();
+            Pickaxe.Launch(); Phase = RunPhase.Mining; Notify();
         }
 
         void Update()
@@ -95,8 +98,6 @@ namespace PickaxeFall
             if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
             if (Phase == RunPhase.Mining && !Paused)
             {
-                if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) Pickaxe.Nudge(-1);
-                if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) Pickaxe.Nudge(1);
                 Depth = Mathf.Max(Depth, Mathf.FloorToInt(-Pickaxe.transform.position.y));
                 World.Stream(Depth);
             }
@@ -114,9 +115,10 @@ namespace PickaxeFall
             else
             {
                 BlocksBroken++; Coins += balance.Block(block.Kind).reward; OreCounts[(int)block.Kind]++;
-                Effects.Impact(block.transform.position, PixelArt.BlockColor(block.Kind), 7);
+                Effects.Impact(block.transform.position, block.BaseColor, 7);
                 if (block.Kind >= BlockKind.Coal && block.Kind <= BlockKind.Diamond)
                     hud.Toast($"{GameBalance.BlockName(block.Kind)}  +{balance.Block(block.Kind).reward}");
+                if (block.Kind == BlockKind.Tnt) hud.Toast("TNT! ЦЕПНАЯ РЕАКЦИЯ");
             }
             Notify();
         }
