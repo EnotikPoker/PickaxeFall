@@ -12,7 +12,8 @@ namespace PickaxeFall
         bool detonating;
         GameController game;
         GameBalance balance;
-        int seed, nextRow;
+        int nextRow;
+        MineGenerator generator;
         Transform walls;
         public int ActiveBlocks { get; private set; }
         public GameBalance Balance => balance;
@@ -33,14 +34,14 @@ namespace PickaxeFall
         public void ResetWorld(int runSeed)
         {
             foreach (var row in rows.Values) foreach (var block in row) Return(block);
-            rows.Clear(); explosions.Clear(); nextRow = -2; seed = runSeed; ActiveBlocks = 0;
+            rows.Clear(); explosions.Clear(); nextRow = -2; ActiveBlocks = 0;
+            generator = new MineGenerator(balance, runSeed);
             Stream(0);
         }
 
         public void Stream(float depth)
         {
             int row = Mathf.Max(0, Mathf.FloorToInt(depth));
-            while (nextRow < row + balance.rowsAhead) GenerateRow(nextRow++);
             retiredRows.Clear();
             foreach (var pair in rows)
                 if (pair.Key < row - balance.rowsBehind) retiredRows.Add(pair.Key);
@@ -53,31 +54,19 @@ namespace PickaxeFall
                 }
                 rows.Remove(key);
             }
+            nextRow = Mathf.Max(nextRow, row - balance.rowsBehind);
+            while (nextRow < row + balance.rowsAhead) GenerateRow(nextRow++);
             walls.position = new Vector3(0, -depth, 0);
         }
 
         void GenerateRow(int row)
         {
             var blocks = new List<MineBlock>(balance.worldWidth);
-            var random = new System.Random(unchecked(seed ^ row * 73856093));
-            int benchColumn = row > 0 && row % balance.workbenchInterval == 0 ? random.Next(-3, 4) : int.MinValue;
             for (int column = 0; column < balance.worldWidth; column++)
             {
                 int x = column - balance.worldWidth / 2;
-                int surface = SurfaceRow(x);
-                if (row < surface) continue;
-                BlockKind kind = balance.ChooseBlock(random, row);
-                if (row < surface + 3) kind = BlockKind.Dirt;
-                bool bench = x == benchColumn || (row > 0 && row % balance.workbenchInterval == 0 && column % 9 == 2);
-                if (bench) kind = BlockKind.Workbench;
-                else if (row > surface + 3 && IsCave(x, row)) continue;
-                else if (row >= balance.tntMinimumDepth && random.NextDouble() < balance.tntChance) kind = BlockKind.Tnt;
-                else if (row >= surface + 3)
-                {
-                    // Nearby cells share a seed, producing ore pockets rather than isolated dots.
-                    var veinRandom = new System.Random(unchecked(seed ^ Mathf.FloorToInt(x / 2f) * 19349663 ^ (row / 2) * 83492791));
-                    kind = balance.ChooseBlock(veinRandom, row);
-                }
+                var cell = generator.Sample(x, row);
+                if (!cell.exists) continue;
                 MineBlock block;
                 if (pool.Count > 0) block = pool.Pop();
                 else
@@ -85,8 +74,7 @@ namespace PickaxeFall
                     var obj = new GameObject("Mine block"); obj.transform.SetParent(transform);
                     block = obj.AddComponent<MineBlock>();
                 }
-                bool deep = row >= balance.Block(BlockKind.Deepstone).minimumDepth;
-                block.Setup(this, kind, x, row, random.Next(4), deep, row == surface);
+                block.Setup(this, cell.kind, x, row, cell.variant, cell.deep, cell.surface);
                 blocks.Add(block); ActiveBlocks++;
             }
             rows.Add(row, blocks);
@@ -105,18 +93,7 @@ namespace PickaxeFall
             // Retain the cell until its row retires, preventing a broken cell from respawning.
         }
 
-        public int SurfaceRow(int x)
-        {
-            if (Mathf.Abs(x) <= 2) return 0;
-            return Mathf.FloorToInt(Mathf.PerlinNoise((x + 500) * 0.16f, (seed % 100003) * 0.013f) * 5) - 2;
-        }
-
-        bool IsCave(int x, int row)
-        {
-            float noise = Mathf.PerlinNoise((x + 1000) * 0.29f + seed % 997,
-                row * 0.23f + (seed / 997) % 997);
-            return noise < balance.caveChance + 0.15f;
-        }
+        public int SurfaceRow(int x) => generator.SurfaceRow(x);
 
         void DetonateQueued()
         {

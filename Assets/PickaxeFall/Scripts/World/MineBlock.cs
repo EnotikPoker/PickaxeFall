@@ -11,8 +11,9 @@ namespace PickaxeFall
         public bool IsBroken { get; private set; }
         public bool IsDeep { get; private set; }
         public Color BaseColor => PixelArt.BlockColor(Kind, IsDeep);
-        public float NextStrikeTime { get; set; }
+        public int DamageStage { get; private set; }
         SpriteRenderer visual;
+        SpriteRenderer cracks;
         BoxCollider2D hitbox;
         MiningWorld world;
         int maxHealth;
@@ -20,8 +21,15 @@ namespace PickaxeFall
         public void Setup(MiningWorld owner, BlockKind kind, int x, int row, int variant, bool deep = false, bool surface = false)
         {
             world = owner; Kind = kind; Row = row; IsDeep = deep;
-            Health = maxHealth = owner.Balance.Block(kind).health; IsBroken = false; NextStrikeTime = 0;
+            Health = maxHealth = owner.Balance.Block(kind).health; IsBroken = false; DamageStage = 0;
             visual ??= GetComponent<SpriteRenderer>(); hitbox ??= GetComponent<BoxCollider2D>();
+            if (!cracks)
+            {
+                var overlay = new GameObject("Damage cracks"); overlay.transform.SetParent(transform, false);
+                overlay.transform.localPosition = new Vector3(0, 0, -0.01f);
+                cracks = overlay.AddComponent<SpriteRenderer>(); cracks.sortingOrder = visual.sortingOrder + 1;
+            }
+            cracks.enabled = false; cracks.sprite = null;
             transform.position = new Vector3(x, -row - 0.5f, 0);
             visual.sprite = PixelArt.Block(kind, variant, deep, surface); visual.color = Color.white;
             hitbox.size = new Vector2(0.99f, 0.99f); hitbox.enabled = true;
@@ -32,7 +40,8 @@ namespace PickaxeFall
         {
             if (IsBroken) return false;
             Health = Mathf.Max(0, Health - damage);
-            visual.color = Color.Lerp(new Color(0.45f, 0.47f, 0.53f), Color.white, (float)Health / maxHealth);
+            DamageStage = Mathf.Clamp(Mathf.CeilToInt((1f - (float)Health / maxHealth) * 8), 1, 8);
+            cracks.sprite = PixelArt.Cracks(DamageStage); cracks.enabled = true;
             if (Health > 0) return false;
             IsBroken = true; hitbox.enabled = false;
             world.Break(this);

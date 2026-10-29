@@ -119,6 +119,7 @@ namespace PickaxeFall.Editor
                 }
                 if (depth == 70) Require(sawDiamond, "Deep layers must contain diamonds.");
             }
+            PrototypeChecks.Validate(balance);
             Debug.Log("PICKAXEFALL_BALANCE_OK: 100000 roulette rolls; deterministic generation and ore depth gates.");
         }
 
@@ -126,6 +127,7 @@ namespace PickaxeFall.Editor
         public static void BuildLinux()
         {
             ValidateBalance();
+            PrototypeChecks.ExportPreview(AssetDatabase.LoadAssetAtPath<GameBalance>(DataPath));
             Build(new BuildPlayerOptions
             {
                 scenes = new[] { ScenePath }, target = BuildTarget.StandaloneLinux64,

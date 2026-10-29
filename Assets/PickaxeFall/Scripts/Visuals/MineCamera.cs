@@ -37,7 +37,7 @@ namespace PickaxeFall
         void LateUpdate()
         {
             SetFraming();
-            if (game.Phase == RunPhase.Mining || game.Phase == RunPhase.Finished)
+            if (game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking || game.Phase == RunPhase.Finished)
             {
                 Vector3 p = game.Pickaxe.transform.position;
                 float halfWorld = game.Balance.worldWidth / 2f;
