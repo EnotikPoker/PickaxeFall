@@ -8,6 +8,8 @@ namespace PickaxeFall
         Camera view;
         Vector3 velocity;
         SpriteRenderer backdrop;
+        SpriteRenderer landscape;
+        const float SurfaceCameraY = 3.2f;
 
         public void Initialize(GameController owner)
         {
@@ -15,28 +17,47 @@ namespace PickaxeFall
             view.orthographic = true; view.clearFlags = CameraClearFlags.SolidColor;
             view.backgroundColor = new Color32(25, 38, 49, 255);
             var obj = new GameObject("Cave background");
-            backdrop = obj.AddComponent<SpriteRenderer>(); backdrop.sprite = PixelArt.Square;
-            backdrop.sortingOrder = -20; obj.transform.localScale = new Vector3(120, 180, 1);
-            backdrop.color = new Color32(29, 36, 48, 255);
+            backdrop = obj.AddComponent<SpriteRenderer>(); backdrop.sprite = PixelArt.CaveWall();
+            backdrop.sortingOrder = -30; obj.transform.localScale = Vector3.one * 90;
+            var sky = new GameObject("Sky, clouds and distant forest");
+            landscape = sky.AddComponent<SpriteRenderer>(); landscape.sprite = PixelArt.Landscape();
+            landscape.sortingOrder = -20; sky.transform.localScale = Vector3.one * 80;
+            sky.transform.position = new Vector3(0, 20, 3);
             ResetView();
         }
 
-        public void ResetView() { transform.position = new Vector3(0, -3.2f, -10); velocity = Vector3.zero; }
+        public void ResetView()
+        {
+            SetFraming(); transform.position = new Vector3(0, SurfaceCameraY, -10); velocity = Vector3.zero;
+            UpdateBackground();
+        }
+
+        void SetFraming() => view.orthographicSize = Mathf.Clamp(6.2f / Mathf.Max(0.35f, view.aspect), 8, 16);
 
         void LateUpdate()
         {
-            view.orthographicSize = Mathf.Clamp(6.2f / Mathf.Max(0.35f, view.aspect), 8, 16);
+            SetFraming();
             if (game.Phase == RunPhase.Mining || game.Phase == RunPhase.Finished)
             {
                 Vector3 p = game.Pickaxe.transform.position;
                 float halfWorld = game.Balance.worldWidth / 2f;
                 float maxX = Mathf.Max(0, halfWorld - view.orthographicSize * view.aspect);
-                Vector3 target = new(Mathf.Clamp(p.x, -maxX, maxX), Mathf.Min(-3.2f, p.y - 2.4f), -10);
+                Vector3 target = new(Mathf.Clamp(p.x, -maxX, maxX), Mathf.Min(SurfaceCameraY, p.y - 2.4f), -10);
                 transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, 0.2f);
             }
-            backdrop.transform.position = new Vector3(0, transform.position.y, 2);
+            UpdateBackground();
         }
 
-        void OnDestroy() { if (backdrop) Destroy(backdrop.gameObject); }
+        void UpdateBackground()
+        {
+            backdrop.transform.position = new Vector3(transform.position.x * 0.1f, transform.position.y - 20, 4);
+            landscape.transform.position = new Vector3(transform.position.x * 0.06f, 20, 3);
+        }
+
+        void OnDestroy()
+        {
+            if (backdrop) { Destroy(backdrop.sprite.texture); Destroy(backdrop.sprite); Destroy(backdrop.gameObject); }
+            if (landscape) { Destroy(landscape.sprite.texture); Destroy(landscape.sprite); Destroy(landscape.gameObject); }
+        }
     }
 }

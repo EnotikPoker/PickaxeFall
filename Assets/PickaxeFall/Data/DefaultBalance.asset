@@ -17,11 +17,13 @@ MonoBehaviour:
   rowsBehind: 18
   workbenchInterval: 14
   caveChance: 0.075
+  spawnHeight: 7.5
+  tntMinimumDepth: 8
+  tntChance: 0.012
+  explosionRadius: 2.6
   gravity: -15
   maxFallSpeed: 22
   strikeInterval: 0.24
-  nudgeImpulse: 2.8
-  nudgeCooldown: 0.35
   blocks:
   - kind: 0
     health: 1
@@ -68,6 +70,11 @@ MonoBehaviour:
     reward: 0
     minimumDepth: 14
     oreChance: 0
+  - kind: 9
+    health: 1
+    reward: 0
+    minimumDepth: 8
+    oreChance: 0
   pickaxes:
   - title: "\u0414\u0435\u0440\u0435\u0432\u044F\u043D\u043D\u0430\u044F"
     rarity: "\u041E\u0411\u042B\u0427\u041D\u0410\u042F"
@@ -83,20 +90,20 @@ MonoBehaviour:
     durability: 140
     weight: 30
     mass: 1.2
-  - title: "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F"
-    rarity: "\u0420\u0415\u0414\u041A\u0410\u042F"
-    color: {r: 0.8862745, g: 0.92156863, b: 0.9098039, a: 1}
-    damage: 3
-    durability: 180
-    weight: 20
-    mass: 1.4
   - title: "\u0417\u043E\u043B\u043E\u0442\u0430\u044F"
-    rarity: "\u042D\u041F\u0418\u0427\u0415\u0421\u041A\u0410\u042F"
+    rarity: "\u0420\u0415\u0414\u041a\u0410\u042f"
     color: {r: 1, g: 0.79607844, b: 0.36078432, a: 1}
-    damage: 4
-    durability: 150
+    damage: 3
+    durability: 160
     weight: 9
     mass: 1.6
+  - title: "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F"
+    rarity: "\u041f\u0420\u041e\u0427\u041d\u0410\u042f"
+    color: {r: 0.8862745, g: 0.92156863, b: 0.9098039, a: 1}
+    damage: 4
+    durability: 210
+    weight: 20
+    mass: 1.4
   - title: "\u0410\u043B\u043C\u0430\u0437\u043D\u0430\u044F"
     rarity: "\u041B\u0415\u0413\u0415\u041D\u0414\u0410\u0420\u041D\u0410\u042F"
     color: {r: 0.37254903, g: 0.94509804, b: 0.8352941, a: 1}

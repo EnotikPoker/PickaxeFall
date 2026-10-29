@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PickaxeFall
 {
-    public enum BlockKind { Dirt, Stone, Coal, Copper, Iron, Gold, Diamond, Deepstone, Workbench }
+    public enum BlockKind { Dirt, Stone, Coal, Copper, Iron, Gold, Diamond, Deepstone, Workbench, Tnt }
     public enum RunPhase { Ready, Spinning, Equipped, Mining, Finished }
 
     [Serializable]
@@ -45,12 +45,15 @@ namespace PickaxeFall
         [Min(8)] public int rowsBehind = 18;
         [Min(10)] public int workbenchInterval = 14;
         [Range(0, 1)] public float caveChance = 0.075f;
+        [Min(4)] public float spawnHeight = 7.5f;
+        [Header("TNT")]
+        [Min(1)] public int tntMinimumDepth = 8;
+        [Range(0, 0.1f)] public float tntChance = 0.012f;
+        [Min(1)] public float explosionRadius = 2.6f;
         [Header("Physics")]
         public float gravity = -15;
         public float maxFallSpeed = 22;
         public float strikeInterval = 0.24f;
-        public float nudgeImpulse = 2.8f;
-        public float nudgeCooldown = 0.35f;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {
@@ -58,15 +61,15 @@ namespace PickaxeFall
             new(BlockKind.Coal, 4, 3, 3, 0.16f), new(BlockKind.Copper, 5, 5, 10, 0.09f),
             new(BlockKind.Iron, 7, 8, 22, 0.07f), new(BlockKind.Gold, 9, 15, 40, 0.05f),
             new(BlockKind.Diamond, 13, 35, 65, 0.035f), new(BlockKind.Deepstone, 6, 1, 55),
-            new(BlockKind.Workbench, 1, 0, 14)
+            new(BlockKind.Workbench, 1, 0, 14), new(BlockKind.Tnt, 1, 0, 8)
         };
         [Header("Pickaxes / weighted roulette")]
         public PickaxeStats[] pickaxes =
         {
             new("Деревянная", "ОБЫЧНАЯ", new Color32(184, 130, 78, 255), 1, 100, 38, 1),
             new("Каменная", "НЕОБЫЧНАЯ", new Color32(173, 188, 198, 255), 2, 140, 30, 1.2f),
-            new("Железная", "РЕДКАЯ", new Color32(226, 235, 232, 255), 3, 180, 20, 1.4f),
-            new("Золотая", "ЭПИЧЕСКАЯ", new Color32(255, 203, 92, 255), 4, 150, 9, 1.6f),
+            new("Золотая", "РЕДКАЯ", new Color32(255, 203, 92, 255), 3, 160, 9, 1.6f),
+            new("Железная", "ПРОЧНАЯ", new Color32(226, 235, 232, 255), 4, 210, 20, 1.4f),
             new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 6, 260, 3, 1.5f)
         };
 
@@ -81,6 +84,13 @@ namespace PickaxeFall
                 if (value < 0) return i;
             }
             return pickaxes.Length - 1;
+        }
+
+        public float RollChance(int tier)
+        {
+            float total = 0;
+            foreach (var pickaxe in pickaxes) total += pickaxe.weight;
+            return pickaxes[tier].weight / total;
         }
 
         public BlockStats Block(BlockKind kind) => blocks[(int)kind];
@@ -102,7 +112,8 @@ namespace PickaxeFall
         {
             BlockKind.Dirt => "Земля", BlockKind.Stone => "Камень", BlockKind.Coal => "Уголь",
             BlockKind.Copper => "Медь", BlockKind.Iron => "Железо", BlockKind.Gold => "Золото",
-            BlockKind.Diamond => "Алмаз", BlockKind.Deepstone => "Глубинный сланец", _ => "Верстак"
+            BlockKind.Diamond => "Алмаз", BlockKind.Deepstone => "Глубинный сланец",
+            BlockKind.Tnt => "Динамит", _ => "Верстак"
         };
     }
 }

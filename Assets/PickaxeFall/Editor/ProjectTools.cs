@@ -87,6 +87,9 @@ namespace PickaxeFall.Editor
                 oreChance += block.oreChance;
             }
             Require(oreChance <= 1, "Ore probabilities cannot exceed 100%.");
+            Require(balance.pickaxes[3].damage > balance.pickaxes[2].damage &&
+                balance.pickaxes[3].durability > balance.pickaxes[2].durability,
+                "Iron must be stronger and more durable than gold.");
             int[] counts = new int[balance.pickaxes.Length]; var random = new System.Random(8127);
             for (int i = 0; i < 100000; i++) counts[balance.Roll(random)]++;
             float total = 0;
@@ -96,7 +99,10 @@ namespace PickaxeFall.Editor
                 total += tier.weight;
             }
             for (int i = 0; i < counts.Length; i++)
-                Require(Math.Abs(counts[i] / 100000f - balance.pickaxes[i].weight / total) < 0.008f, "Roulette weight mismatch.");
+            {
+                Require(Math.Abs(counts[i] / 100000f - balance.RollChance(i)) < 0.008f, "Roulette weight mismatch.");
+                Debug.Log($"ROULETTE_AUDIT: {balance.pickaxes[i].title}: expected={balance.RollChance(i) * 100:F3}% actual={counts[i] / 1000f:F3}% count={counts[i]}/100000");
+            }
             foreach (int depth in new[] { 0, 5, 15, 30, 45, 70 })
             {
                 var first = new System.Random(73); var second = new System.Random(73);

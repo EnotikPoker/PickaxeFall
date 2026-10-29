@@ -50,6 +50,18 @@ namespace PickaxeFall
             }
         }
 
+        public void Explosion(Vector2 point, float radius)
+        {
+            Impact(point, new Color32(255, 192, 78, 255), 30, true);
+            foreach (var chip in chips)
+            {
+                if (chip.life <= 0) continue;
+                if (((Vector2)chip.transform.position - point).sqrMagnitude > 0.01f) continue;
+                chip.velocity *= radius * 1.3f;
+                chip.transform.localScale *= 1.6f;
+            }
+        }
+
         void Update()
         {
             foreach (var chip in chips)
