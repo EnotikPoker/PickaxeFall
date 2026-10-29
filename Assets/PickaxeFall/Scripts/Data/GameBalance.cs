@@ -57,6 +57,7 @@ namespace PickaxeFall
         public float gravity = -15;
         public float maxFallSpeed = 22;
         public float strikeInterval = 0.7f;
+        [Min(0)] public float hitHopSpeed = 2.6f;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {

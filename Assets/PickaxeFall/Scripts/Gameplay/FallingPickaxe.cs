@@ -12,6 +12,7 @@ namespace PickaxeFall
         float nextStrikeTime;
         System.Random physicsRandom;
         public int TotalStrikes { get; private set; }
+        public int HopCount { get; private set; }
         public bool IsVisible => visual && visual.enabled;
         public int Tier { get; private set; }
         public int Durability { get; private set; }
@@ -45,7 +46,7 @@ namespace PickaxeFall
             Tier = Mathf.Clamp(tier, 0, game.Balance.pickaxes.Length - 1);
             Durability = MaxDurability;
             visual.sprite = PixelArt.Pickaxe(Stats.color); visual.color = Color.white; visual.enabled = true;
-            TotalStrikes = 0; physicsRandom = new System.Random(unchecked(game.Seed ^ tier * 73856093));
+            TotalStrikes = HopCount = 0; physicsRandom = new System.Random(unchecked(game.Seed ^ tier * 73856093));
             body.mass = Stats.mass;
             ResetPose();
         }
@@ -96,6 +97,7 @@ namespace PickaxeFall
             if (block.Kind == BlockKind.Workbench || block.Kind == BlockKind.Tnt)
             {
                 block.Hit(int.MaxValue);
+                HopAfterHit();
                 return;
             }
             block.Hit(Stats.damage);
@@ -104,6 +106,16 @@ namespace PickaxeFall
             // Wake sleeping bodies so resting contact still mines a hard block.
             body.WakeUp(); body.AddTorque((float)physicsRandom.NextDouble() * 0.24f - 0.12f, ForceMode2D.Impulse);
             if (Durability <= 0) game.FinishRun();
+            else HopAfterHit();
+        }
+
+        void HopAfterHit()
+        {
+            if (game.Phase != RunPhase.Mining || !body.simulated) return;
+            float change = Mathf.Max(0, game.Balance.hitHopSpeed - body.linearVelocity.y);
+            if (change <= 0) return;
+            body.AddForce(Vector2.up * (change * body.mass), ForceMode2D.Impulse);
+            HopCount++;
         }
 
         public void RepairAndUpgrade()

@@ -27,6 +27,7 @@ MonoBehaviour:
   gravity: -15
   maxFallSpeed: 22
   strikeInterval: 0.7
+  hitHopSpeed: 2.6
   blocks:
   - kind: 0
     health: 1

@@ -11,7 +11,22 @@ namespace PickaxeFall
         static readonly Sprite[] CrackSprites = new Sprite[9];
         public const float PickaxeScale = 1.15f;
         static Sprite square;
+        static Sprite chest;
         public static Sprite Square => square ? square : square = Make(1, 1, new[] { Color.white });
+
+        public static Sprite Chest()
+        {
+            if (chest) return chest;
+            var pixels = new Color[256];
+            Fill(pixels, 16, 1, 1, 14, 13, new Color32(53, 35, 20, 255));
+            Fill(pixels, 16, 2, 2, 12, 11, new Color32(164, 110, 46, 255));
+            Fill(pixels, 16, 3, 3, 10, 4, new Color32(139, 85, 34, 255));
+            Fill(pixels, 16, 2, 8, 12, 1, new Color32(64, 40, 23, 255));
+            Fill(pixels, 16, 3, 11, 10, 1, new Color32(205, 158, 75, 255));
+            Fill(pixels, 16, 7, 6, 2, 4, new Color32(218, 218, 184, 255));
+            Fill(pixels, 16, 7, 7, 1, 2, new Color32(135, 139, 124, 255));
+            return chest = Make(16, 16, pixels);
+        }
 
         public static Color BlockColor(BlockKind kind, bool deep = false) => kind switch
         {
