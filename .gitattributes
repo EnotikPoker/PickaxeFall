@@ -9,3 +9,4 @@
 *.asset whitespace=-blank-at-eol
 *.meta whitespace=-blank-at-eol
 *.png binary
+Assets/PickaxeFall/Resources/Blocks/**/*.png filter=lfs diff=lfs merge=lfs -text

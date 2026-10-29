@@ -86,7 +86,8 @@ namespace PickaxeFall.Editor
             canvas.SetPixels(background);
             for (int stage = 0; stage < 8; stage++)
             {
-                Blit(canvas, PixelArt.Block(BlockKind.Stone, 0), 8 + stage * 86, 136, 4);
+                var stone = PixelArt.Block(BlockKind.Stone, 0);
+                Blit(canvas, stone, 8 + stage * 86, 136, 64f / stone.texture.width);
                 if (stage > 0) Blit(canvas, PixelArt.Cracks(stage), 8 + stage * 86, 136, 4);
             }
             for (int tier = 0; tier < balance.pickaxes.Length; tier++)

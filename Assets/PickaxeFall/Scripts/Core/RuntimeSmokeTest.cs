@@ -42,6 +42,17 @@ namespace PickaxeFall
             Check(font && font.HasCharacter('Я') && font.HasCharacter('ё'), "Pixel font includes Cyrillic glyphs.");
             Check(PixelArt.BlockColor(BlockKind.Iron, true) == PixelArt.BlockColor(BlockKind.Deepstone), "Deep ore uses the surrounding deepstone color.");
             Check(PixelArt.Block(BlockKind.Iron, 1, true) != PixelArt.Block(BlockKind.Iron, 1, false), "Surface and deep ores have distinct sprites.");
+            for (int variant = 0; variant < 4; variant++)
+            {
+                var stone = PixelArt.Block(BlockKind.Stone, variant);
+                var coal = PixelArt.Block(BlockKind.Coal, variant);
+                Check(stone.name == $"Stone_{variant}_Work" && stone.texture.width == 32,
+                    "The player loads the new Work PNG for Stone variant " + variant);
+                Check(coal.name == $"Coal_{variant}_Work" && coal.texture.width == 32,
+                    "The player loads the new Work PNG for Coal variant " + variant);
+                Check(Mathf.Abs(stone.bounds.size.x - 1) < 0.001f && Mathf.Abs(coal.bounds.size.x - 1) < 0.001f,
+                    "The 32px Work variants still occupy one block.");
+            }
             var damageObject = new GameObject("Damage overlay test");
             var damageBlock = damageObject.AddComponent<MineBlock>();
             damageBlock.Setup(game.World, BlockKind.Stone, 80, 10000, 0);

@@ -76,6 +76,7 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Validate game balance")]
         public static void ValidateBalance()
         {
+            ImportedSpriteChecks.Validate();
             var balance = AssetDatabase.LoadAssetAtPath<GameBalance>(DataPath);
             Require(balance && balance.pickaxes.Length == 5, "Five pickaxe tiers must exist.");
             Require(balance.blocks.Length == Enum.GetValues(typeof(BlockKind)).Length, "Every block kind needs a balance entry.");
