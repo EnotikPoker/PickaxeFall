@@ -27,56 +27,46 @@ MonoBehaviour:
   gravity: -15
   maxFallSpeed: 22
   strikeInterval: 0.7
-  hitHopSpeed: 2.6
+  hitHopSpeed: 5.2
   blocks:
   - kind: 0
     health: 1
-    reward: 0
     minimumDepth: 0
     oreChance: 0
   - kind: 1
     health: 6
-    reward: 1
     minimumDepth: 3
     oreChance: 0
   - kind: 2
     health: 8
-    reward: 2
     minimumDepth: 3
     oreChance: 0.1
   - kind: 3
     health: 11
-    reward: 3
     minimumDepth: 10
     oreChance: 0.055
   - kind: 4
     health: 14
-    reward: 5
     minimumDepth: 22
     oreChance: 0.035
   - kind: 5
     health: 18
-    reward: 8
     minimumDepth: 40
     oreChance: 0.02
   - kind: 6
     health: 22
-    reward: 12
     minimumDepth: 65
     oreChance: 0.009
   - kind: 7
     health: 10
-    reward: 1
     minimumDepth: 55
     oreChance: 0
   - kind: 8
     health: 1
-    reward: 0
     minimumDepth: 12
     oreChance: 0
   - kind: 9
     health: 1
-    reward: 0
     minimumDepth: 8
     oreChance: 0
   pickaxes:

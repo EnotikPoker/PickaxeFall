@@ -77,6 +77,7 @@ namespace PickaxeFall.Editor
         public static void ValidateBalance()
         {
             ImportedSpriteChecks.Validate();
+            ProgressionChecks.Validate();
             var balance = AssetDatabase.LoadAssetAtPath<GameBalance>(DataPath);
             Require(balance && balance.pickaxes.Length == 5, "Five pickaxe tiers must exist.");
             Require(balance.blocks.Length == Enum.GetValues(typeof(BlockKind)).Length, "Every block kind needs a balance entry.");
@@ -84,7 +85,7 @@ namespace PickaxeFall.Editor
             for (int i = 0; i < balance.blocks.Length; i++)
             {
                 var block = balance.blocks[i];
-                Require((int)block.kind == i && block.health > 0 && block.reward >= 0, "Block entries must follow enum order and contain valid values.");
+                Require((int)block.kind == i && block.health > 0, "Block entries must follow enum order and contain valid values.");
                 oreChance += block.oreChance;
             }
             Require(oreChance <= 1, "Ore probabilities cannot exceed 100%.");
@@ -141,6 +142,7 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Build Android APK")]
         public static void BuildAndroid()
         {
+            ValidateBalance();
             Directory.CreateDirectory("Builds/Android");
             EditorUserBuildSettings.buildAppBundle = false;
             Build(new BuildPlayerOptions
@@ -148,6 +150,15 @@ namespace PickaxeFall.Editor
                 scenes = new[] { ScenePath }, target = BuildTarget.Android,
                 locationPathName = "Builds/Android/PickaxeFall.apk", options = BuildOptions.None
             });
+        }
+
+        [MenuItem("PickaxeFall/Build Android development verification APK")]
+        public static void BuildAndroidDevelopment()
+        {
+            ValidateBalance();
+            Directory.CreateDirectory("Builds/Android"); EditorUserBuildSettings.buildAppBundle = false;
+            Build(new BuildPlayerOptions { scenes = new[] { ScenePath }, target = BuildTarget.Android,
+                locationPathName = "Builds/Android/PickaxeFall-development.apk", options = BuildOptions.Development });
         }
 
         static void Build(BuildPlayerOptions options)

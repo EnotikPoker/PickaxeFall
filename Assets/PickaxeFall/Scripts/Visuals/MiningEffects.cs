@@ -19,7 +19,7 @@ namespace PickaxeFall
             Muted = PlayerPrefs.GetInt("soundMuted", 0) == 1;
             audioSource = gameObject.AddComponent<AudioSource>(); audioSource.playOnAwake = false;
             hitClip = Tone(160, 0.045f); rewardClip = Tone(660, 0.14f); breakClip = Tone(85, 0.24f);
-            for (int i = 0; i < 160; i++)
+            for (int i = 0; i < 320; i++)
             {
                 var chip = new GameObject("Pooled chip"); chip.transform.SetParent(transform);
                 var renderer = chip.AddComponent<SpriteRenderer>(); renderer.sprite = PixelArt.Square; renderer.sortingOrder = 15;

@@ -11,11 +11,10 @@ namespace PickaxeFall
     {
         public BlockKind kind;
         [Min(1)] public int health;
-        [Min(0)] public int reward;
         [Min(0)] public int minimumDepth;
         [Range(0, 1)] public float oreChance;
-        public BlockStats(BlockKind kind, int health, int reward, int depth, float chance = 0)
-        { this.kind = kind; this.health = health; this.reward = reward; minimumDepth = depth; oreChance = chance; }
+        public BlockStats(BlockKind kind, int health, int depth, float chance = 0)
+        { this.kind = kind; this.health = health; minimumDepth = depth; oreChance = chance; }
     }
 
     [Serializable]
@@ -57,15 +56,15 @@ namespace PickaxeFall
         public float gravity = -15;
         public float maxFallSpeed = 22;
         public float strikeInterval = 0.7f;
-        [Min(0)] public float hitHopSpeed = 2.6f;
+        [Min(0)] public float hitHopSpeed = 5.2f;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {
-            new(BlockKind.Dirt, 1, 0, 0), new(BlockKind.Stone, 6, 1, 3),
-            new(BlockKind.Coal, 8, 2, 3, 0.10f), new(BlockKind.Copper, 11, 3, 10, 0.055f),
-            new(BlockKind.Iron, 14, 5, 22, 0.035f), new(BlockKind.Gold, 18, 8, 40, 0.02f),
-            new(BlockKind.Diamond, 22, 12, 65, 0.009f), new(BlockKind.Deepstone, 10, 1, 55),
-            new(BlockKind.Workbench, 1, 0, 12), new(BlockKind.Tnt, 1, 0, 8)
+            new(BlockKind.Dirt, 1, 0), new(BlockKind.Stone, 6, 3),
+            new(BlockKind.Coal, 8, 3, 0.10f), new(BlockKind.Copper, 11, 10, 0.055f),
+            new(BlockKind.Iron, 14, 22, 0.035f), new(BlockKind.Gold, 18, 40, 0.02f),
+            new(BlockKind.Diamond, 22, 65, 0.009f), new(BlockKind.Deepstone, 10, 55),
+            new(BlockKind.Workbench, 1, 12), new(BlockKind.Tnt, 1, 8)
         };
         [Header("Pickaxes / weighted roulette")]
         public PickaxeStats[] pickaxes =
