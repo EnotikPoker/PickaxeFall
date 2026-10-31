@@ -20,36 +20,46 @@ namespace PickaxeFall
             var game = GetComponent<GameController>();
             var csv = new List<string> { "profile,tier,seed,tools,seconds,depth,potentialSaleValue,blocks,strikes,benches,dirt,stone,coal,copper,iron,gold,diamond,deepstone" };
             int[] seeds = { 8127, 19073, 40211, 73417, 120011, 88191, 55513, 90913 };
-            foreach (int profile in new[] { 0, 1, 2 })
+            string seedArgument = Array.Find(Environment.GetCommandLineArgs(), a => a.StartsWith("--balance-seed="));
+            int singleSeed = 0;
+            if (seedArgument != null && (!int.TryParse(seedArgument.Substring(15), out singleSeed) || singleSeed <= 0)) throw new Exception("Invalid balance seed.");
+            if (singleSeed > 0) seeds = new[] { singleSeed };
+            string output = singleSeed > 0 ? "/tmp/pickaxefall-progression-balance-" + singleSeed + ".csv" : "/tmp/pickaxefall-progression-balance.csv";
+            bool quick = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--quick-balance");
+            bool legendary = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--legendary-balance");
+            foreach (int profile in legendary ? new[] { 2 } : quick ? new[] { 0 } : new[] { 0, 1, 2 })
             {
                 foreach (var key in Progression.Keys) game.Economy.Profile.upgrades[key.Index] = profile == 0 ? 0 : profile == 1 ? Math.Min(5, Progression.MaxLevel(key.Kind)) : Progression.MaxLevel(key.Kind);
                 for (int tier = 0; tier < 5; tier++)
                 {
+                    if (legendary && tier != 4) continue;
                     if (profile > 0 && tier != 0 && tier != 1 && tier != 4) continue;
                     int count = profile == 2 ? 5 : 1;
-                    for (int si = 0; si < (profile == 0 ? 8 : 3); si++)
+                    for (int si = 0; si < Math.Min(seeds.Length, profile == 0 && !quick ? 8 : 3); si++)
                     {
                         int seed = seeds[si]; game.BeginProbeRun(tier, seed, count); Time.timeScale = 8; float start = Time.time;
-                        while (game.Phase == RunPhase.Mining && Time.time - start < 600) yield return null;
-                        if (game.Phase == RunPhase.Mining) throw new Exception("Run did not end within 600 simulated seconds.");
+                        float timeout = profile == 2 ? 1800 : 600;
+                        while (game.Phase == RunPhase.Mining && Time.time - start < timeout) yield return null;
+                        if (game.Phase == RunPhase.Mining) throw new Exception("Run did not end within " + timeout + " simulated seconds.");
                         float duration = Time.time - start; int strikes = 0; foreach (var tool in game.Pickaxes) strikes += tool.TotalStrikes;
                         string line = string.Join(",", profile, tier, seed, count, duration.ToString("F2", CultureInfo.InvariantCulture), game.Depth, game.PotentialSaleValue,
                             game.BlocksBroken, strikes, game.WorkbenchesUsed, string.Join(",", ResourceCounts(game)));
                         csv.Add(line); Debug.Log("BALANCE_RUN: " + line); Time.timeScale = 8;
+                        File.WriteAllLines(output, csv);
                         while (game.Phase == RunPhase.Breaking) yield return null;
                     }
                 }
             }
-            File.WriteAllLines("/tmp/pickaxefall-progression-balance.csv", csv); Debug.Log("PICKAXEFALL_BALANCE_PROBE_OK: " + (csv.Count - 1) + " physical runs."); Application.Quit(0);
+            File.WriteAllLines(output, csv); Debug.Log("PICKAXEFALL_BALANCE_PROBE_OK: " + (csv.Count - 1) + " physical runs."); Application.Quit(0);
         }
         static string[] ResourceCounts(GameController game) { var values = new string[8]; for (int i = 0; i < 8; i++) values[i] = game.OreCounts[i].ToString(); return values; }
         IEnumerator EconomyTrace()
         {
             var game = GetComponent<GameController>();
-            Array.Clear(game.Economy.Profile.upgrades, 0, 18); Array.Clear(game.Economy.Profile.resources, 0, 8); game.Economy.Profile.coins = 0;
+            Array.Clear(game.Economy.Profile.upgrades, 0, 18); Array.Clear(game.Economy.Profile.resources, 0, 8); game.Economy.Profile.coins = 0; game.Economy.Profile.bestDepth = 0;
             var targets = new[] { new UpgradeKey(UpgradeKind.Damage, 0), new UpgradeKey(UpgradeKind.Durability, 0), new UpgradeKey(UpgradeKind.Damage, 1), new UpgradeKey(UpgradeKind.Durability, 1), new UpgradeKey(UpgradeKind.TeamChance) };
             var random = new System.Random(190738127); int target = 0, run = 0; float elapsed = 0, firstPurchase = -1;
-            var csv = new List<string> { "run,elapsedSeconds,tier,runSeconds,depth,saleValue,wallet,woodDamage,woodDurability,stoneDamage,stoneDurability,teamChanceLevel" };
+            var csv = new List<string> { "run,elapsedSeconds,tier,runSeconds,depth,saleValue,wallet,woodDamage,woodDurability,stoneDamage,stoneDurability,teamChanceLevel,bestDepth" };
             while (elapsed < 3600)
             {
                 int tier = game.Balance.Roll(random), seed = random.Next(1, int.MaxValue);
@@ -71,7 +81,7 @@ namespace PickaxeFall
                 }
                 else target++;
                 string line = string.Join(",", ++run, elapsed.ToString("F2", CultureInfo.InvariantCulture), tier, duration.ToString("F2", CultureInfo.InvariantCulture), game.Depth, game.PotentialSaleValue,
-                    game.Wallet, game.Economy.Profile.upgrades[0], game.Economy.Profile.upgrades[5], game.Economy.Profile.upgrades[1], game.Economy.Profile.upgrades[6], game.Economy.Profile.Level(new(UpgradeKind.TeamChance)));
+                    game.Wallet, game.Economy.Profile.upgrades[0], game.Economy.Profile.upgrades[5], game.Economy.Profile.upgrades[1], game.Economy.Profile.upgrades[6], game.Economy.Profile.Level(new(UpgradeKind.TeamChance)), game.BestDepth);
                 csv.Add(line); Debug.Log("ECONOMY_RUN: " + line);
             }
             File.WriteAllLines("/tmp/pickaxefall-economy-trace.csv", csv);

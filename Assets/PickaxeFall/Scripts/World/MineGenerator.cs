@@ -28,7 +28,7 @@ namespace PickaxeFall
             var veinRandom = new System.Random(unchecked((int)Hash(Mathf.FloorToInt(x / 2f), row / 2, 173)));
             BlockKind kind = row < surface + 3 ? BlockKind.Dirt : balance.ChooseBlock(veinRandom, row);
             if (IsWorkbench(x, row)) kind = BlockKind.Workbench;
-            else if (IsIsolated(x, row, TntSalt, balance.tntMinimumDepth, balance.tntChance, balance.tntSpacing) && !NearBenchCandidate(x, row))
+            else if (IsIsolated(x, row, TntSalt, balance.tntMinimumDepth, balance.tntChance, balance.tntSpacing) && !NearWorkbench(x, row))
                 kind = BlockKind.Tnt;
             return new Cell(kind, (int)(Hash(x, row, 619) % 4),
                 row >= balance.Block(BlockKind.Deepstone).minimumDepth, row == surface);
@@ -74,10 +74,10 @@ namespace PickaxeFall
             return true;
         }
 
-        bool NearBenchCandidate(int x, int row)
+        bool NearWorkbench(int x, int row)
         {
-            for (int dy = -3; dy <= 3; dy++) for (int dx = -3; dx <= 3; dx++)
-                if (Candidate(x + dx, row + dy, BenchSalt, balance.workbenchMinimumDepth, balance.workbenchChance)) return true;
+            for (int dy = -2; dy <= 2; dy++) for (int dx = -2; dx <= 2; dx++)
+                if (dx * dx + dy * dy <= 4 && IsWorkbench(x + dx, row + dy)) return true;
             return false;
         }
 

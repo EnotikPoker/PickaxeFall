@@ -21,7 +21,7 @@ namespace PickaxeFall.Editor
                     Check(Array.Exists(cost.Resources, value => value > 0), "upgrades require resources");
                 }
             }
-            Check(Progression.Cost(new(UpgradeKind.TeamChance), 1).Coins == 20 && Progression.Cost(new(UpgradeKind.TeamChance), 3).Coins == 52, "cheap initial prices and exponential rounding");
+            Check(Progression.Cost(new(UpgradeKind.TeamChance), 1).Coins == 20 && Progression.Cost(new(UpgradeKind.TeamChance), 3).Coins == 34, "cheap initial prices and exponential rounding");
             Check(!economy.TryBuy(new(UpgradeKind.Damage)) && economy.Profile.coins == 0, "unaffordable purchase is rejected");
             economy.Collect(BlockKind.Stone, 12); economy.Collect(BlockKind.Dirt, 40);
             Check(economy.Profile.coins == 0, "collecting grants no coins");
@@ -32,8 +32,8 @@ namespace PickaxeFall.Editor
             var snapshot = new RunUpgrades(economy.Profile); economy.Profile.upgrades[0] = 2;
             Check(snapshot.DamageBonusHalfUnits(0) == 1 && snapshot.DamageBonusHalfUnits(1) == 0, "run snapshot and tier upgrades independent");
             Check(!economy.TryBuy(new(UpgradeKind.TeamSize)), "team size needs team chance");
-            Check(economy.TrySellAll() && economy.Profile.coins == 26 && Array.TrueForAll(economy.Profile.resources, v => v == 0), "bulk sale exact and clears all materials");
-            Check(!economy.TrySellAll() && economy.Profile.coins == 26, "empty bulk sale cannot duplicate coins");
+            Check(economy.TrySellAll() && economy.Profile.coins == 18 && Array.TrueForAll(economy.Profile.resources, v => v == 0), "bulk sale exact and clears all materials");
+            Check(!economy.TrySellAll() && economy.Profile.coins == 18, "empty bulk sale cannot duplicate coins");
             var failureProfile = new PlayerProfile { coins = 1000 }; Array.Fill(failureProfile.resources, 100L);
             var failing = new EconomyService(failureProfile, _ => throw new IOException("test storage failure"));
             Check(!failing.TryBuy(new(UpgradeKind.Damage)) && failing.Profile.coins == 1000 && failing.Profile.upgrades[0] == 0, "save failure rolls purchase back");
@@ -48,7 +48,15 @@ namespace PickaxeFall.Editor
             foreach (var key in Progression.Keys) p.upgrades[key.Index] = Progression.MaxLevel(key.Kind);
             var maxSnapshot = new RunUpgrades(p);
             Check(maxSnapshot.TeamSize == 5 && Math.Abs(maxSnapshot.Chance(UpgradeKind.TeamChance) - 0.1) < 1e-8, "team cap");
-            Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.LastChance) - 0.05) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.Fortune) - 0.25) < 1e-8, "rescue and fortune caps");
+            Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.LastChance) - 0.2) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.Fortune) - 0.25) < 1e-8, "rescue and fortune caps");
+            Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.DoubleBench) - 0.25) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.DoubleBlast) - 0.25) < 1e-8, "25 percent workshop and blast caps");
+            Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.TntFind) - 0.2) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.Careful) - 0.2) < 1e-8, "20 percent ore TNT and careful caps");
+            Check(Progression.Cost(new(UpgradeKind.Damage), 10).Resources[0] == 0, "late progress does not require farming surface dirt");
+            float oldVolume = AudioListener.volume; int oldFps = Application.targetFrameRate;
+            var settings = new GameSettings(true); settings.SetVolume(2); settings.SetFrameRate(30); settings.SetReducedEffects(true);
+            Check(settings.Volume == 1 && settings.FrameRate == 30 && settings.ReducedEffects, "settings clamp and apply");
+            settings.Reset(); Check(settings.Volume == 0.8f && settings.FrameRate == 60 && !settings.ReducedEffects, "settings defaults");
+            AudioListener.volume = oldVolume; Application.targetFrameRate = oldFps;
             foreach (var kind in new[] { UpgradeKind.TeamChance, UpgradeKind.TntFind, UpgradeKind.DoubleBench, UpgradeKind.DoubleBlast, UpgradeKind.Careful, UpgradeKind.LastChance })
             {
                 double chance = maxSnapshot.Chance(kind); var random = new System.Random(8127 + (int)kind); int hits = 0;

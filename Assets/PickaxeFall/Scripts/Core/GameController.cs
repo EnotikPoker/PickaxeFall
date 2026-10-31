@@ -22,6 +22,7 @@ namespace PickaxeFall
         public MiningWorld World { get; private set; }
         public MiningEffects Effects { get; private set; }
         public EconomyService Economy { get; private set; }
+        public GameSettings Settings { get; private set; }
         public RunUpgrades RunUpgrades { get; private set; }
         public ResourceInventory Inventory { get; private set; }
         public int Depth { get; private set; }
@@ -66,9 +67,10 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings" }, TestMode) < 0) TestMode = "";
             if (TestMode.Length > 0) ProfileDirectory = Path.Combine(Application.temporaryCachePath, "verification", Guid.NewGuid().ToString("N"));
 #endif
+            Settings = new GameSettings(TestMode.Length > 0);
             var store = new ProfileStore(ProfileDirectory, TestMode.Length > 0 ? () => new PlayerProfile() : null);
             try { Economy = new EconomyService(store.Load(), store.Save); }
             catch (Exception e)
@@ -81,7 +83,7 @@ namespace PickaxeFall
             }
             Inventory = new ResourceInventory(Economy); RunUpgrades = new RunUpgrades(Economy.Profile);
             rouletteRandom = new System.Random(Guid.NewGuid().GetHashCode());
-            Effects = new GameObject("Mining effects").AddComponent<MiningEffects>(); Effects.transform.SetParent(transform); Effects.Initialize();
+            Effects = new GameObject("Mining effects").AddComponent<MiningEffects>(); Effects.transform.SetParent(transform); Effects.Initialize(Settings);
             World = new GameObject("Streamed mine").AddComponent<MiningWorld>(); World.transform.SetParent(transform); World.Initialize(this, balance);
             for (int i = 0; i < 5; i++)
             {
@@ -146,8 +148,8 @@ namespace PickaxeFall
             if (RunToolCount > 1) hud.Toast("УДАЧА! КИРОК В ОТРЯДЕ: " + RunToolCount);
         }
         public bool RollEffect(UpgradeKind kind) => effectRandom != null && RunUpgrades.Chance(kind) > 0 && effectRandom.NextDouble() < RunUpgrades.Chance(kind);
-        public int PreviewDamageHalfUnits(int tier) => balance.pickaxes[tier].damage * 2 + Economy.Profile.Level(new(UpgradeKind.Damage, tier));
-        public int PreviewDurability(int tier) => balance.pickaxes[tier].durability + 2 * Economy.Profile.Level(new(UpgradeKind.Durability, tier));
+        public int PreviewDamageHalfUnits(int tier) => balance.pickaxes[tier].damage * 2 + Progression.DamageStepHalfUnits(tier) * Economy.Profile.Level(new(UpgradeKind.Damage, tier));
+        public int PreviewDurability(int tier) => balance.pickaxes[tier].durability + Progression.DurabilityStep(tier) * Economy.Profile.Level(new(UpgradeKind.Durability, tier));
 
         void Update()
         {
@@ -172,7 +174,7 @@ namespace PickaxeFall
                 WorkbenchesUsed++; int steps = RollEffect(UpgradeKind.DoubleBench) ? 2 : 1;
                 source.RepairAndUpgrade(steps);
                 Effects.Impact(block.transform.position, new Color32(105, 239, 196, 255), 18, true);
-                hud.Toast(steps == 2 ? "ВЕРСТАК ×2 · ПОЛНЫЙ РЕМОНТ" : "ВЕРСТАК · ПОЛНЫЙ РЕМОНТ");
+                hud.Toast(steps == 2 ? "ВЕРСТАК ×2 · УСИЛЕНИЕ И РЕМОНТ" : "ВЕРСТАК · УСИЛЕНИЕ И РЕМОНТ");
             }
             else
             {
@@ -182,11 +184,11 @@ namespace PickaxeFall
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
                     if (!Economy.Collect(block.Kind, quantity)) throw new InvalidOperationException(Economy.LastError);
                     OreCounts[(int)block.Kind] += quantity; dirty = true;
-                    hud.Toast($"{GameBalance.BlockName(block.Kind)} +{quantity}");
+                    if (Settings.LootMessages) hud.Toast($"{GameBalance.BlockName(block.Kind)} +{quantity}");
                 }
                 Effects.Impact(block.transform.position, block.BaseColor, 7);
             }
-            bool tnt = !explosion && source != null && ResourceInventory.IsMaterial(block.Kind) && RollEffect(UpgradeKind.TntFind);
+            bool tnt = !explosion && source != null && Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.TntFind);
             Notify(); return tnt;
         }
 
@@ -240,7 +242,7 @@ namespace PickaxeFall
         public bool SelectHubTab(HubTab tab) { if (!CanTrade) return false; hud.SelectTab(tab); return true; }
         void SaveProgress()
         {
-            try { Economy?.Save(); dirty = false; nextSave = Time.unscaledTime + 5; }
+            try { Economy?.Save(); Settings?.Save(); dirty = false; nextSave = Time.unscaledTime + 5; }
             catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС"); nextSave = Time.unscaledTime + 10; }
         }
         void OnApplicationPause(bool pause) { if (pause) SaveProgress(); if (pause && Phase == RunPhase.Mining && !Paused) TogglePause(); }

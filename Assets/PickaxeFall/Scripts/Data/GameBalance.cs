@@ -42,38 +42,45 @@ namespace PickaxeFall
         [Min(15)] public int worldWidth = 41;
         [Min(20)] public int rowsAhead = 32;
         [Min(8)] public int rowsBehind = 18;
-        [Min(1)] public int workbenchMinimumDepth = 12;
-        [Range(0, 0.05f)] public float workbenchChance = 0.006f;
-        [Min(2)] public int workbenchSpacing = 8;
-        [Range(0, 1)] public float caveChance = 0.025f;
+        [Min(1)] public int workbenchMinimumDepth = 6;
+        [Range(0, 0.05f)] public float workbenchChance = 0.011f;
+        [Min(2)] public int workbenchSpacing = 6;
+        [Range(0, 1)] public float caveChance = 0.04f;
         [Min(4)] public float spawnHeight = 7.5f;
         [Header("TNT")]
-        [Min(1)] public int tntMinimumDepth = 8;
-        [Range(0, 0.1f)] public float tntChance = 0.004f;
-        [Min(2)] public int tntSpacing = 2;
+        [Min(1)] public int tntMinimumDepth = 5;
+        [Range(0, 0.1f)] public float tntChance = 0.007f;
+        [Min(2)] public int tntSpacing = 3;
         [Min(1)] public float explosionRadius = 2.1f;
         [Header("Physics")]
         public float gravity = -15;
         public float maxFallSpeed = 22;
-        public float strikeInterval = 0.7f;
-        [Min(0)] public float hitHopSpeed = 5.2f;
+        public float strikeInterval = 0.35f;
+        public float surfaceFriction = 0.3f;
+        public float launchAngularSpeed = 260;
+        public float maximumAngularSpeed = 540;
+        [Range(0, 1)] public float restitution = 0.78f;
+        [Min(0)] public float minimumReboundSpeed = 2.8f;
+        [Min(0)] public float maximumReboundSpeed = 6.2f;
+        [Range(0, 1)] public float workbenchRepairFraction = 0.25f;
+        [Min(1)] public int workbenchRepairCap = 28;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {
             new(BlockKind.Dirt, 1, 0), new(BlockKind.Stone, 6, 3),
-            new(BlockKind.Coal, 8, 3, 0.10f), new(BlockKind.Copper, 11, 10, 0.055f),
-            new(BlockKind.Iron, 14, 22, 0.035f), new(BlockKind.Gold, 18, 40, 0.02f),
-            new(BlockKind.Diamond, 22, 65, 0.009f), new(BlockKind.Deepstone, 10, 55),
-            new(BlockKind.Workbench, 1, 12), new(BlockKind.Tnt, 1, 8)
+            new(BlockKind.Coal, 8, 3, 0.15f), new(BlockKind.Copper, 11, 8, 0.08f),
+            new(BlockKind.Iron, 14, 18, 0.055f), new(BlockKind.Gold, 18, 35, 0.03f),
+            new(BlockKind.Diamond, 22, 55, 0.012f), new(BlockKind.Deepstone, 10, 45),
+            new(BlockKind.Workbench, 1, 6), new(BlockKind.Tnt, 1, 5)
         };
         [Header("Pickaxes / weighted roulette")]
         public PickaxeStats[] pickaxes =
         {
-            new("Деревянная", "ОБЫЧНАЯ", new Color32(184, 130, 78, 255), 1, 28, 45, 1),
-            new("Каменная", "НЕОБЫЧНАЯ", new Color32(173, 188, 198, 255), 2, 30, 30, 1.2f),
-            new("Золотая", "РЕДКАЯ", new Color32(255, 203, 92, 255), 3, 32, 15, 1.3f),
-            new("Железная", "ЭПИЧЕСКАЯ", new Color32(226, 235, 232, 255), 4, 34, 8, 1.4f),
-            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 5, 36, 2, 1.5f)
+            new("Деревянная", "ОБЫЧНАЯ", new Color32(184, 130, 78, 255), 2, 40, 45, 1),
+            new("Каменная", "НЕОБЫЧНАЯ", new Color32(173, 188, 198, 255), 4, 72, 30, 1.2f),
+            new("Золотая", "РЕДКАЯ", new Color32(255, 203, 92, 255), 6, 108, 15, 1.3f),
+            new("Железная", "ЭПИЧЕСКАЯ", new Color32(226, 235, 232, 255), 9, 200, 8, 1.4f),
+            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 14, 320, 2, 1.5f)
         };
 
         public int Roll(System.Random random)
@@ -94,6 +101,12 @@ namespace PickaxeFall
             float total = 0;
             foreach (var pickaxe in pickaxes) total += pickaxe.weight;
             return pickaxes[tier].weight / total;
+        }
+
+        public int BlockHealthHalfUnits(BlockKind kind, int row)
+        {
+            float hardness = ResourceInventory.IsMaterial(kind) && kind != BlockKind.Dirt ? 1 + 0.25f * (Mathf.Max(0, row) / 40) : 1;
+            return Mathf.CeilToInt(Block(kind).health * 2 * hardness);
         }
 
         public BlockStats Block(BlockKind kind) => blocks[(int)kind];

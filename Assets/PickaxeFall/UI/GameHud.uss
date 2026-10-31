@@ -90,3 +90,23 @@ Label { white-space: normal; flex-shrink: 0; }
 .missing { color: rgb(126, 55, 31); }
 .soon-panel { padding: 24px; background-color: rgb(178, 185, 155); }
 .fatal-error { flex-grow: 1; background-color: rgb(35, 36, 27); color: rgb(255, 244, 210); font-size: 48px; padding: 80px 40px; white-space: normal; }
+.settings-button { min-width: 240px; font-size: 32px; }
+.pause-glyph { width: 44px; height: 52px; flex-direction: row; justify-content: space-between; align-self: center; }
+.pause-bar { width: 14px; height: 52px; background-color: rgb(255, 255, 239); }
+.mine-window { background-color: transparent; padding: 0; justify-content: flex-end; }
+.mine-panel { flex-shrink: 0; border-width: 6px; border-top-color: rgb(246, 249, 218); border-left-color: rgb(230, 238, 193); border-right-color: rgb(77, 90, 47); border-bottom-color: rgb(45, 61, 25); }
+.mine-panel .title { font-size: 44px; margin-bottom: 12px; }
+.mine-panel .description { font-size: 32px; margin-bottom: 16px; }
+.mine-panel .hero { margin-bottom: 16px; }
+.mine-panel .hero-icon { width: 116px; height: 116px; }
+.mine-panel .hero-name { font-size: 38px; }
+.mine-panel .hero-detail { font-size: 32px; }
+.mine-panel .roulette { height: 144px; margin-bottom: 16px; }
+.mine-panel .slot-icon { width: 82px; height: 82px; }
+.mine-panel .slot-odds { font-size: 32px; }
+.mine-panel .footnote { font-size: 30px; margin-top: 12px; }
+.settings-row { flex-direction: row; margin-bottom: 24px; }
+.settings-choice { flex-grow: 1; flex-basis: 0; height: 128px; font-size: 40px; margin-right: 12px; }
+.settings-switch { font-size: 32px; min-height: 100px; margin: 10px 0; }
+.volume-slider { height: 100px; margin: 12px 0; }
+.volume-slider .unity-base-slider__dragger { width: 54px; height: 70px; background-color: rgb(120, 174, 68); border-radius: 0; border-width: 5px; border-top-color: rgb(198, 230, 144); border-left-color: rgb(198, 230, 144); border-right-color: rgb(44, 66, 27); border-bottom-color: rgb(44, 66, 27); }

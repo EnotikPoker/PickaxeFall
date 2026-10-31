@@ -9,7 +9,8 @@ namespace PickaxeFall
         Rigidbody2D body;
         SpriteRenderer visual;
         PhysicsMaterial2D material;
-        float nextStrikeTime;
+        float nextStrikeTime, lastReboundTime;
+        Vector2 incomingVelocity;
         System.Random physicsRandom;
         public int TotalStrikes { get; private set; }
         public int HopCount { get; private set; }
@@ -32,9 +33,9 @@ namespace PickaxeFall
             transform.localScale = Vector3.one * PixelArt.PickaxeScale;
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
-            body.angularDamping = 0.15f; body.linearDamping = 0.05f;
+            body.angularDamping = 0.14f; body.linearDamping = 0.05f;
             body.sleepMode = RigidbodySleepMode2D.NeverSleep;
-            material = new PhysicsMaterial2D("Pickaxe bounce") { friction = 0.25f, bounciness = 0.32f };
+            material = new PhysicsMaterial2D("Pickaxe bounce") { friction = game.Balance.surfaceFriction, bounciness = game.Balance.restitution };
             var head = gameObject.AddComponent<PolygonCollider2D>();
             head.points = PixelArt.PickaxeHeadOutline();
             head.sharedMaterial = material;
@@ -68,7 +69,7 @@ namespace PickaxeFall
             transform.SetPositionAndRotation(spawn, Quaternion.Euler(0, 0, -12));
             body.position = spawn; body.rotation = -12;
             body.linearVelocity = Vector2.zero; body.angularVelocity = 0;
-            nextStrikeTime = Time.time;
+            nextStrikeTime = Time.time; lastReboundTime = Time.time; incomingVelocity = Vector2.zero;
             Physics2D.SyncTransforms();
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
         }
@@ -78,7 +79,7 @@ namespace PickaxeFall
             ResetPose();
             body.simulated = true;
             body.AddForce(new Vector2((float)physicsRandom.NextDouble() * 0.7f - 0.35f, -0.3f), ForceMode2D.Impulse);
-            body.AddTorque(physicsRandom.NextDouble() < 0.5 ? -1.8f : 1.8f, ForceMode2D.Impulse);
+            body.angularVelocity = (physicsRandom.NextDouble() < 0.5 ? -1 : 1) * game.Balance.launchAngularSpeed;
         }
 
         void FixedUpdate()
@@ -87,11 +88,29 @@ namespace PickaxeFall
             var velocity = body.linearVelocity;
             velocity.x = Mathf.Clamp(velocity.x, -9, 9);
             velocity.y = Mathf.Max(velocity.y, -game.Balance.maxFallSpeed);
-            body.linearVelocity = velocity;
+            body.linearVelocity = velocity; incomingVelocity = velocity;
+            body.angularVelocity = Mathf.Clamp(body.angularVelocity, -game.Balance.maximumAngularSpeed, game.Balance.maximumAngularSpeed);
         }
 
-        void OnCollisionEnter2D(Collision2D collision) => Strike(collision);
-        void OnCollisionStay2D(Collision2D collision) => Strike(collision);
+        void OnCollisionEnter2D(Collision2D collision) { Rebound(collision, true); Strike(collision); }
+        void OnCollisionStay2D(Collision2D collision) { Rebound(collision, false); Strike(collision); }
+
+        void Rebound(Collision2D collision, bool impact)
+        {
+            if (game.Phase != RunPhase.Mining || !IsAlive || collision.contactCount == 0 || !collision.collider.GetComponent<MineBlock>()) return;
+            var contact = collision.GetContact(0); Vector2 normal = contact.normal;
+            float approach = Mathf.Max(0, -Vector2.Dot(incomingVelocity, normal));
+            bool resting = !impact && Time.time - lastReboundTime > 0.55f && body.linearVelocity.sqrMagnitude < 0.25f;
+            if (!resting && (!impact || approach < 1.2f)) return;
+            float desired = resting ? game.Balance.minimumReboundSpeed : Mathf.Clamp(approach * game.Balance.restitution,
+                game.Balance.minimumReboundSpeed, game.Balance.maximumReboundSpeed);
+            float outward = Vector2.Dot(body.linearVelocity, normal);
+            if (outward > game.Balance.maximumReboundSpeed)
+                body.linearVelocity -= normal * (outward - game.Balance.maximumReboundSpeed);
+            else if (outward < desired)
+                body.AddForce(normal * ((desired - outward) * body.mass), ForceMode2D.Impulse);
+            lastReboundTime = Time.time; HopCount++;
+        }
 
         void Strike(Collision2D collision)
         {
@@ -103,7 +122,6 @@ namespace PickaxeFall
             if (block.Kind == BlockKind.Workbench || block.Kind == BlockKind.Tnt)
             {
                 block.DestroyBlock(this);
-                HopAfterHit();
                 return;
             }
             block.HitHalfUnits(DamageHalfUnits, this);
@@ -113,26 +131,17 @@ namespace PickaxeFall
             // Wake sleeping bodies so resting contact still mines a hard block.
             body.WakeUp(); body.AddTorque((float)physicsRandom.NextDouble() * 0.24f - 0.12f, ForceMode2D.Impulse);
             if (Durability <= 0) game.OnPickaxeExhausted(this);
-            else HopAfterHit();
-        }
-
-        void HopAfterHit()
-        {
-            if (game.Phase != RunPhase.Mining || !body.simulated) return;
-            float change = Mathf.Max(0, game.Balance.hitHopSpeed - body.linearVelocity.y);
-            if (change <= 0) return;
-            body.AddForce(Vector2.up * (change * body.mass), ForceMode2D.Impulse);
-            HopCount++;
         }
 
         public void RepairAndUpgrade(int steps = 1)
         {
             Tier = Mathf.Min(Tier + steps, game.Balance.pickaxes.Length - 1);
-            Durability = MaxDurability;
+            int perStep = Mathf.Min(game.Balance.workbenchRepairCap, Mathf.CeilToInt(MaxDurability * game.Balance.workbenchRepairFraction));
+            Durability = Mathf.Min(MaxDurability, Durability + perStep * steps);
             body.mass = Stats.mass; visual.sprite = PixelArt.Pickaxe(Stats.color);
         }
 
-        public void Revive() { Durability = Mathf.Max(1, Mathf.CeilToInt(MaxDurability * 0.25f)); HopAfterHit(); }
+        public void Revive() { Durability = Mathf.Max(1, Mathf.CeilToInt(MaxDurability * 0.25f)); body.WakeUp(); }
 
         public void Stop() { body.linearVelocity = Vector2.zero; body.angularVelocity = 0; body.simulated = false; }
         public void BreakApart()
