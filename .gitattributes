@@ -9,3 +9,6 @@
 *.asset whitespace=-blank-at-eol
 *.meta whitespace=-blank-at-eol
 *.png binary
+Assets/PickaxeFall/Resources/Blocks/**/*.png filter=lfs diff=lfs merge=lfs -text
+Assets/PickaxeFall/Resources/Fonts/Monocraft-Bold.ttf filter=lfs diff=lfs merge=lfs -text
+Docs/MobileScreenshots/*.png filter=lfs diff=lfs merge=lfs -text

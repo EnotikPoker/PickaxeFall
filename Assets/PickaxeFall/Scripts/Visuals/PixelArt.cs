@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PickaxeFall
 {
-    // Original procedural pixel art. No external textures or Minecraft assets.
+    // Imported block PNGs, plus procedural tools, effects, scenery and missing-asset fallback.
     public static class PixelArt
     {
         static readonly Dictionary<int, Sprite> Blocks = new();
@@ -41,6 +41,8 @@ namespace PickaxeFall
         {
             int key = (int)kind * 32 + variant % 4 + (deep ? 4 : 0) + (surface ? 8 : 0);
             if (Blocks.TryGetValue(key, out var cached) && cached) return cached;
+            var imported = Resources.Load<Sprite>(BlockResourcePath(kind, variant, deep, surface));
+            if (imported) return Blocks[key] = imported;
             var random = new System.Random(key * 7919 + 23);
             Color[] pixels = new Color[16 * 16];
             Color baseColor = BlockColor(kind, deep);
@@ -102,6 +104,14 @@ namespace PickaxeFall
                 Fill(pixels, 16, 2, 14, 12, 1, new Color32(234, 110, 73, 255));
             }
             return Blocks[key] = Make(16, 16, pixels);
+        }
+
+        public static string BlockResourcePath(BlockKind kind, int variant, bool deep = false, bool surface = false)
+        {
+            string layer = kind == BlockKind.Dirt && surface ? "_Surface"
+                : deep && kind != BlockKind.Dirt && kind != BlockKind.Workbench && kind != BlockKind.Tnt ? "_Deep" : "";
+            string work = layer.Length == 0 && (kind == BlockKind.Coal || kind == BlockKind.Stone) ? "_Work" : "";
+            return $"Blocks/{kind}/{kind}{layer}_{variant % 4}{work}";
         }
 
         public static Sprite Pickaxe(Color32 color)

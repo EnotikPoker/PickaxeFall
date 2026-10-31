@@ -7,21 +7,22 @@ namespace PickaxeFall
     {
         public BlockKind Kind { get; private set; }
         public int Row { get; private set; }
-        public int Health { get; private set; }
+        public int Column { get; private set; }
+        public int HealthHalfUnits { get; private set; }
+        public float Health => HealthHalfUnits * 0.5f;
         public bool IsBroken { get; private set; }
         public bool IsDeep { get; private set; }
         public Color BaseColor => PixelArt.BlockColor(Kind, IsDeep);
         public int DamageStage { get; private set; }
-        SpriteRenderer visual;
-        SpriteRenderer cracks;
+        SpriteRenderer visual, cracks;
         BoxCollider2D hitbox;
         MiningWorld world;
-        int maxHealth;
+        int maxHealthHalfUnits;
 
         public void Setup(MiningWorld owner, BlockKind kind, int x, int row, int variant, bool deep = false, bool surface = false)
         {
-            world = owner; Kind = kind; Row = row; IsDeep = deep;
-            Health = maxHealth = owner.Balance.Block(kind).health; IsBroken = false; DamageStage = 0;
+            world = owner; Kind = kind; Row = row; Column = x; IsDeep = deep;
+            HealthHalfUnits = maxHealthHalfUnits = owner.Balance.Block(kind).health * 2; IsBroken = false; DamageStage = 0;
             visual ??= GetComponent<SpriteRenderer>(); hitbox ??= GetComponent<BoxCollider2D>();
             if (!cracks)
             {
@@ -35,17 +36,29 @@ namespace PickaxeFall
             hitbox.size = new Vector2(0.99f, 0.99f); hitbox.enabled = true;
             gameObject.SetActive(true);
         }
-
-        public bool Hit(int damage)
+        public void RestoreHealth(int halfUnits)
         {
-            if (IsBroken) return false;
-            Health = Mathf.Max(0, Health - damage);
-            DamageStage = Mathf.Clamp(Mathf.CeilToInt((1f - (float)Health / maxHealth) * 8), 1, 8);
-            cracks.sprite = PixelArt.Cracks(DamageStage); cracks.enabled = true;
-            if (Health > 0) return false;
-            IsBroken = true; hitbox.enabled = false;
-            world.Break(this);
-            return true;
+            HealthHalfUnits = Mathf.Clamp(halfUnits, 1, maxHealthHalfUnits); UpdateCracks();
         }
+        void UpdateCracks()
+        {
+            if (HealthHalfUnits >= maxHealthHalfUnits) { DamageStage = 0; cracks.enabled = false; return; }
+            DamageStage = Mathf.Clamp(Mathf.CeilToInt((1f - (float)HealthHalfUnits / maxHealthHalfUnits) * 8), 1, 8);
+            cracks.sprite = PixelArt.Cracks(DamageStage); cracks.enabled = true;
+        }
+        public bool HitHalfUnits(int damage, FallingPickaxe source)
+        {
+            if (IsBroken || damage <= 0 || !world.CanMine) return false;
+            HealthHalfUnits = damage >= HealthHalfUnits ? 0 : HealthHalfUnits - damage;
+            if (HealthHalfUnits == 0) return DestroyBlock(source);
+            UpdateCracks(); world.Remember(this); return false;
+        }
+        public bool DestroyBlock(FallingPickaxe source, bool explosion = false)
+        {
+            if (IsBroken || !world.CanMine || explosion && Kind == BlockKind.Workbench) return false;
+            HealthHalfUnits = 0; IsBroken = true; hitbox.enabled = false; world.Break(this, source, explosion); return true;
+        }
+        // Legacy full-damage entrypoint for editor inspection; production impacts carry a source.
+        public bool Hit(int damage) => damage == int.MaxValue ? DestroyBlock(null) : HitHalfUnits(damage > int.MaxValue / 2 ? int.MaxValue : damage * 2, null);
     }
 }

@@ -7,6 +7,7 @@ namespace PickaxeFall
         GameController game;
         Camera view;
         Vector3 velocity;
+        float zoomVelocity;
         SpriteRenderer backdrop;
         SpriteRenderer landscape;
         const float SurfaceCameraY = 3.2f;
@@ -28,23 +29,41 @@ namespace PickaxeFall
 
         public void ResetView()
         {
-            SetFraming(); transform.position = new Vector3(0, SurfaceCameraY, -10); velocity = Vector3.zero;
+            SetFraming(); zoomVelocity = 0; transform.position = new Vector3(0, SurfaceCameraY, -10); velocity = Vector3.zero;
             UpdateBackground();
         }
 
         void SetFraming() => view.orthographicSize = Mathf.Clamp(6.2f / Mathf.Max(0.35f, view.aspect), 8, 16);
 
+        public bool TryGetToolBounds(out Bounds bounds)
+        {
+            bounds = new Bounds(); bool found = false;
+            foreach (var tool in game.Pickaxes)
+            {
+                if (!tool.IsAlive) continue;
+                if (!found) { bounds = new Bounds(tool.transform.position, Vector3.one * 2); found = true; }
+                else { bounds.Encapsulate(tool.transform.position + Vector3.one); bounds.Encapsulate(tool.transform.position - Vector3.one); }
+            }
+            return found;
+        }
         void LateUpdate()
         {
-            SetFraming();
-            if (game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking || game.Phase == RunPhase.Finished)
+            float minimumSize = Mathf.Clamp(6.2f / Mathf.Max(0.35f, view.aspect), 8, 16);
+            if (game.Phase == RunPhase.Mining && TryGetToolBounds(out Bounds bounds))
             {
-                Vector3 p = game.Pickaxe.transform.position;
-                float halfWorld = game.Balance.worldWidth / 2f;
-                float maxX = Mathf.Max(0, halfWorld - view.orthographicSize * view.aspect);
-                Vector3 target = new(Mathf.Clamp(p.x, -maxX, maxX), Mathf.Min(SurfaceCameraY, p.y - 2.4f), -10);
-                transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, 0.2f);
+                Rect space = game.GameplayViewport;
+                float width = Mathf.Max(0.2f, space.width), height = Mathf.Max(0.2f, space.height);
+                float required = Mathf.Max(minimumSize, (bounds.extents.x + 1.5f) / (view.aspect * width), (bounds.extents.y + 1.5f) / height);
+                view.orthographicSize = Mathf.SmoothDamp(view.orthographicSize, required, ref zoomVelocity, required > view.orthographicSize ? 0.08f : 0.35f);
+                Vector3 offset = new((space.center.x - 0.5f) * 2 * view.orthographicSize * view.aspect,
+                    (space.center.y - 0.5f) * 2 * view.orthographicSize, 0);
+                Vector3 target = bounds.center - offset; target.z = -10;
+                target.y = Mathf.Min(SurfaceCameraY, target.y);
+                float maxX = Mathf.Max(0, game.Balance.worldWidth / 2f - view.orthographicSize * view.aspect);
+                target.x = Mathf.Clamp(target.x, -maxX, maxX);
+                transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, 0.16f);
             }
+            else if (game.Phase == RunPhase.Ready || game.Phase == RunPhase.Equipped || game.Phase == RunPhase.Spinning) SetFraming();
             UpdateBackground();
         }
 

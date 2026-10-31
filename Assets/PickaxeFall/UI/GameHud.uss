@@ -1,71 +1,92 @@
-.screen { flex-grow: 1; color: rgb(51, 47, 40); -unity-font-style: normal; }
-.safe { flex-grow: 1; padding: 30px 36px 18px; }
-.header { padding: 0; }
-.brand-row { flex-direction: row; align-items: center; margin-bottom: 18px; }
-.brand { flex-grow: 1; font-size: 44px; color: rgb(238, 235, 216); -unity-text-outline-width: 2px; -unity-text-outline-color: rgb(35, 32, 27); letter-spacing: 1px; }
+.screen { flex-grow: 1; color: rgb(39, 40, 31); font-size: 36px; -unity-font-style: normal; }
+Label { white-space: normal; flex-shrink: 0; }
+.safe { flex-grow: 1; padding: 20px 24px 16px; }
+.header { flex-shrink: 0; }
+.brand-row { flex-direction: row; align-items: center; margin-bottom: 12px; }
+.brand { flex-grow: 1; font-size: 48px; color: rgb(255, 247, 215); -unity-text-outline-width: 1px; -unity-text-outline-color: rgb(27, 30, 23); }
 .header-buttons { flex-direction: row; }
-.stone-button { background-color: rgb(132, 133, 128); color: rgb(250, 250, 240); border-top-width: 5px; border-left-width: 5px; border-right-width: 5px; border-bottom-width: 6px; border-top-color: rgb(219, 220, 207); border-left-color: rgb(201, 203, 190); border-right-color: rgb(67, 69, 65); border-bottom-color: rgb(48, 50, 46); border-radius: 0; -unity-text-outline-width: 1px; -unity-text-outline-color: rgb(43, 43, 38); margin: 0; }
-.stone-button:hover { background-color: rgb(160, 163, 147); color: rgb(255, 255, 191); }
-.stone-button:active { border-top-color: rgb(55, 57, 50); border-left-color: rgb(65, 67, 59); border-bottom-color: rgb(203, 207, 188); border-right-color: rgb(194, 198, 180); }
-.stone-button:disabled { background-color: rgb(112, 113, 106); color: rgb(176, 177, 165); }
-.small-button { font-size: 20px; min-width: 66px; height: 60px; margin-left: 12px; padding: 0 14px; }
-.stats-row { flex-direction: row; background-color: rgb(47, 43, 35); padding: 7px; }
-.inset { border-top-width: 4px; border-left-width: 4px; border-right-width: 4px; border-bottom-width: 4px; border-top-color: rgb(67, 66, 60); border-left-color: rgb(84, 83, 75); border-right-color: rgb(234, 234, 221); border-bottom-color: rgb(245, 245, 232); }
-.stat { flex-grow: 1; flex-basis: 0; background-color: rgb(191, 191, 178); padding: 12px 20px; margin: 3px; }
-.stat-title { font-size: 18px; color: rgb(78, 77, 66); }
-.stat-value { font-size: 39px; margin-top: 4px; color: rgb(42, 45, 30); }
-.scene-info { flex-direction: row; justify-content: space-between; background-color: rgba(36, 33, 28, 0.90); padding: 12px 18px; margin-top: 5px; }
-.micro { font-size: 19px; color: rgb(59, 60, 47); }
-.light { color: rgb(221, 218, 195); }
-.air { flex-grow: 1; min-height: 55px; }
-.inventory-window { background-color: rgb(37, 35, 30); padding: 6px; flex-shrink: 0; }
-.page { flex-shrink: 0; }
-.inventory-panel { background-color: rgb(198, 198, 185); border-top-width: 6px; border-left-width: 6px; border-right-width: 6px; border-bottom-width: 6px; border-top-color: rgb(251, 251, 235); border-left-color: rgb(237, 237, 221); border-right-color: rgb(89, 90, 80); border-bottom-color: rgb(69, 70, 61); padding: 24px; }
-.eyebrow { color: rgb(98, 99, 77); font-size: 19px; margin-bottom: 10px; }
-.title { font-size: 40px; color: rgb(45, 43, 34); white-space: normal; margin-bottom: 12px; }
-.description { color: rgb(81, 79, 64); font-size: 23px; white-space: normal; margin-bottom: 18px; }
-.roulette { flex-direction: row; height: 118px; margin-bottom: 16px; }
-.tool-slot { flex-grow: 1; flex-basis: 0; align-items: center; justify-content: center; background-color: rgb(139, 140, 125); margin: 0 5px; }
-.tool-slot.selected { background-color: rgb(176, 191, 111); border-top-color: rgb(81, 100, 36); border-left-color: rgb(81, 100, 36); border-right-color: rgb(236, 250, 182); border-bottom-color: rgb(236, 250, 182); }
-.slot-icon { width: 75px; height: 75px; }
-.slot-odds { font-size: 20px; color: rgb(49, 51, 34); }
-.hero { flex-direction: row; align-items: center; margin: 0 4px 18px; }
-.hero-icon { width: 96px; height: 96px; background-color: rgb(137, 139, 124); margin-right: 22px; }
+.stone-button { background-color: rgb(114, 119, 105); color: rgb(255, 255, 239); border-top-width: 5px; border-left-width: 5px; border-right-width: 5px; border-bottom-width: 7px; border-top-color: rgb(225, 227, 205); border-left-color: rgb(202, 207, 181); border-right-color: rgb(53, 60, 43); border-bottom-color: rgb(35, 42, 28); border-radius: 0; -unity-text-outline-width: 0.5px; -unity-text-outline-color: rgb(24, 28, 19); margin: 0; padding: 12px; -unity-text-align: middle-center; white-space: normal; flex-shrink: 0; }
+.stone-button:hover { background-color: rgb(142, 151, 112); color: rgb(255, 255, 218); }
+.stone-button:active { border-top-color: rgb(42, 51, 31); border-left-color: rgb(45, 55, 33); border-bottom-color: rgb(213, 225, 177); border-right-color: rgb(207, 220, 166); }
+.stone-button:disabled { background-color: rgb(151, 151, 139); color: rgb(232, 231, 214); -unity-text-outline-width: 0; border-top-color: rgb(201, 201, 185); border-left-color: rgb(188, 189, 171); border-right-color: rgb(110, 112, 96); border-bottom-color: rgb(99, 101, 85); }
+.small-button { font-size: 36px; min-width: 132px; height: 132px; margin-left: 12px; }
+.stats-row { flex-direction: row; background-color: rgb(43, 43, 33); padding: 4px; }
+.inset { border-top-width: 4px; border-left-width: 4px; border-right-width: 4px; border-bottom-width: 4px; border-top-color: rgb(65, 67, 54); border-left-color: rgb(78, 81, 63); border-right-color: rgb(235, 238, 213); border-bottom-color: rgb(245, 247, 225); }
+.stat { flex-grow: 1; flex-basis: 0; background-color: rgb(200, 201, 181); padding: 8px 14px; margin: 3px; }
+.stat-title { font-size: 30px; color: rgb(65, 68, 47); }
+.stat-value { font-size: 48px; color: rgb(31, 40, 20); }
+.scene-info { flex-direction: row; justify-content: space-between; background-color: rgba(27, 35, 26, 0.96); padding: 12px 16px; margin-top: 5px; flex-shrink: 0; }
+.micro { font-size: 30px; }
+.light { color: rgb(242, 239, 213); }
+.hub-window { flex-grow: 1; flex-shrink: 1; min-height: 0; background-color: rgb(37, 39, 29); margin-top: 12px; padding: 6px; }
+.page-scroll { flex-grow: 1; min-height: 0; }
+.inventory-panel { background-color: rgb(204, 205, 184); padding: 24px; min-height: 0; }
+.title { font-size: 48px; color: rgb(31, 37, 22); margin-bottom: 18px; }
+.description { font-size: 36px; color: rgb(59, 64, 43); margin-bottom: 22px; }
+.roulette { flex-direction: row; height: 172px; margin-bottom: 24px; flex-shrink: 0; }
+.tool-slot { flex-grow: 1; flex-basis: 0; align-items: center; justify-content: center; background-color: rgb(151, 157, 129); margin: 0 4px; }
+.tool-slot.selected { background-color: rgb(187, 209, 109); border-top-color: rgb(70, 91, 24); border-left-color: rgb(70, 91, 24); border-right-color: rgb(249, 255, 202); border-bottom-color: rgb(249, 255, 202); }
+.slot-icon { width: 96px; height: 96px; }
+.slot-odds { font-size: 36px; color: rgb(34, 46, 16); }
+.hero { flex-direction: row; align-items: center; margin-bottom: 24px; flex-shrink: 0; }
+.hero-icon { width: 144px; height: 144px; background-color: rgb(153, 159, 132); margin-right: 24px; flex-shrink: 0; }
 .hero-info { flex-shrink: 1; }
-.hero-name { font-size: 29px; color: rgb(44, 47, 30); }
-.hero-detail { font-size: 20px; color: rgb(86, 85, 65); white-space: normal; margin-top: 7px; }
-.primary { height: 90px; background-color: rgb(115, 138, 58); border-top-color: rgb(189, 212, 125); border-left-color: rgb(165, 189, 104); border-right-color: rgb(64, 77, 32); border-bottom-color: rgb(46, 58, 25); font-size: 29px; }
-.primary:hover { background-color: rgb(136, 159, 73); }
-.secondary { height: 78px; margin-top: 20px; font-size: 24px; }
-.footnote { font-size: 20px; color: rgb(69, 68, 51); -unity-text-align: middle-center; white-space: normal; margin-top: 14px; }
-.section-label { font-size: 18px; color: rgb(84, 83, 65); margin-bottom: 8px; }
-.result { font-size: 25px; color: rgb(78, 91, 37); margin-bottom: 14px; }
-.resource-grid { flex-direction: row; flex-wrap: wrap; margin: 0 -4px 14px; }
-.resource-slot { width: 23%; margin: 1%; height: 126px; background-color: rgb(139, 140, 126); align-items: center; }
-.resource-icon { width: 64px; height: 64px; margin-top: 9px; }
-.stack-count { position: absolute; right: 7px; bottom: 25px; color: white; font-size: 27px; -unity-text-outline-width: 2px; -unity-text-outline-color: rgb(30, 29, 24); }
-.resource-name { position: absolute; left: 0; right: 0; bottom: 4px; color: rgb(45, 47, 33); font-size: 19px; -unity-text-align: middle-center; }
-.bag-header { flex-direction: row; align-items: center; margin-bottom: 16px; }
-.chest-icon { width: 76px; height: 76px; margin-right: 20px; }
-.bag-total { font-size: 26px; color: rgb(73, 76, 45); flex-shrink: 1; white-space: normal; }
-.shop-sign { background-color: rgb(92, 66, 37); border-width: 5px; border-top-color: rgb(151, 114, 66); border-left-color: rgb(135, 98, 55); border-right-color: rgb(50, 35, 22); border-bottom-color: rgb(50, 35, 22); align-items: center; padding: 18px; margin-bottom: 18px; }
-.shop-chest { width: 100px; height: 100px; }
-.shop-announcement { font-size: 25px; color: rgb(239, 221, 159); margin-top: 10px; }
-.shop-shelves { flex-direction: row; }
-.shop-shelf { flex-grow: 1; flex-basis: 0; margin: 0 6px; align-items: center; background-color: rgb(153, 154, 137); padding: 12px 2px; }
-.shelf-icon { width: 64px; height: 64px; opacity: 0.55; }
-.shelf-title { font-size: 21px; color: rgb(68, 70, 49); margin-top: 8px; }
-.locked { font-size: 17px; color: rgb(103, 100, 77); margin-top: 8px; }
-.mining-panel { background-color: rgb(192, 193, 178); border-width: 5px; border-top-color: rgb(243, 245, 225); border-left-color: rgb(223, 227, 204); border-right-color: rgb(77, 80, 63); border-bottom-color: rgb(50, 55, 40); padding: 20px; }
-.tool-row { flex-direction: row; justify-content: space-between; margin-bottom: 12px; }
-.health-track { height: 17px; background-color: rgb(51, 55, 36); margin-bottom: 13px; }
-.health-fill { height: 9px; background-color: rgb(113, 172, 51); }
-.compact.resource-grid { margin-bottom: 0; }
-.compact .resource-slot { width: 11.5%; margin: 0.5%; height: 78px; }
-.compact .resource-icon { width: 46px; height: 46px; margin-top: 7px; }
-.compact .stack-count { bottom: 3px; right: 4px; font-size: 20px; }
+.hero-name { font-size: 42px; color: rgb(31, 41, 19); }
+.hero-detail { font-size: 36px; color: rgb(58, 66, 39); margin-top: 10px; }
+.primary { min-height: 144px; background-color: rgb(92, 121, 40); border-top-color: rgb(193, 219, 127); border-left-color: rgb(170, 198, 98); border-right-color: rgb(48, 70, 20); border-bottom-color: rgb(34, 51, 13); font-size: 48px; }
+.primary:hover { background-color: rgb(116, 146, 53); }
+.secondary { min-height: 144px; margin-top: 20px; font-size: 42px; }
+.footnote { font-size: 34px; color: rgb(66, 70, 47); white-space: normal; margin-top: 20px; }
+.section-label { font-size: 36px; color: rgb(62, 68, 43); margin-bottom: 12px; }
+.result { font-size: 38px; color: rgb(50, 80, 23); margin-bottom: 18px; }
+.resource-grid { flex-direction: row; flex-wrap: wrap; margin-bottom: 20px; flex-shrink: 0; }
+.resource-slot { width: 23%; margin: 1%; height: 192px; background-color: rgb(152, 158, 129); align-items: center; }
+.resource-icon { width: 86px; height: 86px; margin-top: 10px; }
+.stack-count { color: rgb(25, 34, 15); font-size: 38px; }
+.resource-name { font-size: 28px; color: rgb(40, 50, 23); -unity-text-align: middle-center; }
 .tabs { flex-direction: row; margin-top: 12px; flex-shrink: 0; }
-.tab { flex-grow: 1; flex-basis: 0; height: 80px; margin: 0 4px; font-size: 24px; }
-.tab.active { background-color: rgb(104, 123, 54); border-top-color: rgb(184, 205, 119); border-left-color: rgb(164, 187, 100); }
-.toast { position: absolute; top: 29%; align-self: center; background-color: rgba(43, 39, 30, 0.96); border-width: 3px; border-top-color: rgb(174, 162, 121); border-left-color: rgb(135, 125, 93); border-right-color: rgb(27, 25, 20); border-bottom-color: rgb(27, 25, 20); padding: 12px 22px; color: rgb(245, 238, 200); font-size: 24px; }
-.pause-overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(24, 22, 17, 0.76); justify-content: center; padding: 54px; }
+.tab { flex-grow: 1; flex-basis: 0; min-height: 144px; margin: 0 4px; font-size: 42px; padding: 4px; }
+.active { background-color: rgb(92, 122, 39); border-top-color: rgb(198, 223, 133); border-left-color: rgb(172, 204, 101); }
+.playfield { flex-grow: 1; min-height: 60px; }
+.mining-panel { background-color: rgb(196, 202, 173); border-width: 5px; border-top-color: rgb(244, 250, 223); border-left-color: rgb(226, 237, 195); border-right-color: rgb(72, 87, 46); border-bottom-color: rgb(44, 60, 25); padding: 16px; flex-shrink: 0; }
+.tool-status-row { flex-direction: row; justify-content: center; margin-bottom: 10px; }
+.tool-status { flex-grow: 1; flex-basis: 0; align-items: center; margin: 0 6px; }
+.tool-status-icon { width: 84px; height: 84px; }
+.tool-health { font-size: 36px; color: rgb(34, 46, 20); }
+.health-track { width: 100%; height: 18px; background-color: rgb(48, 61, 27); margin-top: 7px; }
+.health-fill { height: 12px; background-color: rgb(107, 162, 52); }
+.compact.resource-grid { margin-bottom: 0; }
+.compact .resource-slot { width: 11.5%; margin: 0.5%; height: 118px; }
+.compact .resource-icon { width: 60px; height: 60px; margin-top: 6px; }
+.compact .stack-count { font-size: 34px; }
+.toast { position: absolute; top: 24%; left: 4%; right: 4%; background-color: rgba(29, 38, 20, 0.97); border-width: 4px; border-top-color: rgb(195, 201, 143); border-left-color: rgb(171, 184, 119); border-right-color: rgb(42, 56, 23); border-bottom-color: rgb(24, 36, 12); padding: 18px 24px; color: rgb(255, 248, 199); font-size: 38px; -unity-text-align: middle-center; }
+.pause-overlay, .modal-overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 12, 0.9); justify-content: center; padding: 50px 32px; }
+.modal-card { background-color: rgb(209, 211, 187); border-width: 6px; border-top-color: rgb(251, 255, 226); border-left-color: rgb(237, 247, 201); border-right-color: rgb(74, 88, 46); border-bottom-color: rgb(47, 63, 26); padding: 32px; }
+.modal-scroll { max-height: 94%; }
+.quantity-input { font-size: 48px; height: 126px; margin: 8px 0 20px; flex-shrink: 0; }
+.quantity-input .unity-text-field__input { background-color: rgb(248, 249, 228); color: rgb(29, 39, 17); padding: 16px 24px; border-width: 4px; border-color: rgb(77, 95, 46); }
+.sale-quote { font-size: 38px; color: rgb(40, 74, 18); margin-bottom: 20px; }
+.bag-grid { flex-direction: row; flex-wrap: wrap; margin-bottom: 20px; }
+.resource-card { width: 48%; margin: 1%; height: 282px; background-color: rgb(159, 168, 134); color: rgb(30, 43, 17); border-radius: 0; align-items: center; justify-content: center; padding: 8px; flex-shrink: 0; }
+.resource-card:hover { background-color: rgb(183, 195, 148); }
+.bag-icon { width: 90px; height: 90px; }
+.bag-name { font-size: 36px; -unity-text-align: middle-center; }
+.bag-count { font-size: 44px; color: rgb(29, 53, 12); }
+.bag-price { font-size: 32px; color: rgb(53, 69, 32); }
+.goal-note { font-size: 34px; background-color: rgb(185, 194, 151); padding: 18px; color: rgb(47, 68, 23); margin-bottom: 20px; }
+.shop-categories { flex-direction: row; margin-bottom: 22px; }
+.category { flex-grow: 1; flex-basis: 0; min-height: 144px; margin: 0 4px; padding: 2px; font-size: 36px; }
+.tier-selector { flex-direction: row; margin-bottom: 16px; }
+.tier-button { flex-grow: 1; flex-basis: 0; height: 144px; align-items: center; justify-content: center; margin: 0 5px; }
+.tier-icon { width: 100px; height: 100px; }
+.selected-tool { font-size: 44px; margin-bottom: 24px; color: rgb(44, 65, 21); }
+.upgrade-card { background-color: rgb(184, 194, 155); padding: 24px; margin-bottom: 24px; flex-shrink: 0; }
+.upgrade-card.pinned { border-top-color: rgb(107, 133, 57); border-left-color: rgb(107, 133, 57); }
+.upgrade-title { font-size: 44px; color: rgb(28, 46, 13); margin-bottom: 16px; }
+.upgrade-effect { font-size: 42px; color: rgb(47, 89, 17); margin-bottom: 16px; }
+.upgrade-price { font-size: 36px; color: rgb(51, 65, 29); margin-bottom: 12px; }
+.upgrade-resources { font-size: 34px; color: rgb(55, 70, 32); margin-bottom: 12px; }
+.upgrade-reason { font-size: 32px; color: rgb(61, 85, 34); }
+.missing { color: rgb(126, 55, 31); }
+.soon-panel { padding: 24px; background-color: rgb(178, 185, 155); }
+.fatal-error { flex-grow: 1; background-color: rgb(35, 36, 27); color: rgb(255, 244, 210); font-size: 48px; padding: 80px 40px; white-space: normal; }
