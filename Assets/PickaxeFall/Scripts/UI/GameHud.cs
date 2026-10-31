@@ -43,14 +43,16 @@ namespace PickaxeFall
             var header = Box(safe, "header"); var brand = Box(header, "brand-row");
             BoldText(brand, "PICKAXE FALL", "brand");
             var buttons = Box(brand, "header-buttons");
-            sound = Button(buttons, "ЗВУК", () => { game.Effects.ToggleSound(); Refresh(); }, "stone-button small-button");
-            pause = Button(buttons, "II", game.TogglePause, "stone-button small-button");
+            sound = Button(buttons, "НАСТРОЙКИ", OpenSettings, "stone-button small-button settings-button"); sound.name = "open-settings";
+            pause = Button(buttons, "", game.TogglePause, "stone-button small-button"); pause.tooltip = "Пауза";
+            var pauseGlyph = Box(pause, "pause-glyph"); pauseGlyph.pickingMode = PickingMode.Ignore;
+            Box(pauseGlyph, "pause-bar").pickingMode = PickingMode.Ignore; Box(pauseGlyph, "pause-bar").pickingMode = PickingMode.Ignore;
             var stats = Box(header, "stats-row");
             depth = Stat(stats, "ГЛУБИНА", "0 м"); wallet = Stat(stats, "МОНЕТЫ", "0"); best = Stat(stats, "РЕКОРД", "0 м");
             sceneInfo = Box(safe, "scene-info"); Text(sceneInfo, "БЕЗДОННАЯ ШАХТА", "micro light"); status = Text(sceneInfo, "ПОВЕРХНОСТЬ", "micro light");
             window = Box(safe, "hub-window");
-            mineView = Page(window, "mine-page");
-            title = BoldText(mineView, "Снаряжение шахтёра", "title");
+            mineView = Box(window, "inventory-panel mine-panel"); mineView.name = "mine-page";
+            title = BoldText(mineView, "Спуск в шахту", "title");
             description = Text(mineView, "Каждый спуск — новая шахта. Добычу можно продать в рюкзаке.", "description");
             roulette = Box(mineView, "roulette"); slots = new VisualElement[game.Balance.pickaxes.Length];
             for (int i = 0; i < slots.Length; i++)
@@ -61,9 +63,9 @@ namespace PickaxeFall
             var hero = Box(mineView, "hero"); heroIcon = Icon(hero, PixelArt.Pickaxe(game.Balance.pickaxes[0].color), "hero-icon inset");
             var info = Box(hero, "hero-info"); heroName = BoldText(info, "Пять видов кирок", "hero-name"); heroDetail = Text(info, "", "hero-detail");
             resultArea = Box(mineView, "result-area"); result = Text(resultArea, "", "result");
-            runGrid = new ResourceGrid(resultArea, "run-resources", false);
+            runGrid = new ResourceGrid(resultArea, "run-resources", true);
             action = Button(mineView, "КРУТИТЬ РУЛЕТКУ", MainAction, "stone-button primary"); action.name = "main-action";
-            Text(mineView, "Верстаки повышают тип и чинят кирку. TNT взрывается от удара.", "footnote");
+            Text(mineView, "Верстак — улучшение и ремонт. TNT — взрыв от удара.", "footnote");
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
             shopView = Page(window, "shop-page"); BuildShop(shopView);
             playfield = Box(safe, "playfield"); playfield.pickingMode = PickingMode.Ignore;
@@ -87,7 +89,10 @@ namespace PickaxeFall
         public void Tick()
         {
             SetText(depth, game.Depth + " м"); SetText(wallet, Short(game.Wallet)); SetText(best, game.BestDepth + " м");
-            SetText(status, game.Depth < 3 ? "ПОВЕРХНОСТЬ" : game.Depth < 55 ? "КАМЕНЬ" : "СЛАНЕЦ");
+            string nextOre = "";
+            foreach (var kind in new[] { BlockKind.Copper, BlockKind.Iron, BlockKind.Gold, BlockKind.Diamond })
+                if (game.Depth < game.Balance.Block(kind).minimumDepth) { nextOre = GameBalance.BlockName(kind).ToUpperInvariant() + ": " + (game.Balance.Block(kind).minimumDepth - game.Depth) + " М"; break; }
+            SetText(status, nextOre.Length > 0 ? nextOre : "РУБЕЖ: " + ((game.Depth / 50 + 1) * 50) + " М");
             if (game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking)
             {
                 for (int i = 0; i < 5; i++) toolStatuses[i].Update(game.Pickaxes[i], i < game.RunToolCount);
@@ -109,9 +114,9 @@ namespace PickaxeFall
             if (!game.Pickaxe) return;
             bool active = game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking;
             Display(window, !active); Display(tabs, !active); Display(controls, active); Display(playfield, active);
-            Display(mineView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Mine); Display(inventoryView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Inventory); Display(shopView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Shop);
+            Display(mineView, CurrentTab == HubTab.Mine); window.EnableInClassList("mine-window", CurrentTab == HubTab.Mine); Display(inventoryView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Inventory); Display(shopView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Shop);
             Display(pause, game.Phase == RunPhase.Mining); Display(pauseOverlay, game.Paused);
-            sound.text = game.Effects.Muted ? "ТИХО" : "ЗВУК";
+            sound.text = "НАСТРОЙКИ";
             for (int i = 0; i < 3; i++) { tabButtons[i].EnableInClassList("active", (int)CurrentTab == i); tabButtons[i].SetEnabled(game.CanTrade); }
             action.SetEnabled(game.Phase != RunPhase.Spinning);
             Display(resultArea, game.Phase == RunPhase.Finished); Display(roulette, game.Phase != RunPhase.Finished);
@@ -120,7 +125,7 @@ namespace PickaxeFall
             switch (game.Phase)
             {
                 case RunPhase.Ready:
-                    title.text = "Снаряжение шахтёра"; description.text = "Каждый спуск — новая шахта. Продажа добычи — в рюкзаке.";
+                    title.text = "Спуск в шахту"; description.text = "Крути рулетку, добывай и улучшай снаряжение.";
                     heroName.text = "Пять видов кирок";
                     var preview = new RunUpgrades(game.Economy.Profile);
                     heroDetail.text = $"Отряд: {Progression.Number(preview.Chance(UpgradeKind.TeamChance) * 100)}% · {preview.TeamSize} кирки при удаче";
@@ -129,10 +134,10 @@ namespace PickaxeFall
                 case RunPhase.Spinning:
                     title.text = "Испытываем удачу"; description.text = "Вероятности каждого типа указаны под кирками."; action.text = "ВРАЩАЕТСЯ…"; break;
                 case RunPhase.Equipped:
-                    title.text = "Готов к спуску?"; description.text = "Купленные сейчас улучшения применятся при спуске.";
+                    title.text = "Готов к спуску?"; description.text = "Кирка готова. Самое время для нового рекорда.";
                     ShowRouletteTier(game.Pickaxe.Tier); action.text = "В ШАХТУ ↓"; break;
                 case RunPhase.Finished:
-                    title.text = $"Экспедиция: {game.Depth} м"; description.text = "Добыча уже в рюкзаке. Продай часть или оставь для улучшений.";
+                    title.text = $"Экспедиция: {game.Depth} м"; description.text = "Добыча в рюкзаке. Продай лишнее и усиль кирки.";
                     result.text = $"Собрано на {Short(game.PotentialSaleValue)} монет\nРазрушено блоков: {game.BlocksBroken}";
                     runGrid.Update(kind => game.OreCounts[(int)kind]);
                     ShowRouletteTier(game.Pickaxe.Tier); action.text = "ЕЩЁ ОДИН ЗАБЕГ"; break;
@@ -144,10 +149,12 @@ namespace PickaxeFall
             shownTier = tier; var stats = game.Balance.pickaxes[tier];
             for (int i = 0; i < slots.Length; i++) slots[i].EnableInClassList("selected", i == tier);
             heroIcon.style.backgroundImage = Background.FromSprite(PixelArt.Pickaxe(stats.color)); heroName.text = stats.title;
-            heroDetail.text = $"Урон {Progression.Number(game.PreviewDamageHalfUnits(tier) * 0.5)} · Прочность {game.PreviewDurability(tier)}";
+            int damage = game.Phase == RunPhase.Finished ? game.Pickaxe.DamageHalfUnits : game.PreviewDamageHalfUnits(tier);
+            int durability = game.Phase == RunPhase.Finished ? game.Pickaxe.MaxDurability : game.PreviewDurability(tier);
+            heroDetail.text = $"Урон {Progression.Number(damage * 0.5)} · Прочность {durability}";
         }
         public void Toast(string message) { toast.text = message; toastUntil = Time.unscaledTime + 2.3f; Display(toast, true); }
-        public bool CloseModal() { if (modal == null || modal.style.display == DisplayStyle.None) return false; Display(modal, false); modal.Clear(); return true; }
+        public bool CloseModal() { if (modal == null || modal.style.display == DisplayStyle.None) return false; Display(modal, false); modal.Clear(); FinishSettings(); return true; }
         void MainAction() { if (game.Phase == RunPhase.Ready) game.Spin(); else if (game.Phase == RunPhase.Equipped) game.Drop(); else if (game.Phase == RunPhase.Finished) game.NewRun(); }
         public void Dispose() => game.Changed -= Refresh;
         static void Display(VisualElement element, bool visible) => element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;

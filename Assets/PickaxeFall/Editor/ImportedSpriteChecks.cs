@@ -19,7 +19,7 @@ namespace PickaxeFall.Editor
                 else if (kind != BlockKind.Workbench && kind != BlockKind.Tnt) ValidateLayer(kind, true, false, paths);
             }
             Require(paths.Count == 72, "The supplied block pack must contain all 72 selected variants.");
-            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 72 PNGs; Work Stone/Coal at 32px; other blocks at 16px; Point, no compression/mips; all variants one opaque world tile.");
+            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 72 PNGs; ordinary terrain/ores at 32px; deep/special blocks at 16px; Point, no compression/mips; all variants one opaque world tile.");
         }
 
         static void ValidateLayer(BlockKind kind, bool deep, bool surface, HashSet<string> paths)
@@ -31,7 +31,7 @@ namespace PickaxeFall.Editor
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 Require(sprite, "Missing imported sprite: " + path);
                 Require(PixelArt.Block(kind, variant, deep, surface) == sprite, "The game selected generated art instead of the supplied PNG: " + path);
-                int size = !deep && (kind == BlockKind.Stone || kind == BlockKind.Coal) ? 32 : 16;
+                int size = !deep && kind <= BlockKind.Diamond ? 32 : 16;
                 Require(sprite.texture.width == size && sprite.texture.height == size, "Incorrect source variant or resolution: " + path);
                 Require(Mathf.Abs(sprite.bounds.size.x - 1) < 0.001f && Mathf.Abs(sprite.bounds.size.y - 1) < 0.001f,
                     "Mixed pixel sizes must still fill exactly one world tile: " + path);

@@ -10,13 +10,14 @@ namespace PickaxeFall
         AudioSource audioSource;
         AudioClip hitClip, rewardClip, breakClip;
         float lastSound;
-        public bool Muted { get; private set; }
+        GameSettings settings;
+        public bool Muted => settings.Volume < 0.001f;
         public int LastShatterPieces { get; private set; }
         public int ActiveToolFragments { get { int n = 0; foreach (var chip in chips) if (chip.tool && chip.life > 0) n++; return n; } }
 
-        public void Initialize()
+        public void Initialize(GameSettings options)
         {
-            Muted = PlayerPrefs.GetInt("soundMuted", 0) == 1;
+            settings = options;
             audioSource = gameObject.AddComponent<AudioSource>(); audioSource.playOnAwake = false;
             hitClip = Tone(160, 0.045f); rewardClip = Tone(660, 0.14f); breakClip = Tone(85, 0.24f);
             for (int i = 0; i < 320; i++)
@@ -29,11 +30,12 @@ namespace PickaxeFall
 
         public void ToggleSound()
         {
-            Muted = !Muted; PlayerPrefs.SetInt("soundMuted", Muted ? 1 : 0); PlayerPrefs.Save();
+            settings.SetVolume(Muted ? 0.8f : 0); settings.Save();
         }
 
         public void Impact(Vector2 point, Color color, int count, bool reward = false)
         {
+            if (settings.ReducedEffects) count = Mathf.Max(1, count / 2);
             int emitted = 0;
             foreach (var chip in chips)
             {
@@ -58,7 +60,8 @@ namespace PickaxeFall
             LastShatterPieces = 0;
             Color32[] pixels = sprite.texture.GetPixels32();
             int width = sprite.texture.width, height = sprite.texture.height;
-            for (int y = 0; y < height; y += 2) for (int x = 0; x < width; x += 2)
+            int step = settings.ReducedEffects ? 3 : 2;
+            for (int y = 0; y < height; y += step) for (int x = 0; x < width; x += step)
             {
                 Color sum = Color.clear; int count = 0; Vector2 center = Vector2.zero;
                 for (int dy = 0; dy < 2 && y + dy < height; dy++) for (int dx = 0; dx < 2 && x + dx < width; dx++)

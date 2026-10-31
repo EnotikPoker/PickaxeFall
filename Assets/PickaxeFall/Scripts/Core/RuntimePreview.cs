@@ -21,6 +21,8 @@ namespace PickaxeFall
                 foreach (var key in Progression.Keys) game.Economy.Profile.upgrades[key.Index] = Progression.MaxLevel(key.Kind);
                 game.BeginProbeRun(0, 8127, 5);
             }
+            else if (game.TestMode == "mine") { }
+            else if (game.TestMode == "settings") Submit(root.Q<Button>("open-settings"));
             else if (game.TestMode == "shop" || game.TestMode == "luck")
             {
                 game.SelectHubTab(HubTab.Shop);

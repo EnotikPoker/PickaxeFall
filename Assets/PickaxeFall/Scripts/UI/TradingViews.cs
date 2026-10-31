@@ -153,10 +153,10 @@ namespace PickaxeFall
         }
         string UpgradeEffect(UpgradeKey key, int level)
         {
-            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.Balance.pickaxes[key.Tier].damage + level * 0.5) + " урона";
-            if (key.Kind == UpgradeKind.Durability) return (game.Balance.pickaxes[key.Tier].durability + level * 2) + " прочности";
+            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.Balance.pickaxes[key.Tier].damage + level * Progression.DamageStepHalfUnits(key.Tier) * 0.5) + " урона";
+            if (key.Kind == UpgradeKind.Durability) return (game.Balance.pickaxes[key.Tier].durability + level * Progression.DurabilityStep(key.Tier)) + " прочности";
             if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + " кирки";
-            return Progression.Number(level * (key.Kind == UpgradeKind.Fortune ? 1 : 0.5)) + "%";
+            return Progression.Number(level * Progression.ChanceStep(key.Kind) * 100) + "%";
         }
         sealed class UpgradeCard
         {

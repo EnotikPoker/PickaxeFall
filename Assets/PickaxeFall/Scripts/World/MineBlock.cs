@@ -22,7 +22,7 @@ namespace PickaxeFall
         public void Setup(MiningWorld owner, BlockKind kind, int x, int row, int variant, bool deep = false, bool surface = false)
         {
             world = owner; Kind = kind; Row = row; Column = x; IsDeep = deep;
-            HealthHalfUnits = maxHealthHalfUnits = owner.Balance.Block(kind).health * 2; IsBroken = false; DamageStage = 0;
+            HealthHalfUnits = maxHealthHalfUnits = owner.Balance.BlockHealthHalfUnits(kind, row); IsBroken = false; DamageStage = 0;
             visual ??= GetComponent<SpriteRenderer>(); hitbox ??= GetComponent<BoxCollider2D>();
             if (!cracks)
             {
