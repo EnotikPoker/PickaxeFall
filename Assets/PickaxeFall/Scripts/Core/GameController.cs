@@ -23,6 +23,12 @@ namespace PickaxeFall
         public MiningEffects Effects { get; private set; }
         public EconomyService Economy { get; private set; }
         public GameSettings Settings { get; private set; }
+        public RunEnergy Energy { get; } = new();
+        public RunBenefits Benefits { get; } = new();
+        public int SelectedToolIndex { get; private set; }
+        public FallingPickaxe SelectedTool => tools.Count > SelectedToolIndex ? tools[SelectedToolIndex] : null;
+        public float AbilityCost(AbilityKind kind) => RunUpgrades.EnergyCost(kind == AbilityKind.Dash ? 40 : 50);
+        public bool ControlsAvailable => Phase == RunPhase.Mining && !Paused && hud != null && !hud.ModalOpen;
         public RunUpgrades RunUpgrades { get; private set; }
         public ResourceInventory Inventory { get; private set; }
         public int Depth { get; private set; }
@@ -67,7 +73,10 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits" }, TestMode) < 0) TestMode = "";
+            bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
+            if (probe) TestMode = "probe";
+            else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
             if (TestMode.Length > 0) ProfileDirectory = Path.Combine(Application.temporaryCachePath, "verification", Guid.NewGuid().ToString("N"));
 #endif
             Settings = new GameSettings(TestMode.Length > 0);
@@ -98,7 +107,7 @@ namespace PickaxeFall
             initialized = true; NewRun();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (TestMode == "smoke" || Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test")) gameObject.AddComponent<RuntimeSmokeTest>();
-            if (TestMode.Length > 0 && TestMode != "smoke") gameObject.AddComponent<RuntimePreview>();
+            if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe") gameObject.AddComponent<RuntimePreview>();
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe" || arg == "--economy-probe")) gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
@@ -110,6 +119,7 @@ namespace PickaxeFall
             foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
             Depth = BlocksBroken = WorkbenchesUsed = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
             RunToolCount = 1; RescueUsed = false; RunUpgrades = new RunUpgrades(Economy.Profile);
+            SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); hud.CancelGesture();
             int previousSeed = Seed;
             do { Seed = Guid.NewGuid().GetHashCode() & int.MaxValue; } while (Seed == 0 || Seed == previousSeed);
             World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); cameraFollow.ResetView();
@@ -144,6 +154,7 @@ namespace PickaxeFall
                 if (i >= RunToolCount) { tools[i].gameObject.SetActive(false); continue; }
                 tools[i].Equip(selectedTier, i, (i - (RunToolCount - 1) * 0.5f) * 1.4f); tools[i].Launch();
             }
+            Energy.Reset(RunUpgrades); SelectTool(0);
             Phase = RunPhase.Mining; World.StreamTools(tools); cameraFollow.ResetView(); Notify();
             if (RunToolCount > 1) hud.Toast("УДАЧА! КИРОК В ОТРЯДЕ: " + RunToolCount);
         }
@@ -164,8 +175,37 @@ namespace PickaxeFall
             hud.Tick();
         }
 
-        // Returns whether the harvested cell should become a fresh TNT. Explosions cannot create TNT this way.
-        public bool OnBlockBroken(MineBlock block, FallingPickaxe source, bool explosion)
+        public bool SelectTool(int index)
+        {
+            if (index < 0 || index >= tools.Count || !tools[index].IsAlive) return false;
+            if (SelectedToolIndex != index) hud?.CancelGesture();
+            SelectedToolIndex = index;
+            foreach (var tool in tools) tool.SetSelected(tool.ToolIndex == index);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (Phase == RunPhase.Mining) Debug.Log($"PICKAXEFALL_SELECT_TOOL: index={index}; energy={Energy.Value}");
+#endif
+            return true;
+        }
+        public bool TryUseAbility(AbilityKind kind, Vector2 direction)
+        {
+            if (!ControlsAvailable || SelectedTool == null || !SelectedTool.IsAlive || SelectedTool.AbilityActive || !Energy.CanSpend(AbilityCost(kind))) return false;
+            if (kind != AbilityKind.Dash && kind != AbilityKind.Plunge) return false;
+            if (kind == AbilityKind.Dash)
+            {
+                if (direction.sqrMagnitude < 0.5f || float.IsNaN(direction.x) || float.IsNaN(direction.y)) return false;
+                direction = Mathf.Abs(direction.x) > Mathf.Abs(direction.y) ? new Vector2(Mathf.Sign(direction.x), 0) : new Vector2(0, Mathf.Sign(direction.y));
+            }
+            if (!SelectedTool.StartAbility(kind, direction)) return false;
+            Energy.TrySpend(AbilityCost(kind)); Benefits.Abilities++; return true;
+        }
+        public void OnPhysicalHit(FallingPickaxe source, bool strong)
+        {
+            if (Phase != RunPhase.Mining || Paused) return;
+            if (source == SelectedTool) Energy.Add(RunUpgrades.EnergyPerHit);
+            if (strong) Benefits.StrongHits++;
+        }
+        // Bonus TNT is detonated by the world after the mined cell has been retired.
+        public bool OnBlockBroken(MineBlock block, FallingPickaxe source, DamageOrigin origin)
         {
             if (Phase != RunPhase.Mining) return false;
             if (block.Kind == BlockKind.Workbench)
@@ -173,22 +213,26 @@ namespace PickaxeFall
                 if (source == null) return false;
                 WorkbenchesUsed++; int steps = RollEffect(UpgradeKind.DoubleBench) ? 2 : 1;
                 source.RepairAndUpgrade(steps);
+                if (steps == 2) { Benefits.DoubleBenches++; Energy.Ensure(Energy.Maximum); }
                 Effects.Impact(block.transform.position, new Color32(105, 239, 196, 255), 18, true);
-                hud.Toast(steps == 2 ? "ВЕРСТАК ×2 · УСИЛЕНИЕ И РЕМОНТ" : "ВЕРСТАК · УСИЛЕНИЕ И РЕМОНТ");
+                hud.Toast(steps == 2 ? "ВЕРСТАК ×2 · ПОЛНЫЙ РЕМОНТ И ЭНЕРГИЯ" : "ВЕРСТАК · ПОЛНЫЙ РЕМОНТ");
             }
             else
             {
                 BlocksBroken++;
+                if (origin == DamageOrigin.Dash || origin == DamageOrigin.Plunge) Benefits.AbilityBlocks++;
+                if (origin == DamageOrigin.Shrapnel) Benefits.ShrapnelBlocks++;
                 if (ResourceInventory.IsMaterial(block.Kind))
                 {
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
                     if (!Economy.Collect(block.Kind, quantity)) throw new InvalidOperationException(Economy.LastError);
-                    OreCounts[(int)block.Kind] += quantity; dirty = true;
+                    Benefits.BonusOre += quantity - 1; OreCounts[(int)block.Kind] += quantity; dirty = true;
                     if (Settings.LootMessages) hud.Toast($"{GameBalance.BlockName(block.Kind)} +{quantity}");
                 }
                 Effects.Impact(block.transform.position, block.BaseColor, 7);
             }
-            bool tnt = !explosion && source != null && Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.TntFind);
+            bool tnt = (origin == DamageOrigin.Physical || origin == DamageOrigin.Dash || origin == DamageOrigin.Plunge) && source != null && Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.TntFind);
+            if (tnt) Benefits.BonusTnt++;
             Notify(); return tnt;
         }
 
@@ -199,9 +243,14 @@ namespace PickaxeFall
             if (last && !RescueUsed)
             {
                 RescueUsed = true;
-                if (RollEffect(UpgradeKind.LastChance)) { tool.Revive(); hud.Toast("ПОСЛЕДНИЙ ШАНС! +25% ПРОЧНОСТИ"); Notify(); return; }
+                if (RollEffect(UpgradeKind.LastChance))
+                {
+                    tool.Revive(); Benefits.Rescues++; Benefits.RestoredDurability += tool.Durability; Energy.Ensure(AbilityCost(AbilityKind.Plunge));
+                    hud.Toast("ПОСЛЕДНИЙ ШАНС! +50% ПРОЧНОСТИ И ЭНЕРГИЯ"); Notify(); return;
+                }
             }
             tool.BreakApart();
+            if (tool == SelectedTool) for (int i = 0; i < tools.Count; i++) if (SelectTool(i)) break;
             if (last) FinishRun(); else { hud.Toast("КИРКА №" + (tool.ToolIndex + 1) + " РАССЫПАЛАСЬ"); Notify(); }
         }
         public void FinishRun()
@@ -211,6 +260,7 @@ namespace PickaxeFall
             {
                 if (tool.IsAlive) { Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.transform.position.y)); tool.BreakApart(); }
             }
+            hud.CancelGesture();
             Phase = RunPhase.Breaking; Paused = false; Time.timeScale = 1;
             Economy.Profile.bestDepth = Mathf.Max(BestDepth, Depth); SaveProgress();
             Notify(); StartCoroutine(FinishAnimation());
@@ -237,7 +287,7 @@ namespace PickaxeFall
         public void TogglePause()
         {
             if (Phase != RunPhase.Mining) return;
-            Paused = !Paused; Time.timeScale = Paused ? 0 : 1; Notify();
+            hud.CancelGesture(); Paused = !Paused; Time.timeScale = Paused ? 0 : 1; Notify();
         }
         public bool SelectHubTab(HubTab tab) { if (!CanTrade) return false; hud.SelectTab(tab); return true; }
         void SaveProgress()

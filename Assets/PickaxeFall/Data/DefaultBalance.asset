@@ -26,15 +26,17 @@ MonoBehaviour:
   explosionRadius: 2.1
   gravity: -15
   maxFallSpeed: 22
-  strikeInterval: 0.35
+  minimumImpactSpeed: 1.2
+  strongImpactSpeed: 4
+  impactRearmSpeed: 0.5
   surfaceFriction: 0.3
   launchAngularSpeed: 260
   maximumAngularSpeed: 540
   restitution: 0.78
   minimumReboundSpeed: 2.8
   maximumReboundSpeed: 6.2
-  workbenchRepairFraction: 0.25
-  workbenchRepairCap: 28
+  hardnessStartDepth: 40
+  hardnessDoublingDepth: 50
   blocks:
   - kind: 0
     health: 1
@@ -101,14 +103,14 @@ MonoBehaviour:
   - title: "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F"
     rarity: "\u042d\u041f\u0418\u0427\u0415\u0421\u041a\u0410\u042f"
     color: {r: 0.8862745, g: 0.92156863, b: 0.9098039, a: 1}
-    damage: 9
+    damage: 10
     durability: 200
     weight: 8
     mass: 1.4
   - title: "\u0410\u043B\u043C\u0430\u0437\u043D\u0430\u044F"
     rarity: "\u041B\u0415\u0413\u0415\u041D\u0414\u0410\u0420\u041D\u0410\u042F"
     color: {r: 0.37254903, g: 0.94509804, b: 0.8352941, a: 1}
-    damage: 14
+    damage: 16
     durability: 320
     weight: 2
     mass: 1.5

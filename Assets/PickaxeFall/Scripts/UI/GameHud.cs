@@ -9,6 +9,7 @@ namespace PickaxeFall
 
     public sealed partial class GameHud : IDisposable
     {
+        static readonly BlockKind[] MilestoneOres = { BlockKind.Coal, BlockKind.Copper, BlockKind.Iron, BlockKind.Gold, BlockKind.Diamond };
         readonly GameController game;
         readonly VisualElement root, safe, window, mineView, inventoryView, shopView, controls, sceneInfo, tabs, resultArea, roulette, pauseOverlay, modal, playfield;
         readonly Label depth, wallet, best, title, description, heroName, heroDetail, status, toast, result;
@@ -65,7 +66,7 @@ namespace PickaxeFall
             resultArea = Box(mineView, "result-area"); result = Text(resultArea, "", "result");
             runGrid = new ResourceGrid(resultArea, "run-resources", true);
             action = Button(mineView, "КРУТИТЬ РУЛЕТКУ", MainAction, "stone-button primary"); action.name = "main-action";
-            Text(mineView, "Верстак — улучшение и ремонт. TNT — взрыв от удара.", "footnote");
+            Text(mineView, "Свайп — рывок. Нажатие — пробой вниз. Верстак — полный ремонт.", "footnote");
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
             shopView = Page(window, "shop-page"); BuildShop(shopView);
             playfield = Box(safe, "playfield"); playfield.pickingMode = PickingMode.Ignore;
@@ -83,14 +84,15 @@ namespace PickaxeFall
             BoldText(pausePanel, "Пауза", "title"); Text(pausePanel, "Добыча и улучшения сохраняются.", "description");
             Button(pausePanel, "ПРОДОЛЖИТЬ", game.TogglePause, "stone-button primary");
             modal = Box(root, "modal-overlay"); modal.name = "trade-modal"; Display(modal, false);
-            game.Changed += Refresh; Refresh();
+            BuildCombat(); game.Changed += Refresh; Refresh();
         }
         public void SelectTab(HubTab tab) { CloseModal(); CurrentTab = tab; Refresh(); }
         public void Tick()
         {
+            TickCombat();
             SetText(depth, game.Depth + " м"); SetText(wallet, Short(game.Wallet)); SetText(best, game.BestDepth + " м");
             string nextOre = "";
-            foreach (var kind in new[] { BlockKind.Copper, BlockKind.Iron, BlockKind.Gold, BlockKind.Diamond })
+            foreach (var kind in MilestoneOres)
                 if (game.Depth < game.Balance.Block(kind).minimumDepth) { nextOre = GameBalance.BlockName(kind).ToUpperInvariant() + ": " + (game.Balance.Block(kind).minimumDepth - game.Depth) + " М"; break; }
             SetText(status, nextOre.Length > 0 ? nextOre : "РУБЕЖ: " + ((game.Depth / 50 + 1) * 50) + " М");
             if (game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking)
@@ -137,6 +139,7 @@ namespace PickaxeFall
                     title.text = "Готов к спуску?"; description.text = "Кирка готова. Самое время для нового рекорда.";
                     ShowRouletteTier(game.Pickaxe.Tier); action.text = "В ШАХТУ ↓"; break;
                 case RunPhase.Finished:
+                    SetText(runBenefits, game.Benefits.Summary);
                     title.text = $"Экспедиция: {game.Depth} м"; description.text = "Добыча в рюкзаке. Продай лишнее и усиль кирки.";
                     result.text = $"Собрано на {Short(game.PotentialSaleValue)} монет\nРазрушено блоков: {game.BlocksBroken}";
                     runGrid.Update(kind => game.OreCounts[(int)kind]);
@@ -156,7 +159,7 @@ namespace PickaxeFall
         public void Toast(string message) { toast.text = message; toastUntil = Time.unscaledTime + 2.3f; Display(toast, true); }
         public bool CloseModal() { if (modal == null || modal.style.display == DisplayStyle.None) return false; Display(modal, false); modal.Clear(); FinishSettings(); return true; }
         void MainAction() { if (game.Phase == RunPhase.Ready) game.Spin(); else if (game.Phase == RunPhase.Equipped) game.Drop(); else if (game.Phase == RunPhase.Finished) game.NewRun(); }
-        public void Dispose() => game.Changed -= Refresh;
+        public void Dispose() { CancelGesture(); game.Changed -= Refresh; }
         static void Display(VisualElement element, bool visible) => element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         static void SetText(Label label, string value) { if (label.text != value) label.text = value; }
         static VisualElement Box(VisualElement parent, string classes) { var item = new VisualElement(); AddClasses(item, classes); parent.Add(item); return item; }
@@ -183,18 +186,23 @@ namespace PickaxeFall
 
         sealed class ToolStatus
         {
+            readonly GameHud owner;
             readonly VisualElement box, icon, fill;
             readonly Label value;
             int tier = -1, hp = -1, max = -1;
             public ToolStatus(GameHud hud, VisualElement parent, int index)
             {
-                box = Box(parent, "tool-status"); icon = Icon(box, PixelArt.Pickaxe(hud.game.Balance.pickaxes[0].color), "tool-status-icon");
+                box = Box(parent, "tool-status"); box.name = "tool-select-" + index;
+                box.RegisterCallback<ClickEvent>(e => { if (hud.game.ControlsAvailable) hud.game.SelectTool(index); e.StopPropagation(); });
+                owner = hud;
+                icon = Icon(box, PixelArt.Pickaxe(hud.game.Balance.pickaxes[0].color), "tool-status-icon");
                 value = hud.BoldText(box, "", "tool-health"); value.name = "health-" + index;
                 fill = Box(Box(box, "health-track"), "health-fill");
             }
             public void Update(FallingPickaxe tool, bool visible)
             {
                 Display(box, visible); if (!visible) return;
+                box.EnableInClassList("tool-selected", tool.IsAlive && owner.game.SelectedToolIndex == tool.ToolIndex);
                 if (tier != tool.Tier) { tier = tool.Tier; icon.style.backgroundImage = Background.FromSprite(PixelArt.Pickaxe(tool.Stats.color)); }
                 int current = tool.IsAlive ? tool.Durability : 0;
                 if (hp == current && max == tool.MaxDurability) return;

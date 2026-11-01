@@ -46,17 +46,18 @@ namespace PickaxeFall
             DamageStage = Mathf.Clamp(Mathf.CeilToInt((1f - (float)HealthHalfUnits / maxHealthHalfUnits) * 8), 1, 8);
             cracks.sprite = PixelArt.Cracks(DamageStage); cracks.enabled = true;
         }
-        public bool HitHalfUnits(int damage, FallingPickaxe source)
+        public bool HitHalfUnits(int damage, FallingPickaxe source, DamageOrigin origin = DamageOrigin.Physical)
         {
-            if (IsBroken || damage <= 0 || !world.CanMine) return false;
+            if (IsBroken || damage <= 0 || !world.CanMine || origin == DamageOrigin.Shrapnel && !ResourceInventory.IsMaterial(Kind)) return false;
             HealthHalfUnits = damage >= HealthHalfUnits ? 0 : HealthHalfUnits - damage;
-            if (HealthHalfUnits == 0) return DestroyBlock(source);
+            if (HealthHalfUnits == 0) return DestroyBlock(source, origin);
             UpdateCracks(); world.Remember(this); return false;
         }
-        public bool DestroyBlock(FallingPickaxe source, bool explosion = false)
+        public bool DestroyBlock(FallingPickaxe source, bool explosion) => DestroyBlock(source, explosion ? DamageOrigin.Explosion : DamageOrigin.Physical);
+        public bool DestroyBlock(FallingPickaxe source, DamageOrigin origin = DamageOrigin.Physical)
         {
-            if (IsBroken || !world.CanMine || explosion && Kind == BlockKind.Workbench) return false;
-            HealthHalfUnits = 0; IsBroken = true; hitbox.enabled = false; world.Break(this, source, explosion); return true;
+            if (IsBroken || !world.CanMine || origin == DamageOrigin.Explosion && Kind == BlockKind.Workbench || origin == DamageOrigin.Shrapnel && !ResourceInventory.IsMaterial(Kind)) return false;
+            HealthHalfUnits = 0; IsBroken = true; hitbox.enabled = false; world.Break(this, source, origin); return true;
         }
         // Legacy full-damage entrypoint for editor inspection; production impacts carry a source.
         public bool Hit(int damage) => damage == int.MaxValue ? DestroyBlock(null) : HitHalfUnits(damage > int.MaxValue / 2 ? int.MaxValue : damage * 2, null);

@@ -46,7 +46,7 @@ namespace PickaxeFall.Editor
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             PlayerSettings.companyName = "EnotikPoker"; PlayerSettings.productName = "PickaxeFall";
-            PlayerSettings.bundleVersion = "0.1.0";
+            ApplyVersion();
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.enotikpoker.pickaxefall");
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
@@ -131,6 +131,7 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Build Linux smoke-test player")]
         public static void BuildLinux()
         {
+            ApplyVersion();
             ValidateBalance();
             PrototypeChecks.ExportPreview(AssetDatabase.LoadAssetAtPath<GameBalance>(DataPath));
             Build(new BuildPlayerOptions
@@ -145,6 +146,7 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Build Android APK")]
         public static void BuildAndroid()
         {
+            ApplyVersion();
             ValidateBalance();
             Directory.CreateDirectory("Builds/Android");
             EditorUserBuildSettings.buildAppBundle = false;
@@ -158,10 +160,17 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Build Android development verification APK")]
         public static void BuildAndroidDevelopment()
         {
+            ApplyVersion();
             ValidateBalance();
             Directory.CreateDirectory("Builds/Android"); EditorUserBuildSettings.buildAppBundle = false;
             Build(new BuildPlayerOptions { scenes = new[] { ScenePath }, target = BuildTarget.Android,
                 locationPathName = "Builds/Android/PickaxeFall-development.apk", options = BuildOptions.Development });
+        }
+
+        static void ApplyVersion()
+        {
+            PlayerSettings.bundleVersion = GameVersion.Name;
+            PlayerSettings.Android.bundleVersionCode = GameVersion.AndroidVersionCode;
         }
 
         static void Build(BuildPlayerOptions options)

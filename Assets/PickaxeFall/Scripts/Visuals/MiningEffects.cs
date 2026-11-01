@@ -33,7 +33,7 @@ namespace PickaxeFall
             settings.SetVolume(Muted ? 0.8f : 0); settings.Save();
         }
 
-        public void Impact(Vector2 point, Color color, int count, bool reward = false)
+        public void Impact(Vector2 point, Color color, int count, bool reward = false, bool sound = true)
         {
             if (settings.ReducedEffects) count = Mathf.Max(1, count / 2);
             int emitted = 0;
@@ -48,7 +48,7 @@ namespace PickaxeFall
                 chip.velocity = new Vector2(Random.Range(-2.5f, 2.5f), Random.Range(1, 3));
                 if (++emitted >= count) break;
             }
-            if (!Muted && Time.time > lastSound + 0.07f)
+            if (sound && !Muted && Time.time > lastSound + 0.07f)
             {
                 lastSound = Time.time; audioSource.pitch = Random.Range(0.9f, 1.12f);
                 audioSource.PlayOneShot(reward ? rewardClip : hitClip, reward ? 0.13f : 0.06f);

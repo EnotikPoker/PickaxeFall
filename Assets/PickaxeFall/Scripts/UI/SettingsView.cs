@@ -17,6 +17,7 @@ namespace PickaxeFall
         void DrawSettings()
         {
             var card = OpenModal("Настройки игры");
+            Text(card, "PickaxeFall · Версия " + Application.version, "footnote").name = "game-version";
             var options = game.Settings;
             var volumeText = BoldText(card, "Громкость: " + Mathf.RoundToInt(options.Volume * 100) + "%", "section-label");
             var volume = new Slider(0, 1) { value = options.Volume, name = "settings-volume" }; volume.AddToClassList("volume-slider"); card.Add(volume);

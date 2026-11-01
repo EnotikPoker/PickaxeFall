@@ -11,6 +11,7 @@ namespace PickaxeFall.Editor
         public static void Validate()
         {
             assertions = 0;
+            ActionChecks.Validate();
             var p = new PlayerProfile(); var economy = new EconomyService(p);
             foreach (var key in Progression.Keys)
             {
@@ -21,7 +22,7 @@ namespace PickaxeFall.Editor
                     Check(Array.Exists(cost.Resources, value => value > 0), "upgrades require resources");
                 }
             }
-            Check(Progression.Cost(new(UpgradeKind.TeamChance), 1).Coins == 20 && Progression.Cost(new(UpgradeKind.TeamChance), 3).Coins == 34, "cheap initial prices and exponential rounding");
+            Check(Progression.Cost(new(UpgradeKind.TeamChance), 1).Coins == 10 && Progression.Cost(new(UpgradeKind.TeamChance), 3).Coins == 19, "cheap initial prices and exponential rounding");
             Check(!economy.TryBuy(new(UpgradeKind.Damage)) && economy.Profile.coins == 0, "unaffordable purchase is rejected");
             economy.Collect(BlockKind.Stone, 12); economy.Collect(BlockKind.Dirt, 40);
             Check(economy.Profile.coins == 0, "collecting grants no coins");
@@ -48,7 +49,7 @@ namespace PickaxeFall.Editor
             foreach (var key in Progression.Keys) p.upgrades[key.Index] = Progression.MaxLevel(key.Kind);
             var maxSnapshot = new RunUpgrades(p);
             Check(maxSnapshot.TeamSize == 5 && Math.Abs(maxSnapshot.Chance(UpgradeKind.TeamChance) - 0.1) < 1e-8, "team cap");
-            Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.LastChance) - 0.2) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.Fortune) - 0.25) < 1e-8, "rescue and fortune caps");
+            Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.LastChance) - 0.2) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.Fortune) - 0.5) < 1e-8, "rescue and fortune caps");
             Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.DoubleBench) - 0.25) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.DoubleBlast) - 0.25) < 1e-8, "25 percent workshop and blast caps");
             Check(Math.Abs(maxSnapshot.Chance(UpgradeKind.TntFind) - 0.2) < 1e-8 && Math.Abs(maxSnapshot.Chance(UpgradeKind.Careful) - 0.2) < 1e-8, "20 percent ore TNT and careful caps");
             Check(Progression.Cost(new(UpgradeKind.Damage), 10).Resources[0] == 0, "late progress does not require farming surface dirt");

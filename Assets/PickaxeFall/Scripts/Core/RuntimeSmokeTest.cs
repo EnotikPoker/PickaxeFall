@@ -17,6 +17,7 @@ namespace PickaxeFall
         {
             yield return null;
             var game = GetComponent<GameController>(); var root = GetComponent<UIDocument>().rootVisualElement;
+            Check(game.ProfileDirectory.StartsWith(Application.temporaryCachePath), "verification always uses an isolated cache profile");
             Check(game.Phase == RunPhase.Ready && game.Pickaxes.Count == 5, "ready state and tool pool");
             Check(root.Q<Button>("main-action").resolvedStyle.fontSize >= 48, "large primary label");
             Check(game.SelectHubTab(HubTab.Shop) && root.Q("upgrade-Damage-0") != null, "shop opens with per-tier upgrades");
@@ -73,8 +74,8 @@ namespace PickaxeFall
             var protectedBench = game.World.DebugSetCell(-10, 6, BlockKind.Workbench);
             var created = game.World.DebugSetCell(-10, 5, BlockKind.Copper); long beforeCopper = game.Inventory[BlockKind.Copper], beforeCoal = game.Inventory[BlockKind.Coal];
             created.DestroyBlock(game.Pickaxe);
-            Check(created.Kind == BlockKind.Tnt && !created.IsBroken && game.Inventory[BlockKind.Copper] == beforeCopper + 1, "direct mining awards resource and leaves TNT in the same cell");
-            Physics2D.SyncTransforms(); created.DestroyBlock(game.Pickaxe);
+            Check(created.IsBroken && game.Inventory[BlockKind.Copper] == beforeCopper + 1 && game.Benefits.BonusTnt == 1, "direct ore mining immediately detonates bonus TNT and awards resource");
+            Physics2D.SyncTransforms();
             Check(game.Inventory[BlockKind.Coal] == beforeCoal + 1 && !protectedBench.IsBroken, "explosion grants ore and protects workbenches");
             bool recursiveTnt = false;
             for (int row = 3; row <= 7; row++) for (int x = -12; x <= -8; x++)
@@ -107,13 +108,14 @@ namespace PickaxeFall
                 Check(point.x > visible.xMin - 0.03f && point.x < visible.xMax + 0.03f && point.y > visible.yMin - 0.03f && point.y < visible.yMax + 0.03f, "camera fits living tool " + i);
             }
             game.FinishRun(); yield return new WaitForSeconds(1);
-            Array.Clear(game.Economy.Profile.upgrades, 0, 18); game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.LastChance).Index] = 10;
+            Array.Clear(game.Economy.Profile.upgrades, 0, game.Economy.Profile.upgrades.Length); game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.LastChance).Index] = 10;
             int rescueSeed = 1; while (new System.Random(unchecked(rescueSeed ^ 0x6AC690C5)).NextDouble() >= 0.05) rescueSeed++;
             game.BeginProbeRun(0, rescueSeed, 1); game.Pickaxe.DebugExhaust();
-            Check(game.Phase == RunPhase.Mining && game.RescueUsed && game.Pickaxe.Durability == Mathf.CeilToInt(game.Pickaxe.MaxDurability * 0.25f), "last tool recovers exactly rounded 25 percent");
+            Check(game.Phase == RunPhase.Mining && game.RescueUsed && game.Pickaxe.Durability == Mathf.CeilToInt(game.Pickaxe.MaxDurability * 0.5f), "last tool recovers exactly rounded 50 percent");
             game.Pickaxe.DebugExhaust(); Check(game.Phase == RunPhase.Breaking, "rescue cannot repeat");
             yield return new WaitForSeconds(1); game.NewRun();
             Check(game.Depth == 0 && game.Pickaxe.transform.position.y > 5, "retry resets both physics and camera spawn");
+            yield return RuntimeActionChecks.Run(game, root, Check);
             Debug.Log("PICKAXEFALL_SMOKE_OK: " + assertions + " checks; trading, half damage, opaque cracks, stronger hops, group lifecycle, streaming, camera, workbench and rescue.");
             Application.Quit(0);
         }

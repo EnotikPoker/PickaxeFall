@@ -110,3 +110,14 @@ Label { white-space: normal; flex-shrink: 0; }
 .settings-switch { font-size: 32px; min-height: 100px; margin: 10px 0; }
 .volume-slider { height: 100px; margin: 12px 0; }
 .volume-slider .unity-base-slider__dragger { width: 54px; height: 70px; background-color: rgb(120, 174, 68); border-radius: 0; border-width: 5px; border-top-color: rgb(198, 230, 144); border-left-color: rgb(198, 230, 144); border-right-color: rgb(44, 66, 27); border-bottom-color: rgb(44, 66, 27); }
+
+.energy-panel { margin-bottom: 12px; }
+.energy-label { font-size: 30px; color: rgb(27, 53, 57); }
+.energy-track { height: 18px; background-color: rgb(31, 53, 54); margin: 6px 0; }
+.energy-fill { height: 18px; background-color: rgb(55, 171, 184); }
+.ability-help { font-size: 28px; color: rgb(53, 66, 54); }
+.tool-status { border-width: 4px; border-color: transparent; padding: 4px; }
+.tool-selected { border-color: rgb(139, 112, 34); background-color: rgb(222, 219, 157); }
+.benefit-summary { font-size: 28px; margin: 8px 0; }
+.benefits-button { font-size: 28px; min-height: 64px; margin: 8px 0; }
+.category { font-size: 28px; }

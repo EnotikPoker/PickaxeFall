@@ -16,14 +16,23 @@ namespace PickaxeFall
             foreach (string candidate in new[] { path, path + ".bak" })
             {
                 if (!File.Exists(candidate)) continue;
-                try { return ReadProfile(File.ReadAllText(candidate)); }
-                catch (Exception e) { Debug.LogWarning("Profile recovery: " + e.Message); }
+                PlayerProfile result; bool migrated; string json;
+                try { json = File.ReadAllText(candidate); result = ReadProfile(json, out migrated); }
+                catch (Exception e) { Debug.LogWarning("Profile recovery: " + e.Message); continue; }
+                // A migration write failure must never fall back to an older, poorer profile.
+                if (migrated)
+                {
+                    string snapshot = path + ".pre-v3.bak";
+                    if (!File.Exists(snapshot)) File.WriteAllText(snapshot, json);
+                    Save(result);
+                }
+                return result;
             }
             // Never silently replace an existing, unreadable save with an empty profile.
             if (File.Exists(path) || File.Exists(path + ".bak")) throw new IOException("Не удалось прочитать сохранение. Резервные файлы сохранены.");
-            var migrated = importLegacy();
-            Save(migrated);
-            return migrated;
+            var imported = importLegacy();
+            Save(imported);
+            return imported;
         }
         static PlayerProfile ReadLegacy()
         {
@@ -31,11 +40,20 @@ namespace PickaxeFall
             foreach (var kind in ResourceInventory.Materials) profile.resources[(int)kind] = Math.Max(0, PlayerPrefs.GetInt("inventory.v1." + kind, 0));
             return profile;
         }
-        static PlayerProfile ReadProfile(string json)
+        static PlayerProfile ReadProfile(string json) => ReadProfile(json, out _);
+        static PlayerProfile ReadProfile(string json, out bool migrated)
         {
+            migrated = false;
             // Missing JSON fields must not inherit the defaults of a new, empty player.
             var profile = new PlayerProfile { version = 0, coins = -1, bestDepth = -1, resources = null, upgrades = null };
-            JsonUtility.FromJsonOverwrite(json, profile); profile.Validate(); return profile;
+            JsonUtility.FromJsonOverwrite(json, profile);
+            if (profile.version == 2)
+            {
+                if (profile.upgrades == null || profile.upgrades.Length != 18) throw new InvalidOperationException("Invalid v2 upgrades.");
+                var expanded = new int[Progression.Keys.Length]; Array.Copy(profile.upgrades, expanded, 18);
+                profile.upgrades = expanded; profile.version = 3; migrated = true;
+            }
+            profile.Validate(); return profile;
         }
         public void Save(PlayerProfile profile)
         {

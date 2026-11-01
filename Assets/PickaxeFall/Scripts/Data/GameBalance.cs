@@ -55,15 +55,18 @@ namespace PickaxeFall
         [Header("Physics")]
         public float gravity = -15;
         public float maxFallSpeed = 22;
-        public float strikeInterval = 0.35f;
+        public float minimumImpactSpeed = 1.2f;
+        public float strongImpactSpeed = 4;
+        public float impactRearmSpeed = 0.5f;
         public float surfaceFriction = 0.3f;
         public float launchAngularSpeed = 260;
         public float maximumAngularSpeed = 540;
         [Range(0, 1)] public float restitution = 0.78f;
         [Min(0)] public float minimumReboundSpeed = 2.8f;
         [Min(0)] public float maximumReboundSpeed = 6.2f;
-        [Range(0, 1)] public float workbenchRepairFraction = 0.25f;
-        [Min(1)] public int workbenchRepairCap = 28;
+        [Header("Depth hardness")]
+        [Min(0)] public int hardnessStartDepth = 40;
+        [Min(20)] public int hardnessDoublingDepth = 50;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {
@@ -79,8 +82,8 @@ namespace PickaxeFall
             new("Деревянная", "ОБЫЧНАЯ", new Color32(184, 130, 78, 255), 2, 40, 45, 1),
             new("Каменная", "НЕОБЫЧНАЯ", new Color32(173, 188, 198, 255), 4, 72, 30, 1.2f),
             new("Золотая", "РЕДКАЯ", new Color32(255, 203, 92, 255), 6, 108, 15, 1.3f),
-            new("Железная", "ЭПИЧЕСКАЯ", new Color32(226, 235, 232, 255), 9, 200, 8, 1.4f),
-            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 14, 320, 2, 1.5f)
+            new("Железная", "ЭПИЧЕСКАЯ", new Color32(226, 235, 232, 255), 10, 200, 8, 1.4f),
+            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 16, 320, 2, 1.5f)
         };
 
         public int Roll(System.Random random)
@@ -105,7 +108,7 @@ namespace PickaxeFall
 
         public int BlockHealthHalfUnits(BlockKind kind, int row)
         {
-            float hardness = ResourceInventory.IsMaterial(kind) && kind != BlockKind.Dirt ? 1 + 0.25f * (Mathf.Max(0, row) / 40) : 1;
+            float hardness = ResourceInventory.IsMaterial(kind) && kind != BlockKind.Dirt ? Mathf.Pow(2, Mathf.Clamp((row - hardnessStartDepth) / (float)Mathf.Max(20, hardnessDoublingDepth), 0, 20)) : 1;
             return Mathf.CeilToInt(Block(kind).health * 2 * hardness);
         }
 
