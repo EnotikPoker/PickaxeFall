@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
 
 namespace PickaxeFall
 {
+    [DefaultExecutionOrder(-100)]
     public class GameController : MonoBehaviour
     {
         [SerializeField] GameBalance balance;
@@ -20,7 +22,11 @@ namespace PickaxeFall
         public FallingPickaxe Pickaxe => tools.Count > 0 ? tools[0] : null;
         public IReadOnlyList<FallingPickaxe> Pickaxes => tools;
         public MiningWorld World { get; private set; }
+        public PhysicsScene2D PhysicsScene => gameObject.scene.GetPhysicsScene2D();
         public MiningEffects Effects { get; private set; }
+        public SimulationClock Clock { get; } = new();
+        public EffectRolls Rolls { get; } = new();
+        public bool IsSimulation => Clock.Manual;
         public EconomyService Economy { get; private set; }
         public GameSettings Settings { get; private set; }
         public RunEnergy Energy { get; } = new();
@@ -28,7 +34,7 @@ namespace PickaxeFall
         public int SelectedToolIndex { get; private set; }
         public FallingPickaxe SelectedTool => tools.Count > SelectedToolIndex ? tools[SelectedToolIndex] : null;
         public float AbilityCost(AbilityKind kind) => RunUpgrades.EnergyCost(kind == AbilityKind.Dash ? 40 : 50);
-        public bool ControlsAvailable => Phase == RunPhase.Mining && !Paused && hud != null && !hud.ModalOpen;
+        public bool ControlsAvailable => Phase == RunPhase.Mining && !Paused && (IsSimulation || hud != null && !hud.ModalOpen);
         public RunUpgrades RunUpgrades { get; private set; }
         public ResourceInventory Inventory { get; private set; }
         public int Depth { get; private set; }
@@ -48,7 +54,7 @@ namespace PickaxeFall
         public event Action Changed;
         GameHud hud;
         MineCamera cameraFollow;
-        System.Random rouletteRandom, effectRandom;
+        System.Random rouletteRandom;
         int selectedTier;
         bool initialized, dirty;
         float nextSave;
@@ -58,7 +64,9 @@ namespace PickaxeFall
 
         void Start()
         {
+            if (IsSimulation) return;
             Application.targetFrameRate = 60; Screen.orientation = ScreenOrientation.Portrait;
+            Time.fixedDeltaTime = 1f / 60; Physics2D.simulationMode = SimulationMode2D.Script;
             Physics2D.gravity = new Vector2(0, balance.gravity);
             ProfileDirectory = Application.persistentDataPath;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -92,13 +100,7 @@ namespace PickaxeFall
             }
             Inventory = new ResourceInventory(Economy); RunUpgrades = new RunUpgrades(Economy.Profile);
             rouletteRandom = new System.Random(Guid.NewGuid().GetHashCode());
-            Effects = new GameObject("Mining effects").AddComponent<MiningEffects>(); Effects.transform.SetParent(transform); Effects.Initialize(Settings);
-            World = new GameObject("Streamed mine").AddComponent<MiningWorld>(); World.transform.SetParent(transform); World.Initialize(this, balance);
-            for (int i = 0; i < 5; i++)
-            {
-                var tool = new GameObject("Physical pickaxe " + (i + 1)).AddComponent<FallingPickaxe>();
-                tool.transform.SetParent(transform); tool.Initialize(this); tools.Add(tool); tool.gameObject.SetActive(false);
-            }
+            InitializeWorldAndTools();
             var cameraObject = new GameObject("Main Camera"); cameraObject.tag = "MainCamera";
             cameraObject.AddComponent<Camera>(); cameraObject.AddComponent<AudioListener>();
             cameraFollow = cameraObject.AddComponent<MineCamera>(); cameraFollow.Initialize(this);
@@ -112,6 +114,17 @@ namespace PickaxeFall
 #endif
         }
 
+        void InitializeWorldAndTools()
+        {
+            Effects = new GameObject("Mining effects").AddComponent<MiningEffects>(); Effects.transform.SetParent(transform); Effects.Initialize(Settings, IsSimulation);
+            World = new GameObject("Streamed mine").AddComponent<MiningWorld>(); World.transform.SetParent(transform); World.Initialize(this, balance);
+            for (int i = 0; i < 5; i++)
+            {
+                var tool = new GameObject("Physical pickaxe " + (i + 1)).AddComponent<FallingPickaxe>();
+                tool.transform.SetParent(transform); tool.Initialize(this); tools.Add(tool); tool.gameObject.SetActive(false);
+            }
+        }
+
         public void NewRun()
         {
             if (!initialized) return;
@@ -119,11 +132,11 @@ namespace PickaxeFall
             foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
             Depth = BlocksBroken = WorkbenchesUsed = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
             RunToolCount = 1; RescueUsed = false; RunUpgrades = new RunUpgrades(Economy.Profile);
-            SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); hud.CancelGesture();
+            SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); Clock.Reset(); hud?.CancelGesture();
             int previousSeed = Seed;
             do { Seed = Guid.NewGuid().GetHashCode() & int.MaxValue; } while (Seed == 0 || Seed == previousSeed);
-            World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); cameraFollow.ResetView();
-            Phase = RunPhase.Ready; hud.SelectTab(HubTab.Mine); Notify();
+            World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); cameraFollow?.ResetView();
+            Phase = RunPhase.Ready; hud?.SelectTab(HubTab.Mine); Notify();
         }
         public void Spin()
         {
@@ -147,7 +160,10 @@ namespace PickaxeFall
         void StartDrop(int forcedCount)
         {
             if (Phase != RunPhase.Equipped) return;
-            RunUpgrades = new RunUpgrades(Economy.Profile); effectRandom = new System.Random(unchecked(Seed ^ 0x6AC690C5));
+            RunUpgrades = new RunUpgrades(Economy.Profile); Rolls.Reset(unchecked(Seed ^ 0x6AC690C5));
+#if BALANCE_LAB || UNITY_EDITOR
+            if (IsSimulation) { Rolls.Forced[(int)UpgradeKind.TeamChance] = forcedTeam; Rolls.Forced[(int)UpgradeKind.LastChance] = forcedRescue; }
+#endif
             RunToolCount = forcedCount > 0 ? Mathf.Clamp(forcedCount, 1, 5) : RollEffect(UpgradeKind.TeamChance) ? RunUpgrades.TeamSize : 1;
             for (int i = 0; i < tools.Count; i++)
             {
@@ -155,24 +171,38 @@ namespace PickaxeFall
                 tools[i].Equip(selectedTier, i, (i - (RunToolCount - 1) * 0.5f) * 1.4f); tools[i].Launch();
             }
             Energy.Reset(RunUpgrades); SelectTool(0);
-            Phase = RunPhase.Mining; World.StreamTools(tools); cameraFollow.ResetView(); Notify();
-            if (RunToolCount > 1) hud.Toast("УДАЧА! КИРОК В ОТРЯДЕ: " + RunToolCount);
+            Phase = RunPhase.Mining; World.StreamTools(tools); cameraFollow?.ResetView(); Notify();
+            if (RunToolCount > 1) hud?.Toast("УДАЧА! КИРОК В ОТРЯДЕ: " + RunToolCount);
         }
-        public bool RollEffect(UpgradeKind kind) => effectRandom != null && RunUpgrades.Chance(kind) > 0 && effectRandom.NextDouble() < RunUpgrades.Chance(kind);
+        public bool RollEffect(UpgradeKind kind) => Rolls.Roll(kind, RunUpgrades.Chance(kind));
         public int PreviewDamageHalfUnits(int tier) => balance.pickaxes[tier].damage * 2 + Progression.DamageStepHalfUnits(tier) * Economy.Profile.Level(new(UpgradeKind.Damage, tier));
         public int PreviewDurability(int tier) => balance.pickaxes[tier].durability + Progression.DurabilityStep(tier) * Economy.Profile.Level(new(UpgradeKind.Durability, tier));
 
         void Update()
         {
-            if (!initialized) return;
+            if (!initialized || IsSimulation) return;
             if (Input.GetKeyDown(KeyCode.Escape)) { if (!hud.CloseModal()) TogglePause(); }
             if (Phase == RunPhase.Mining && !Paused)
             {
-                foreach (var tool in tools) if (tool.IsAlive) Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.transform.position.y));
-                World.StreamTools(tools);
                 if (dirty && Time.unscaledTime >= nextSave) SaveProgress();
             }
             hud.Tick();
+        }
+
+        void FixedUpdate() { if (initialized && !IsSimulation) SimulateMiningStep(); }
+        // The player and the lab use the same native physics entry point and ordering.
+        public void SimulateMiningStep(Action<GameController> policy = null)
+        {
+            if (Phase != RunPhase.Mining || Paused) return;
+            Clock.Advance(); StepMiningWorld(); policy?.Invoke(this);
+            foreach (var tool in tools) if (tool.IsAlive) tool.PhysicsTick();
+            Physics2D.SyncTransforms(); PhysicsScene.Simulate(Clock.Delta);
+        }
+        public void StepMiningWorld()
+        {
+            if (Phase != RunPhase.Mining || Paused) return;
+            foreach (var tool in tools) if (tool.IsAlive) Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.Body.position.y));
+            World.StreamTools(tools);
         }
 
         public bool SelectTool(int index)
@@ -215,7 +245,7 @@ namespace PickaxeFall
                 source.RepairAndUpgrade(steps);
                 if (steps == 2) { Benefits.DoubleBenches++; Energy.Ensure(Energy.Maximum); }
                 Effects.Impact(block.transform.position, new Color32(105, 239, 196, 255), 18, true);
-                hud.Toast(steps == 2 ? "ВЕРСТАК ×2 · ПОЛНЫЙ РЕМОНТ И ЭНЕРГИЯ" : "ВЕРСТАК · ПОЛНЫЙ РЕМОНТ");
+                hud?.Toast(steps == 2 ? "ВЕРСТАК ×2 · ПОЛНЫЙ РЕМОНТ И ЭНЕРГИЯ" : "ВЕРСТАК · ПОЛНЫЙ РЕМОНТ");
             }
             else
             {
@@ -227,7 +257,7 @@ namespace PickaxeFall
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
                     if (!Economy.Collect(block.Kind, quantity)) throw new InvalidOperationException(Economy.LastError);
                     Benefits.BonusOre += quantity - 1; OreCounts[(int)block.Kind] += quantity; dirty = true;
-                    if (Settings.LootMessages) hud.Toast($"{GameBalance.BlockName(block.Kind)} +{quantity}");
+                    if (Settings.LootMessages && !IsSimulation) hud?.Toast($"{GameBalance.BlockName(block.Kind)} +{quantity}");
                 }
                 Effects.Impact(block.transform.position, block.BaseColor, 7);
             }
@@ -246,16 +276,17 @@ namespace PickaxeFall
                 if (RollEffect(UpgradeKind.LastChance))
                 {
                     tool.Revive(); Benefits.Rescues++; Benefits.RestoredDurability += tool.Durability; Energy.Ensure(AbilityCost(AbilityKind.Plunge));
-                    hud.Toast("ПОСЛЕДНИЙ ШАНС! +50% ПРОЧНОСТИ И ЭНЕРГИЯ"); Notify(); return;
+                    hud?.Toast("ПОСЛЕДНИЙ ШАНС! +50% ПРОЧНОСТИ И ЭНЕРГИЯ"); Notify(); return;
                 }
             }
             tool.BreakApart();
             if (tool == SelectedTool) for (int i = 0; i < tools.Count; i++) if (SelectTool(i)) break;
-            if (last) FinishRun(); else { hud.Toast("КИРКА №" + (tool.ToolIndex + 1) + " РАССЫПАЛАСЬ"); Notify(); }
+            if (last) FinishRun(); else { hud?.Toast("КИРКА №" + (tool.ToolIndex + 1) + " РАССЫПАЛАСЬ"); Notify(); }
         }
         public void FinishRun()
         {
             if (Phase != RunPhase.Mining) return;
+            if (IsSimulation) { StepMiningWorld(); Phase = RunPhase.Finished; foreach (var tool in tools) tool.Stop(); return; }
             foreach (var tool in tools)
             {
                 if (tool.IsAlive) { Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.transform.position.y)); tool.BreakApart(); }
@@ -292,10 +323,11 @@ namespace PickaxeFall
         public bool SelectHubTab(HubTab tab) { if (!CanTrade) return false; hud.SelectTab(tab); return true; }
         void SaveProgress()
         {
+            if (IsSimulation) return;
             try { Economy?.Save(); Settings?.Save(); dirty = false; nextSave = Time.unscaledTime + 5; }
             catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС"); nextSave = Time.unscaledTime + 10; }
         }
-        void OnApplicationPause(bool pause) { if (pause) SaveProgress(); if (pause && Phase == RunPhase.Mining && !Paused) TogglePause(); }
+        void OnApplicationPause(bool pause) { if (IsSimulation) return; if (pause) SaveProgress(); if (pause && Phase == RunPhase.Mining && !Paused) TogglePause(); }
         void OnApplicationQuit() => SaveProgress();
         void OnDestroy() { if (initialized) SaveProgress(); Time.timeScale = 1; hud?.Dispose(); }
         void Notify() => Changed?.Invoke();
@@ -306,6 +338,24 @@ namespace PickaxeFall
             NewRun(); Seed = seed; World.ResetWorld(seed); selectedTier = tier;
             RunUpgrades = new RunUpgrades(Economy.Profile); Pickaxe.Equip(tier);
             Phase = RunPhase.Equipped; StartDrop(count);
+        }
+#endif
+#if BALANCE_LAB || UNITY_EDITOR
+        int forcedTeam = -1, forcedRescue = -1;
+        public void InitializeSimulation(GameBalance config)
+        {
+            Clock.Manual = true; balance = config; Settings = new GameSettings(true);
+            Economy = new EconomyService(new PlayerProfile()); Inventory = new ResourceInventory(Economy);
+            RunUpgrades = new RunUpgrades(Economy.Profile); Physics2D.gravity = new Vector2(0, config.gravity);
+            InitializeWorldAndTools(); initialized = true;
+        }
+        public void BeginSimulation(int tier, int seed, int[] levels, int team, int rescue)
+        {
+            foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
+            Array.Clear(Economy.Profile.resources, 0, 8); Array.Copy(levels, Economy.Profile.upgrades, 25);
+            Economy.Profile.Validate(); Seed = seed; Clock.Reset(); forcedTeam = team; forcedRescue = rescue;
+            Depth = BlocksBroken = WorkbenchesUsed = 0; RescueUsed = false; Array.Clear(OreCounts, 0, OreCounts.Length); Benefits.Reset();
+            World.ResetWorld(seed); selectedTier = tier; Phase = RunPhase.Equipped; StartDrop(0);
         }
 #endif
     }

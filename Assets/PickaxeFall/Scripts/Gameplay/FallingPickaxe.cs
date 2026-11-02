@@ -9,6 +9,7 @@ namespace PickaxeFall
         Rigidbody2D body;
         SpriteRenderer visual;
         PhysicsMaterial2D material;
+        Material selectionMaterial;
         LineRenderer selection;
         readonly ImpactGate impacts = new();
         readonly RaycastHit2D[] sweepHits = new RaycastHit2D[64];
@@ -26,7 +27,7 @@ namespace PickaxeFall
         public int OriginalTier { get; private set; }
         public int ToolIndex { get; private set; }
         public bool IsAlive => gameObject.activeSelf && Durability > 0 && visual.enabled;
-        public bool AbilityActive => remaining > 0 && Time.time < abilityUntil;
+        public bool AbilityActive => remaining > 0 && game.Clock.Now < abilityUntil;
         public int DamageHalfUnits => Stats.damage * 2 + game.RunUpgrades.DamageBonusHalfUnits(OriginalTier);
         public int Durability { get; private set; }
         public int MaxDurability => Stats.durability + game.RunUpgrades.DurabilityBonus(OriginalTier);
@@ -48,8 +49,13 @@ namespace PickaxeFall
             var marker = new GameObject("Selected tool"); marker.transform.SetParent(transform, false); selection = marker.AddComponent<LineRenderer>();
             selection.useWorldSpace = false; selection.loop = true; selection.positionCount = 4; selection.widthMultiplier = 0.035f;
             selection.SetPositions(new[] { new Vector3(-0.62f,-0.62f), new Vector3(-0.62f,0.62f), new Vector3(0.62f,0.62f), new Vector3(0.62f,-0.62f) });
-            selection.material = new Material(Shader.Find("Sprites/Default")); selection.startColor = selection.endColor = new Color32(255, 236, 107, 255); selection.sortingOrder = 9; selection.enabled = false;
+            selectionMaterial = new Material(Shader.Find("Sprites/Default")); selection.material = selectionMaterial; selection.startColor = selection.endColor = new Color32(255, 236, 107, 255); selection.sortingOrder = 9; selection.enabled = false;
             body.simulated = false;
+        }
+        void OnDestroy()
+        {
+            if (material) DestroyImmediate(material);
+            if (selectionMaterial) DestroyImmediate(selectionMaterial);
         }
         public void SetSelected(bool selected) { if (selection) selection.enabled = selected && IsAlive; }
         public void Equip(int tier, int toolIndex = 0, float x = 0)
@@ -65,8 +71,8 @@ namespace PickaxeFall
             Vector3 spawn = new(spawnX, game.Balance.spawnHeight, 0); transform.SetPositionAndRotation(spawn, Quaternion.Euler(0, 0, -12));
             body.position = spawn; body.rotation = -12; body.linearVelocity = Vector2.zero; body.angularVelocity = 0;
             remaining = 0; abilityUntil = momentumUntil = 0; step = 0; impacts.Clear();
-            lastReboundTime = Time.time; incomingVelocity = Vector2.zero; incomingAngular = 0;
-            Physics2D.SyncTransforms(); body.interpolation = RigidbodyInterpolation2D.Interpolate;
+            lastReboundTime = game.Clock.Now; incomingVelocity = Vector2.zero; incomingAngular = 0;
+            Physics2D.SyncTransforms(); body.interpolation = game.IsSimulation ? RigidbodyInterpolation2D.None : RigidbodyInterpolation2D.Interpolate;
         }
         public void Launch()
         {
@@ -78,26 +84,26 @@ namespace PickaxeFall
         {
             if (!IsAlive || AbilityActive || !body.simulated) return false;
             ability = kind; remaining = kind == AbilityKind.Dash ? 1 : game.RunUpgrades.PlungeBlocks;
-            abilityUntil = Time.time + (kind == AbilityKind.Dash ? 0.35f : 0.6f); momentumUntil = abilityUntil;
+            abilityUntil = game.Clock.Now + (kind == AbilityKind.Dash ? 0.35f : 0.6f); momentumUntil = abilityUntil;
             Vector2 desired = kind == AbilityKind.Dash ? direction * game.RunUpgrades.DashSpeed : new Vector2(body.linearVelocity.x * 0.5f, -18);
             body.AddForce((desired - body.linearVelocity) * body.mass, ForceMode2D.Impulse); body.WakeUp(); nextTrail = 0; return true;
         }
         public void CancelAbility() { remaining = 0; abilityUntil = momentumUntil = 0; }
-        void FixedUpdate()
+        public void PhysicsTick()
         {
             if (game.Phase != RunPhase.Mining || game.Paused || !IsAlive) return;
             step++;
-            var velocity = body.linearVelocity; float horizontalLimit = Time.time < momentumUntil ? 18 : 9;
+            var velocity = body.linearVelocity; float horizontalLimit = game.Clock.Now < momentumUntil ? 18 : 9;
             velocity.x = Mathf.Clamp(velocity.x, -horizontalLimit, horizontalLimit); velocity.y = Mathf.Max(velocity.y, -game.Balance.maxFallSpeed);
             body.linearVelocity = velocity;
             body.angularVelocity = Mathf.Clamp(body.angularVelocity, -game.Balance.maximumAngularSpeed, game.Balance.maximumAngularSpeed);
             incomingVelocity = velocity; incomingAngular = body.angularVelocity * Mathf.Deg2Rad;
-            impacts.Prepare(step, velocity, incomingAngular, body.worldCenterOfMass, transform, game.Balance.impactRearmSpeed);
+            impacts.Prepare(step, velocity, incomingAngular, body.worldCenterOfMass, body.position, body.rotation, game.Balance.impactRearmSpeed);
             if (AbilityActive) SweepAbility();
         }
         void SweepAbility()
         {
-            Vector2 velocity = body.linearVelocity; float distance = velocity.magnitude * Time.fixedDeltaTime + 0.025f;
+            Vector2 velocity = body.linearVelocity; float distance = velocity.magnitude * game.Clock.Delta + 0.025f;
             if (velocity.sqrMagnitude < 0.01f) return;
             // Cast the whole rigidbody, including the handle, before the solver can bounce it.
             int count = body.Cast(velocity.normalized, worldFilter, sweepHits, distance);
@@ -109,9 +115,9 @@ namespace PickaxeFall
                 if (!block) { if (!sweepHits[i].collider.attachedRigidbody) CancelAbility(); continue; }
                 if (!block.IsBroken) Penetrate(block, sweepHits[i].point);
             }
-            if (IsAlive && Time.time >= nextTrail)
+            if (IsAlive && game.Clock.Now >= nextTrail)
             {
-                game.Effects.Impact(body.position, new Color32(94, 225, 238, 255), 2, false, false); nextTrail = Time.time + 0.07f;
+                game.Effects.Impact(body.position, new Color32(94, 225, 238, 255), 2, false, false); nextTrail = game.Clock.Now + 0.07f;
             }
         }
         sealed class HitOrder : System.Collections.Generic.IComparer<RaycastHit2D>
@@ -156,11 +162,11 @@ namespace PickaxeFall
                 // Normally the sweep destroys it first. This handles a rotating/overlapping tip.
                 Vector2 before = incomingVelocity;
                 Penetrate(block, contact.point);
-                if (block.IsBroken && IsAlive && Time.time < momentumUntil) body.linearVelocity = before;
+                if (block.IsBroken && IsAlive && game.Clock.Now < momentumUntil) body.linearVelocity = before;
                 return;
             }
             var key = new Vector2Int(block.Column, block.Row);
-            if (impacts.TryHit(key, step, approach, game.Balance.minimumImpactSpeed, contact.normal, transform.InverseTransformPoint(contact.point)))
+            if (impacts.TryHit(key, step, approach, game.Balance.minimumImpactSpeed, contact.normal, ImpactGate.Rotate(contact.point-body.position,-body.rotation)))
                 PhysicalHit(block, approach, contact.point);
             if (IsAlive) Rebound(contact.normal, approach, enter);
         }
@@ -183,13 +189,13 @@ namespace PickaxeFall
         }
         void Rebound(Vector2 normal, float approach, bool impact)
         {
-            bool resting = !impact && Time.time - lastReboundTime > 0.55f && body.linearVelocity.sqrMagnitude < 0.25f;
+            bool resting = !impact && game.Clock.Now - lastReboundTime > 0.55f && body.linearVelocity.sqrMagnitude < 0.25f;
             if (!resting && (!impact || approach < game.Balance.minimumImpactSpeed)) return;
             float desired = resting ? game.Balance.minimumReboundSpeed : Mathf.Clamp(approach * game.Balance.restitution, game.Balance.minimumReboundSpeed, game.Balance.maximumReboundSpeed);
             float outward = Vector2.Dot(body.linearVelocity, normal);
             if (outward > game.Balance.maximumReboundSpeed) body.linearVelocity -= normal * (outward - game.Balance.maximumReboundSpeed);
             else if (outward < desired) body.AddForce(normal * ((desired - outward) * body.mass), ForceMode2D.Impulse);
-            lastReboundTime = Time.time; HopCount++;
+            lastReboundTime = game.Clock.Now; HopCount++;
         }
         public void RepairAndUpgrade(int steps = 1)
         {
@@ -209,6 +215,5 @@ namespace PickaxeFall
             body.linearVelocity = velocity; body.angularVelocity = 0; incomingVelocity = velocity; incomingAngular = 0; Physics2D.SyncTransforms();
         }
 #endif
-        void OnDestroy() { if (material) Destroy(material); if (selection && selection.sharedMaterial) Destroy(selection.sharedMaterial); }
     }
 }

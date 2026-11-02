@@ -65,7 +65,7 @@ namespace PickaxeFall
             long dirt = game.Inventory[BlockKind.Dirt]; Check(game.Sell(BlockKind.Dirt, 1) && game.Wallet == wallet + 1 && game.Inventory[BlockKind.Dirt] == dirt - 1, "live sale updates wallet and inventory");
             // Controlled RNG seeds exercise rare mechanics without changing their production probabilities.
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.TntFind).Index] = 20;
-            int rareSeed = 1; while (new System.Random(unchecked(rareSeed ^ 0x6AC690C5)).NextDouble() >= 0.1) rareSeed++;
+            int rareSeed = EffectSeed(UpgradeKind.TntFind,0.1);
             game.BeginProbeRun(0, rareSeed, 1);
             var plain = game.World.DebugSetCell(-15, 4, BlockKind.Stone); plain.DestroyBlock(game.Pickaxe);
             Check(plain.IsBroken && plain.Kind == BlockKind.Stone, "TNT find applies to ore only");
@@ -83,7 +83,7 @@ namespace PickaxeFall
             Check(!recursiveTnt && !created.DestroyBlock(game.Pickaxe), "explosions cannot create bonus TNT or trigger the spent cell twice");
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.TntFind).Index] = 0;
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.DoubleBench).Index] = 20;
-            game.BeginProbeRun(0, rareSeed, 5);
+            game.BeginProbeRun(0, EffectSeed(UpgradeKind.DoubleBench,0.2), 5);
             Check(game.RunToolCount == 5, "five independent tools spawn");
             for (int i = 0; i < 5; i++)
             {
@@ -109,7 +109,7 @@ namespace PickaxeFall
             }
             game.FinishRun(); yield return new WaitForSeconds(1);
             Array.Clear(game.Economy.Profile.upgrades, 0, game.Economy.Profile.upgrades.Length); game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.LastChance).Index] = 10;
-            int rescueSeed = 1; while (new System.Random(unchecked(rescueSeed ^ 0x6AC690C5)).NextDouble() >= 0.05) rescueSeed++;
+            int rescueSeed = EffectSeed(UpgradeKind.LastChance,0.05);
             game.BeginProbeRun(0, rescueSeed, 1); game.Pickaxe.DebugExhaust();
             Check(game.Phase == RunPhase.Mining && game.RescueUsed && game.Pickaxe.Durability == Mathf.CeilToInt(game.Pickaxe.MaxDurability * 0.5f), "last tool recovers exactly rounded 50 percent");
             game.Pickaxe.DebugExhaust(); Check(game.Phase == RunPhase.Breaking, "rescue cannot repeat");
@@ -118,6 +118,12 @@ namespace PickaxeFall
             yield return RuntimeActionChecks.Run(game, root, Check);
             Debug.Log("PICKAXEFALL_SMOKE_OK: " + assertions + " checks; trading, half damage, opaque cracks, stronger hops, group lifecycle, streaming, camera, workbench and rescue.");
             Application.Quit(0);
+        }
+        public static int EffectSeed(UpgradeKind kind,double chance)
+        {
+            var rolls=new EffectRolls();
+            for(int seed=1;seed<100000;seed++) { rolls.Reset(unchecked(seed ^ 0x6AC690C5));if(rolls.Roll(kind,chance))return seed; }
+            throw new Exception("No controlled effect seed found");
         }
     }
 }

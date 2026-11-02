@@ -13,6 +13,7 @@ namespace PickaxeFall
         readonly HashSet<int> wantedRows = new();
         readonly Queue<(Vector2 center, FallingPickaxe source)> explosions = new();
         readonly BoxCollider2D[] walls = new BoxCollider2D[2];
+        readonly List<Collider2D> blastColliders = new();
         bool detonating;
         float wallTopHint = 24, wallBottomHint = -48;
         GameController game;
@@ -136,7 +137,8 @@ namespace PickaxeFall
                     if (doubled) game.Benefits.DoubleBlasts++;
                     float radius = balance.explosionRadius * (doubled ? Mathf.Sqrt(2) : 1);
                     game.Effects.Explosion(blast.center, radius);
-                    foreach (var collider in Physics2D.OverlapCircleAll(blast.center, radius))
+                    game.PhysicsScene.OverlapCircle(blast.center,radius,new ContactFilter2D().NoFilter(),blastColliders);
+                    foreach (var collider in blastColliders)
                     {
                         var block = collider.GetComponent<MineBlock>();
                         if (block && !block.IsBroken && block.Kind != BlockKind.Workbench) block.DestroyBlock(blast.source, true);

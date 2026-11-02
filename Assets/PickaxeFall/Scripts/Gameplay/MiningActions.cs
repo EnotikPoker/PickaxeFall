@@ -38,14 +38,19 @@ namespace PickaxeFall
         readonly System.Collections.Generic.Dictionary<Vector2Int, Contact> contacts = new();
         readonly System.Collections.Generic.List<Vector2Int> retired = new();
         public void Clear() => contacts.Clear();
-        public void Prepare(int step, Vector2 linear, float angular, Vector2 center, Transform pose, float rearmSpeed)
+        public static Vector2 Rotate(Vector2 point, float degrees)
+        {
+            float angle=degrees*Mathf.Deg2Rad, c=Mathf.Cos(angle), s=Mathf.Sin(angle);
+            return new Vector2(c*point.x-s*point.y,s*point.x+c*point.y);
+        }
+        public void Prepare(int step, Vector2 linear, float angular, Vector2 center, Vector2 position, float rotation, float rearmSpeed)
         {
             retired.Clear();
             foreach (var pair in contacts)
             {
                 var c = pair.Value;
                 if (step - c.SeenStep > 50) { retired.Add(pair.Key); continue; }
-                Vector2 offset = (Vector2)pose.TransformPoint(c.LocalPoint) - center;
+                Vector2 offset = position + Rotate(c.LocalPoint,rotation) - center;
                 Vector2 pointVelocity = linear + new Vector2(-offset.y, offset.x) * angular;
                 if (step - c.SeenStep > 1 || Vector2.Dot(pointVelocity, c.Normal) > rearmSpeed) c.Armed = true;
             }
