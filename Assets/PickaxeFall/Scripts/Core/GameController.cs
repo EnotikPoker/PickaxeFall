@@ -27,6 +27,7 @@ namespace PickaxeFall
         public SimulationClock Clock { get; } = new();
         public EffectRolls Rolls { get; } = new();
         public bool IsSimulation => Clock.Manual;
+        public bool ReadyToPresent => initialized;
         public EconomyService Economy { get; private set; }
         public GameSettings Settings { get; private set; }
         public RunEnergy Energy { get; } = new();
@@ -44,6 +45,7 @@ namespace PickaxeFall
         public long PotentialSaleValue { get { long value = 0; for (int i = 0; i < 8; i++) value += OreCounts[i] * Progression.SellPrices[i]; return value; } }
         public int WorkbenchesUsed { get; private set; }
         public int RunToolCount { get; private set; } = 1;
+        public int LivingToolCount { get { int count=0;foreach(var tool in tools)if(tool.IsAlive)count++;return count; } }
         public bool RescueUsed { get; private set; }
         public HubTab CurrentHubTab => hud.CurrentTab;
         public int Seed { get; private set; }
@@ -70,7 +72,7 @@ namespace PickaxeFall
             Physics2D.gravity = new Vector2(0, balance.gravity);
             ProfileDirectory = Application.persistentDataPath;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            foreach (string arg in Environment.GetCommandLineArgs()) if (arg.StartsWith("--preview-")) TestMode = arg.Substring(10);
+            foreach (string arg in Environment.GetCommandLineArgs()) if (arg.StartsWith("--preview-") && arg!="--preview-exit") TestMode = arg.Substring(10);
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
@@ -81,15 +83,15 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot" }, TestMode) < 0) TestMode = "";
             bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
             if (probe) TestMode = "probe";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
-            if (TestMode.Length > 0) ProfileDirectory = Path.Combine(Application.temporaryCachePath, "verification", Guid.NewGuid().ToString("N"));
+            if (TestMode.Length > 0) { Application.runInBackground=true; ProfileDirectory = Path.Combine(Application.temporaryCachePath, "verification", Guid.NewGuid().ToString("N")); }
 #endif
             Settings = new GameSettings(TestMode.Length > 0);
             var store = new ProfileStore(ProfileDirectory, TestMode.Length > 0 ? () => new PlayerProfile() : null);
-            try { Economy = new EconomyService(store.Load(), store.Save); }
+            try { Economy = new EconomyService(store.Load(), store.Save, store.Reset); }
             catch (Exception e)
             {
                 Debug.LogError(e.Message);
@@ -257,7 +259,7 @@ namespace PickaxeFall
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
                     if (!Economy.Collect(block.Kind, quantity)) throw new InvalidOperationException(Economy.LastError);
                     Benefits.BonusOre += quantity - 1; OreCounts[(int)block.Kind] += quantity; dirty = true;
-                    if (Settings.LootMessages && !IsSimulation) hud?.Toast($"{GameBalance.BlockName(block.Kind)} +{quantity}");
+                    if (!IsSimulation) hud?.ShowLoot(source!=null ? source.Body.position : (Vector2)block.transform.position,block.Kind,quantity,source!=null ? source.ToolIndex : -1);
                 }
                 Effects.Impact(block.transform.position, block.BaseColor, 7);
             }
@@ -281,6 +283,7 @@ namespace PickaxeFall
             }
             tool.BreakApart();
             if (tool == SelectedTool) for (int i = 0; i < tools.Count; i++) if (SelectTool(i)) break;
+            foreach(var other in tools)other.SetSelected(other.ToolIndex==SelectedToolIndex);
             if (last) FinishRun(); else { hud?.Toast("КИРКА №" + (tool.ToolIndex + 1) + " РАССЫПАЛАСЬ"); Notify(); }
         }
         public void FinishRun()
@@ -298,6 +301,12 @@ namespace PickaxeFall
         }
         IEnumerator FinishAnimation() { yield return new WaitForSeconds(0.85f); Phase = RunPhase.Finished; Notify(); }
 
+        public bool ResetProgress()
+        {
+            if(IsSimulation || (!CanTrade && !Paused))return false;
+            if(!Economy.TryResetProgress()){hud?.Toast(Economy.LastError);return false;}
+            Settings.SetTutorialSeen(false);Settings.Save();NewRun();hud?.ProgressReset();return true;
+        }
         public bool Buy(UpgradeKey key)
         {
             if (!CanTrade) return false;
@@ -344,7 +353,7 @@ namespace PickaxeFall
         int forcedTeam = -1, forcedRescue = -1;
         public void InitializeSimulation(GameBalance config)
         {
-            Clock.Manual = true; balance = config; Settings = new GameSettings(true);
+            Clock.Manual = true; balance = config; Settings = new GameSettings(true,false);
             Economy = new EconomyService(new PlayerProfile()); Inventory = new ResourceInventory(Economy);
             RunUpgrades = new RunUpgrades(Economy.Profile); Physics2D.gravity = new Vector2(0, config.gravity);
             InitializeWorldAndTools(); initialized = true;

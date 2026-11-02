@@ -11,7 +11,7 @@ namespace PickaxeFall
         VisualElement energyFill;
         int shownEnergy = -1, shownMaximum = -1, shownSelection = -1;
         RunUpgrades shownUpgrades;
-        public bool ModalOpen => modal != null && modal.style.display != DisplayStyle.None;
+        public bool ModalOpen => tutorialOpen || modal != null && modal.style.display != DisplayStyle.None;
         void BuildCombat()
         {
             playfield.name = "gesture-field"; playfield.pickingMode = PickingMode.Position;

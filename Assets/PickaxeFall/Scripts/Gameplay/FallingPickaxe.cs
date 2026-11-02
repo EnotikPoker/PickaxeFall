@@ -9,8 +9,8 @@ namespace PickaxeFall
         Rigidbody2D body;
         SpriteRenderer visual;
         PhysicsMaterial2D material;
-        Material selectionMaterial;
-        LineRenderer selection;
+        SpriteRenderer selection;
+        PolygonCollider2D hitbox;
         readonly ImpactGate impacts = new();
         readonly RaycastHit2D[] sweepHits = new RaycastHit2D[64];
         ContactFilter2D worldFilter;
@@ -41,27 +41,30 @@ namespace PickaxeFall
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous; body.interpolation = RigidbodyInterpolation2D.Interpolate;
             body.angularDamping = 0.14f; body.linearDamping = 0.05f; body.sleepMode = RigidbodySleepMode2D.NeverSleep;
             material = new PhysicsMaterial2D("Pickaxe bounce") { friction = game.Balance.surfaceFriction, bounciness = game.Balance.restitution };
-            var head = gameObject.AddComponent<PolygonCollider2D>(); head.points = PixelArt.PickaxeHeadOutline(); head.sharedMaterial = material;
-            var handle = new GameObject("Handle collider"); handle.transform.SetParent(transform, false);
-            handle.transform.localPosition = new Vector3(-0.067f, -0.067f); handle.transform.localRotation = Quaternion.Euler(0, 0, -45);
-            var capsule = handle.AddComponent<CapsuleCollider2D>(); capsule.size = new Vector2(0.09f, 0.68f); capsule.sharedMaterial = material;
+            hitbox=gameObject.AddComponent<PolygonCollider2D>();hitbox.sharedMaterial=material;
             worldFilter = new ContactFilter2D { useTriggers = false };
-            var marker = new GameObject("Selected tool"); marker.transform.SetParent(transform, false); selection = marker.AddComponent<LineRenderer>();
-            selection.useWorldSpace = false; selection.loop = true; selection.positionCount = 4; selection.widthMultiplier = 0.035f;
-            selection.SetPositions(new[] { new Vector3(-0.62f,-0.62f), new Vector3(-0.62f,0.62f), new Vector3(0.62f,0.62f), new Vector3(0.62f,-0.62f) });
-            selectionMaterial = new Material(Shader.Find("Sprites/Default")); selection.material = selectionMaterial; selection.startColor = selection.endColor = new Color32(255, 236, 107, 255); selection.sortingOrder = 9; selection.enabled = false;
+            var marker=new GameObject("Selected tool silhouette");marker.transform.SetParent(transform,false);
+            selection=marker.AddComponent<SpriteRenderer>();selection.sortingOrder=9;selection.enabled=false;
             body.simulated = false;
         }
         void OnDestroy()
         {
             if (material) DestroyImmediate(material);
-            if (selectionMaterial) DestroyImmediate(selectionMaterial);
+
         }
-        public void SetSelected(bool selected) { if (selection) selection.enabled = selected && IsAlive; }
+        public void SetSelected(bool selected) { if (selection) selection.enabled = selected && IsAlive && game.LivingToolCount>1; }
+        public bool SelectionVisible => selection && selection.enabled;
+        void SetArt()
+        {
+            visual.sprite=PixelArt.Pickaxe(Tier);selection.sprite=PixelArt.PickaxeOutline(Tier);
+            int count=visual.sprite.GetPhysicsShapeCount();hitbox.pathCount=count;
+            var path=new System.Collections.Generic.List<Vector2>();
+            for(int i=0;i<count;i++){visual.sprite.GetPhysicsShape(i,path);hitbox.SetPath(i,path);}
+        }
         public void Equip(int tier, int toolIndex = 0, float x = 0)
         {
             Tier = OriginalTier = Mathf.Clamp(tier, 0, game.Balance.pickaxes.Length - 1); ToolIndex = toolIndex; spawnX = x;
-            Durability = MaxDurability; visual.sprite = PixelArt.Pickaxe(Stats.color); visual.color = Color.white; visual.enabled = true;
+            Durability = MaxDurability; SetArt(); visual.color = Color.white; visual.enabled = true;
             TotalStrikes = NaturalStrikes = HopCount = 0; physicsRandom = new System.Random(unchecked(game.Seed ^ tier * 73856093 ^ (toolIndex + 1) * 19349663));
             body.mass = Stats.mass; ResetPose();
         }
@@ -201,7 +204,7 @@ namespace PickaxeFall
         {
             Tier = Mathf.Min(Tier + steps, game.Balance.pickaxes.Length - 1); int before = Durability;
             Durability = MaxDurability; game.Benefits.RestoredDurability += Mathf.Max(0, Durability - before);
-            body.mass = Stats.mass; visual.sprite = PixelArt.Pickaxe(Stats.color);
+            body.mass = Stats.mass; SetArt();
         }
         public void Revive() { Durability = Mathf.Max(1, Mathf.CeilToInt(MaxDurability * 0.5f)); body.WakeUp(); }
         public void Stop() { CancelAbility(); body.linearVelocity = Vector2.zero; body.angularVelocity = 0; body.simulated = false; SetSelected(false); }

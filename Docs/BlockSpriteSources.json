@@ -32,32 +32,36 @@
       "height": 32
     },
     {
-      "source": "Blocks/Grass/Dirt_Surface_0.png",
+      "source": "Grass/Dirt_Surface_0.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_0.png",
-      "sha256": "87720fcdfd3992c0a55b0f57052ac5942cc1f6410a6d4b9e6447f13939852513",
+      "sha256": "2440e29c445963df7fa28e999639713911ef02b545d69a943adcdf381bf71eb1",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Grass.rar"
     },
     {
-      "source": "Blocks/Grass/Dirt_Surface_1.png",
+      "source": "Grass/Dirt_Surface_1.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_1.png",
-      "sha256": "89b906b2880953e4c60b0814e13e9d224dce0de34aaba14310e88e78db7fbb3d",
+      "sha256": "49779d54707d791beb6a9fc32773166abce6488e7c9c3b22c437db669619a59f",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Grass.rar"
     },
     {
-      "source": "Blocks/Grass/Dirt_Surface_2.png",
+      "source": "Grass/Dirt_Surface_2.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_2.png",
-      "sha256": "b2e53ea9c8174186bff16a86aaa76a70a136eb279aca0ec23a17172b61cdc76e",
+      "sha256": "7e999f0c117e52bf983a6e8e4cb75434e6825619f82ed12a5119b5609b60cc2b",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Grass.rar"
     },
     {
-      "source": "Blocks/Grass/Dirt_Surface_3.png",
+      "source": "Grass/Dirt_Surface_3.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_3.png",
-      "sha256": "539679fac8eb303b07cd63394dc6f8ab420924c2effb6e2a22b35857ccdbc985",
+      "sha256": "34b01a4e1cdf9fc825fa1c2fa7faa6a63aea81c4760ee489bd65a11cde3f304b",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Grass.rar"
     },
     {
       "source": "Blocks/Stone/Stone_0_Work.png",
@@ -172,32 +176,36 @@
       "height": 16
     },
     {
-      "source": "Blocks/Copper/Copper_0_Work.png",
+      "source": "Copper/Copper_0_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_0.png",
-      "sha256": "3a781f9efc1633e9dad0d6a8d816b1124b01bdeb11a2163d98b43944fcac9845",
+      "sha256": "7133be6a1c50e0be6e3c82baeb9bb14e3291090222afd8404e4bfc614d4181e5",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Copper.rar"
     },
     {
-      "source": "Blocks/Copper/Copper_1_Work.png",
+      "source": "Copper/Copper_1_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_1.png",
-      "sha256": "2978366f8a10b58f443c7b7828519f30c68dbd152d86d4668a249f38fa0fb500",
+      "sha256": "bc81fef57d4dd8d0395120fb2e976c6a19fbbd64d9b82852d571633b61d33086",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Copper.rar"
     },
     {
-      "source": "Blocks/Copper/Copper_2_Work.png",
+      "source": "Copper/Copper_2_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_2.png",
-      "sha256": "b2693ec73eea44011c2dbc08309dcc50573862db80f9e6e9bc869cc35c882496",
+      "sha256": "3a410097423b2a2a544df00a362ade66bc620c5deb575db5b5889726b12d437c",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Copper.rar"
     },
     {
-      "source": "Blocks/Copper/Copper_3_Work.png",
+      "source": "Copper/Copper_3_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_3.png",
-      "sha256": "8c80b9ab7e0d43d490f6d6eb075c51109b6a6a83302fd224593a18b6cb02c48c",
+      "sha256": "e3a5b39224e598fd4828bf0b1504a44ab0157ee256ed8d7bc5e8bd29e615cb3f",
       "width": 32,
-      "height": 32
+      "height": 32,
+      "archive": "Copper.rar"
     },
     {
       "source": "Blocks/Copper_Deep_0.png",
@@ -507,5 +515,9 @@
       "width": 16,
       "height": 16
     }
-  ]
+  ],
+  "overrides": {
+    "Grass.rar": "2c5fc8ac7be0871190217ac4fbeb9ca1211f5f4a3d1dab3f34108138a538a470",
+    "Copper.rar": "30c9b21911291d395f266ead9865b10ab7ccd4f1a059f2360a75ef38c3ee667a"
+  }
 }

@@ -86,7 +86,7 @@ namespace PickaxeFall
             int rescueSeed = RuntimeSmokeTest.EffectSeed(UpgradeKind.LastChance,0.2);
             game.BeginProbeRun(0, rescueSeed, 1); game.Energy.TrySpend(100); tool = game.SelectedTool; tool.DebugExhaust();
             check(tool.IsAlive && tool.Durability == Mathf.CeilToInt(tool.MaxDurability * 0.5f) && game.Energy.CanSpend(game.AbilityCost(AbilityKind.Plunge)), "rescue restores half durability and at least one plunge");
-            game.FinishRun(); yield return new WaitForSeconds(1);
+            game.FinishRun(); yield return new WaitForSeconds(1.5f);
             check(root.Q<Button>("show-benefits") != null && root.Q("mine-page").worldBound.yMax <= root.worldBound.yMax, "results fit and expose benefit details");
         }
     }

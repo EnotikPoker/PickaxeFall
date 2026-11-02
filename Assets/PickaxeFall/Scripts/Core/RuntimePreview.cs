@@ -26,6 +26,9 @@ namespace PickaxeFall
                 game.BeginProbeRun(0, 8127, 1); yield return new WaitForSeconds(2); game.FinishRun(); yield return new WaitForSeconds(1);
                 if (game.TestMode == "benefits") Submit(root.Q<Button>("show-benefits"));
             }
+            else if(game.TestMode=="tutorial"){Submit(root.Q<Button>("open-settings"));Submit(root.Q<Button>("settings-tutorial"));}
+            else if(game.TestMode=="reset"){Submit(root.Q<Button>("open-settings"));Submit(root.Q<Button>("settings-reset-progress"));}
+            else if(game.TestMode=="loot"){game.BeginProbeRun(0,8127,1);yield return new WaitForSeconds(.8f);game.World.DebugSetCell(-10,8,BlockKind.Copper).DestroyBlock(game.Pickaxe);}
             else if (game.TestMode == "controls") game.BeginProbeRun(0, 8127, 3);
             else if (game.TestMode == "abilities") { game.SelectHubTab(HubTab.Shop); yield return null; Submit(root.Q<Button>("shop-category-3")); }
             else if (game.TestMode == "mine") { }
@@ -56,6 +59,7 @@ namespace PickaxeFall
             Debug.Log("PICKAXEFALL_PREVIEW_READY: " + game.TestMode + "; " + file);
             int frames = 0; float seconds = 0, slowest = 0;
             while (seconds < 10) { yield return null; float dt = Time.unscaledDeltaTime; seconds += dt; frames++; slowest = Mathf.Max(slowest, dt); }
+            if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--exit-after-preview"))Application.Quit(0);
             Debug.Log($"PICKAXEFALL_DEVICE_PERFORMANCE: mode={game.TestMode}; averageFPS={frames / seconds:F1}; slowestFrameMs={slowest * 1000:F1}; blocks={game.World.ActiveBlocks}");
         }
         static void Submit(Button button)
