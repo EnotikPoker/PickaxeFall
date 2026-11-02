@@ -14,13 +14,14 @@ namespace PickaxeFall
         readonly Queue<(Vector2 center, FallingPickaxe source)> explosions = new();
         readonly BoxCollider2D[] walls = new BoxCollider2D[2];
         bool detonating;
+        float wallTopHint = 24, wallBottomHint = -48;
         GameController game;
         GameBalance balance;
         MineGenerator generator;
         public int ActiveBlocks { get; private set; }
         public int LoadedRows => rows.Count;
         public GameBalance Balance => balance;
-        public bool CanMine => game.Phase == RunPhase.Mining;
+        public bool CanMine => game.Phase == RunPhase.Mining && !game.Paused;
 
         public void Initialize(GameController owner, GameBalance config)
         {
@@ -37,11 +38,15 @@ namespace PickaxeFall
             rows.Clear(); changes.Clear(); explosions.Clear(); ActiveBlocks = 0;
             generator = new MineGenerator(balance, runSeed); Stream(0);
         }
-        public void Stream(float depth) { wantedRows.Clear(); WantWindow(depth); ApplyWindows(); }
+        public void Stream(float depth) { wallTopHint = -depth + balance.spawnHeight + 12; wallBottomHint = -depth - 12; wantedRows.Clear(); WantWindow(depth); ApplyWindows(); }
         public void StreamTools(IReadOnlyList<FallingPickaxe> tools)
         {
-            wantedRows.Clear();
-            foreach (var tool in tools) if (tool.IsAlive) WantWindow(-tool.transform.position.y);
+            wantedRows.Clear(); wallTopHint = float.NegativeInfinity; wallBottomHint = float.PositiveInfinity;
+            foreach (var tool in tools) if (tool.IsAlive)
+            {
+                float y = tool.Body.position.y; wallTopHint = Mathf.Max(wallTopHint, y + 12); wallBottomHint = Mathf.Min(wallBottomHint, y - 12);
+                WantWindow(-y);
+            }
             if (wantedRows.Count == 0) WantWindow(0);
             ApplyWindows();
         }
@@ -71,8 +76,9 @@ namespace PickaxeFall
             foreach (int row in wantedRows) { min = Mathf.Min(min, row); max = Mathf.Max(max, row); }
             foreach (var wall in walls)
             {
-                var p = wall.transform.position; p.y = -(min + max) * 0.5f;
-                wall.transform.position = p; wall.size = new Vector2(1, max - min + 30);
+                float top = Mathf.Max(-min + 15, wallTopHint), bottom = Mathf.Min(-max - 15, wallBottomHint);
+                var p = wall.transform.position; p.y = (top + bottom) * 0.5f;
+                wall.transform.position = p; wall.size = new Vector2(1, top - bottom);
             }
         }
         void GenerateRow(int row)
@@ -94,18 +100,28 @@ namespace PickaxeFall
         }
         public void Remember(MineBlock block) => changes[new Vector2Int(block.Column, block.Row)] = new CellState
             { kind = block.Kind, health = block.HealthHalfUnits, broken = block.IsBroken };
-        public void Break(MineBlock block, FallingPickaxe source, bool explosion)
+        public void Break(MineBlock block, FallingPickaxe source, DamageOrigin origin)
         {
             bool wasTnt = block.Kind == BlockKind.Tnt;
             Vector2 position = block.transform.position;
-            bool createTnt = game.OnBlockBroken(block, source, explosion);
-            if (createTnt)
-            {
-                block.Setup(this, BlockKind.Tnt, block.Column, block.Row, 0, block.IsDeep); Remember(block); return;
-            }
+            bool createTnt = game.OnBlockBroken(block, source, origin);
             ActiveBlocks--; Remember(block); block.gameObject.SetActive(false);
-            if (wasTnt) { explosions.Enqueue((position, source)); DetonateQueued(); }
+            if (wasTnt || createTnt)
+            {
+                source?.CancelAbility(); explosions.Enqueue((position, source)); DetonateQueued();
+            }
         }
+        public void DamageNeighbours(int x, int row, int damage, FallingPickaxe source)
+        {
+            DamageNeighbour(x - 1, row, damage, source); DamageNeighbour(x + 1, row, damage, source);
+            DamageNeighbour(x, row - 1, damage, source); DamageNeighbour(x, row + 1, damage, source);
+        }
+        void DamageNeighbour(int x, int row, int damage, FallingPickaxe source)
+        {
+            var block = CellAt(x, row);
+            if (block && ResourceInventory.IsMaterial(block.Kind)) block.HitHalfUnits(damage, source, DamageOrigin.Shrapnel);
+        }
+
         public int SurfaceRow(int x) => generator.SurfaceRow(x);
         void DetonateQueued()
         {
@@ -116,7 +132,9 @@ namespace PickaxeFall
                 while (explosions.Count > 0)
                 {
                     var blast = explosions.Dequeue();
-                    float radius = balance.explosionRadius * (game.RollEffect(UpgradeKind.DoubleBlast) ? Mathf.Sqrt(2) : 1);
+                    bool doubled = game.RollEffect(UpgradeKind.DoubleBlast);
+                    if (doubled) game.Benefits.DoubleBlasts++;
+                    float radius = balance.explosionRadius * (doubled ? Mathf.Sqrt(2) : 1);
                     game.Effects.Explosion(blast.center, radius);
                     foreach (var collider in Physics2D.OverlapCircleAll(blast.center, radius))
                     {

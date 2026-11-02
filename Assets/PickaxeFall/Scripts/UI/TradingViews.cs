@@ -103,7 +103,7 @@ namespace PickaxeFall
         {
             BoldText(parent, "Лавка улучшений", "title");
             Text(parent, "Первые уровни дешёвые. Каждый следующий требует больше монет и материалов.", "description");
-            var categories = Box(parent, "shop-categories"); string[] names = { "КИРКИ", "ДОБЫЧА", "УДАЧА", "СКОРО" };
+            var categories = Box(parent, "shop-categories"); string[] names = { "КИРКИ", "ДОБЫЧА", "УДАЧА", "ПРИЁМЫ", "СКОРО" };
             for (int i = 0; i < names.Length; i++)
             {
                 int index = i; var b = Button(categories, names[i], () => { shopCategory = index; RebuildShop(); }, "stone-button category"); b.name = "shop-category-" + i; categoryButtons.Add(b);
@@ -115,7 +115,8 @@ namespace PickaxeFall
                 var b = Button(tierSelector, "", () => { shopTier = tier; RebuildShop(); }, "stone-button tier-button"); b.tooltip = game.Balance.pickaxes[i].title; b.name = "shop-tier-" + i;
                 Icon(b, PixelArt.Pickaxe(game.Balance.pickaxes[i].color), "tier-icon"); tierButtons.Add(b);
             }
-            selectedToolName = BoldText(parent, "", "selected-tool"); shopCards = Box(parent, "shop-cards");
+            selectedToolName = BoldText(parent, "", "selected-tool");
+            toolHitCounts = Text(parent, "", "description"); shopCards = Box(parent, "shop-cards");
             soonPanel = Box(parent, "soon-panel");
             BoldText(soonPanel, "Новые карты и кирки", "title");
             Text(soonPanel, "В следующем обновлении. Пока все пять видов кирок выпадают в рулетке, а их характеристики улучшаются здесь.", "description");
@@ -124,10 +125,11 @@ namespace PickaxeFall
         void RebuildShop()
         {
             shopCards.Clear(); upgradeCards.Clear();
-            Display(tierSelector, shopCategory == 0); Display(selectedToolName, shopCategory == 0); Display(soonPanel, shopCategory == 3);
+            Display(tierSelector, shopCategory == 0); Display(selectedToolName, shopCategory == 0); Display(toolHitCounts, shopCategory == 0); Display(soonPanel, shopCategory == 4);
             if (shopCategory == 0) { AddCard(new(UpgradeKind.Damage, shopTier)); AddCard(new(UpgradeKind.Durability, shopTier)); }
-            else if (shopCategory == 1) foreach (var kind in new[] { UpgradeKind.Fortune, UpgradeKind.TntFind, UpgradeKind.Careful }) AddCard(new(kind));
+            else if (shopCategory == 1) foreach (var kind in new[] { UpgradeKind.Fortune, UpgradeKind.TntFind, UpgradeKind.Careful, UpgradeKind.ImpactPower, UpgradeKind.Shrapnel }) AddCard(new(kind));
             else if (shopCategory == 2) foreach (var kind in new[] { UpgradeKind.TeamChance, UpgradeKind.TeamSize, UpgradeKind.DoubleBench, UpgradeKind.DoubleBlast, UpgradeKind.LastChance }) AddCard(new(kind));
+            else if (shopCategory == 3) foreach (var kind in new[] { UpgradeKind.EnergyCapacity, UpgradeKind.EnergyCharge, UpgradeKind.EnergyEfficiency, UpgradeKind.DashForce, UpgradeKind.PlungeDepth }) AddCard(new(kind));
             RefreshShop();
         }
         void AddCard(UpgradeKey key) => upgradeCards.Add(new UpgradeCard(this, shopCards, key));
@@ -136,7 +138,21 @@ namespace PickaxeFall
             for (int i = 0; i < categoryButtons.Count; i++) categoryButtons[i].EnableInClassList("active", i == shopCategory);
             for (int i = 0; i < tierButtons.Count; i++) tierButtons[i].EnableInClassList("active", i == shopTier);
             selectedToolName.text = game.Balance.pickaxes[shopTier].title;
+            if (shopCategory == 0)
+            {
+                int damage = game.PreviewDamageHalfUnits(shopTier);
+                bool canUpgrade = game.Economy.Profile.Level(new(UpgradeKind.Damage, shopTier)) < Progression.MaxLevel(UpgradeKind.Damage);
+                int nextDamage = canUpgrade ? damage + Progression.DamageStepHalfUnits(shopTier) : damage;
+                toolHitCounts.text = "Ударов на глубине появления" + (canUpgrade ? " сейчас → после +урона:" : ":") + "\nКамень " + HitComparison(BlockKind.Stone, damage, nextDamage) + " · Медь " + HitComparison(BlockKind.Copper, damage, nextDamage) + " · Железо " + HitComparison(BlockKind.Iron, damage, nextDamage) + " · Алмаз " + HitComparison(BlockKind.Diamond, damage, nextDamage);
+            }
             foreach (var card in upgradeCards) card.Refresh();
+        }
+        Label toolHitCounts;
+        string HitComparison(BlockKind kind, int damage, int nextDamage) => Hits(kind, damage) + (damage == nextDamage ? "" : "→" + Hits(kind, nextDamage));
+        int Hits(BlockKind kind, int damage)
+        {
+            int hp = game.Balance.BlockHealthHalfUnits(kind, game.Balance.Block(kind).minimumDepth);
+            return (hp + damage - 1) / damage;
         }
         string ResourceRecipe(UpgradeCost cost, bool owned = false)
         {
@@ -153,10 +169,20 @@ namespace PickaxeFall
         }
         string UpgradeEffect(UpgradeKey key, int level)
         {
-            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.Balance.pickaxes[key.Tier].damage + level * 0.5) + " урона";
-            if (key.Kind == UpgradeKind.Durability) return (game.Balance.pickaxes[key.Tier].durability + level * 2) + " прочности";
+            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.Balance.pickaxes[key.Tier].damage + level * Progression.DamageStepHalfUnits(key.Tier) * 0.5) + " урона";
+            if (key.Kind == UpgradeKind.Durability) return (game.Balance.pickaxes[key.Tier].durability + level * Progression.DurabilityStep(key.Tier)) + " прочности";
             if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + " кирки";
-            return Progression.Number(level * (key.Kind == UpgradeKind.Fortune ? 1 : 0.5)) + "%";
+            return key.Kind switch
+            {
+                UpgradeKind.EnergyCapacity => (100 + 20 * level) + " энергии",
+                UpgradeKind.EnergyCharge => Progression.Number(2 + 0.1 * level) + " за удар",
+                UpgradeKind.EnergyEfficiency => "−" + (2 * level) + "% расхода",
+                UpgradeKind.DashForce => (12 + level) + " м/с",
+                UpgradeKind.PlungeDepth => (2 + level) + " блоков",
+                UpgradeKind.ImpactPower => "+" + Progression.Number(level * 0.5) + " урона сильного удара",
+                UpgradeKind.Shrapnel => Progression.Number(level * 0.5) + " соседям",
+                _ => Progression.Number(level * Progression.ChanceStep(key.Kind) * 100) + "%"
+            };
         }
         sealed class UpgradeCard
         {

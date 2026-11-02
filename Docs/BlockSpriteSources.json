@@ -1,63 +1,63 @@
 {
-  "archive": "Blocks.rar",
-  "archiveSha256": "9a28779692464822e1e35033594a036fdf289f26dbd80c279d458dea667fc615",
+  "archive": "Blocks(1).rar",
+  "archiveSha256": "e891b0e00f53285e822ed356eaa86f07d6f9b096512e7225ef4cd8d88804343f",
   "count": 72,
   "files": [
     {
-      "source": "Blocks/Dirt_0.png",
+      "source": "Blocks/Dirt/Dirt_0.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_0.png",
-      "sha256": "907ca3bb1de5659726c49892ea348532800d3e62114ae5dadda7f332ad32deaf",
-      "width": 16,
-      "height": 16
+      "sha256": "6c6701d6cd4b083543e565ffa1f444c3ba735eaaed1a21116db95e8df441da14",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Dirt_1.png",
+      "source": "Blocks/Dirt/Dirt_1.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_1.png",
-      "sha256": "230e5a5a318ad2ef9e6fe246d5a30135e8f4f885b0e05f4d6bdf06c64d0c0c63",
-      "width": 16,
-      "height": 16
+      "sha256": "55b75d170a8b085d5da5242f7d2898d09aeb8106c365f77df5d6e6034b122812",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Dirt_2.png",
+      "source": "Blocks/Dirt/Dirt_2.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_2.png",
-      "sha256": "69e1694cf644be1c8667108861b25545fcc48215043a50cd85dd4ae74d4f460f",
-      "width": 16,
-      "height": 16
+      "sha256": "4e7b7eccab7022dece01bd777794ba03a23abf84800f7d59cf2776ec2f401660",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Dirt_3.png",
+      "source": "Blocks/Dirt/Dirt_3.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_3.png",
-      "sha256": "bde227b13808ea3daf22bcb98eab23e5683f294ccb3985e01eda7c09de15d9b9",
-      "width": 16,
-      "height": 16
+      "sha256": "8e42d0228787e3b4bb0e32e7f4d11c3ebdb22f05f13b7232429dd6d441bbad5f",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Dirt_Surface_0.png",
+      "source": "Blocks/Grass/Dirt_Surface_0.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_0.png",
-      "sha256": "75611698ff76689dfc2219e17dd3db818f0ea1e306c10cff71d865e3e8e28b6e",
-      "width": 16,
-      "height": 16
+      "sha256": "87720fcdfd3992c0a55b0f57052ac5942cc1f6410a6d4b9e6447f13939852513",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Dirt_Surface_1.png",
+      "source": "Blocks/Grass/Dirt_Surface_1.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_1.png",
-      "sha256": "48519f4dfc6bd824969d17caea0ec759b2c6f2ade315cbbb59168c8cbc1a1b1e",
-      "width": 16,
-      "height": 16
+      "sha256": "89b906b2880953e4c60b0814e13e9d224dce0de34aaba14310e88e78db7fbb3d",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Dirt_Surface_2.png",
+      "source": "Blocks/Grass/Dirt_Surface_2.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_2.png",
-      "sha256": "f2273cd420ecc1303721ee9260aeec2af05b40294c758456238b85d507f76c18",
-      "width": 16,
-      "height": 16
+      "sha256": "b2e53ea9c8174186bff16a86aaa76a70a136eb279aca0ec23a17172b61cdc76e",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Dirt_Surface_3.png",
+      "source": "Blocks/Grass/Dirt_Surface_3.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Dirt/Dirt_Surface_3.png",
-      "sha256": "249b27331d5f98a6f49500c38bb88801c2c47c354aee48fe7e93b152942c0a41",
-      "width": 16,
-      "height": 16
+      "sha256": "539679fac8eb303b07cd63394dc6f8ab420924c2effb6e2a22b35857ccdbc985",
+      "width": 32,
+      "height": 32
     },
     {
       "source": "Blocks/Stone/Stone_0_Work.png",
@@ -172,32 +172,32 @@
       "height": 16
     },
     {
-      "source": "Blocks/Copper_0.png",
+      "source": "Blocks/Copper/Copper_0_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_0.png",
-      "sha256": "f8de89e8df2847f0361e978851ca24b6a62e5068b44e6d3320468b671f6cce1d",
-      "width": 16,
-      "height": 16
+      "sha256": "3a781f9efc1633e9dad0d6a8d816b1124b01bdeb11a2163d98b43944fcac9845",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Copper_1.png",
+      "source": "Blocks/Copper/Copper_1_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_1.png",
-      "sha256": "0f82c830fbf386e2196f201218a1b0c794dcd675e28e23f7ffdbfdad9d4b5542",
-      "width": 16,
-      "height": 16
+      "sha256": "2978366f8a10b58f443c7b7828519f30c68dbd152d86d4668a249f38fa0fb500",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Copper_2.png",
+      "source": "Blocks/Copper/Copper_2_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_2.png",
-      "sha256": "04c2f64e068659b803dd00344a8368a9eb8c3cd66637eaed23b5df26943ffb50",
-      "width": 16,
-      "height": 16
+      "sha256": "b2693ec73eea44011c2dbc08309dcc50573862db80f9e6e9bc869cc35c882496",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Copper_3.png",
+      "source": "Blocks/Copper/Copper_3_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Copper/Copper_3.png",
-      "sha256": "9f7aaf0aa6442e13291ed024f3922d6c998b31e4061dd567fbe663ac260986a3",
-      "width": 16,
-      "height": 16
+      "sha256": "8c80b9ab7e0d43d490f6d6eb075c51109b6a6a83302fd224593a18b6cb02c48c",
+      "width": 32,
+      "height": 32
     },
     {
       "source": "Blocks/Copper_Deep_0.png",
@@ -228,32 +228,32 @@
       "height": 16
     },
     {
-      "source": "Blocks/Iron_0.png",
+      "source": "Blocks/Iron/Iron_0_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Iron/Iron_0.png",
-      "sha256": "a3dd40eb36e685f4ebdd8b5d8a286109712444d0a236486ecb62fbb3a4dbf3a1",
-      "width": 16,
-      "height": 16
+      "sha256": "159fe34ecd1aac12f1c3d11fe01313bd0b6eeca9db78d2d0d1e88baac52e342c",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Iron_1.png",
+      "source": "Blocks/Iron/Iron_1_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Iron/Iron_1.png",
-      "sha256": "d285552ab41348f21a5948e2a23beaac319bdbb8418f6041e4af6763169d51ae",
-      "width": 16,
-      "height": 16
+      "sha256": "7b2b57aa7c8fae7075f874543f12fb1334ad3bcde4689e86f2d8ebaf20a26044",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Iron_2.png",
+      "source": "Blocks/Iron/Iron_2_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Iron/Iron_2.png",
-      "sha256": "ce3f91d5bcc0ee060ed141c2f5287892a9f18505522be40cb7ccc0d6332335ce",
-      "width": 16,
-      "height": 16
+      "sha256": "85526d5c93d738bc361e04f481b2fef969e466435a54d58dcf0f5bc89d9a4731",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Iron_3.png",
+      "source": "Blocks/Iron/Iron_3_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Iron/Iron_3.png",
-      "sha256": "6f645a3bcea1474388c21484bea6ce082ae4a1bc3aa59c4fc5ca09f2e4e01147",
-      "width": 16,
-      "height": 16
+      "sha256": "f474c35e0cebff44f706dd11926b72e047529cc6134129d4a12103faeb2bee46",
+      "width": 32,
+      "height": 32
     },
     {
       "source": "Blocks/Iron_Deep_0.png",
@@ -284,32 +284,32 @@
       "height": 16
     },
     {
-      "source": "Blocks/Gold_0.png",
+      "source": "Blocks/Gold/Gold_0_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Gold/Gold_0.png",
-      "sha256": "44a22f76c2b2067915fd7cf9bdc3b7649b66363184ba3db3b6393f1d58b55369",
-      "width": 16,
-      "height": 16
+      "sha256": "8db4ebd63f92eb048dc5a66f3cc1ed835c9b0c30d639468fd772b2a010685bfc",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Gold_1.png",
+      "source": "Blocks/Gold/Gold_1_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Gold/Gold_1.png",
-      "sha256": "1caf8c510dbaa62fc3feb8a75981d00f477975eefc3bcdd14865c4b6bbd71934",
-      "width": 16,
-      "height": 16
+      "sha256": "5b2085d6bbc8089173e11516acabe7c8b3dc08e4c33d1b410a8eebdcbde76a40",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Gold_2.png",
+      "source": "Blocks/Gold/Gold_2_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Gold/Gold_2.png",
-      "sha256": "226169aa71fe125cdce62748e8f3a2fe9a6ceca8573cf46f16a448d13d00e45c",
-      "width": 16,
-      "height": 16
+      "sha256": "bd25ba9e3001733d96dedd4fc2021fd86ad7086480535e4aa39706718f41df73",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Gold_3.png",
+      "source": "Blocks/Gold/Gold_3_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Gold/Gold_3.png",
-      "sha256": "073c8acba3c0de80f86661f6afe39d2e45b953858f15ed8e70a240e35fb5b45c",
-      "width": 16,
-      "height": 16
+      "sha256": "8c6c7fdca2de380b15a60970abcc6c99ac5ea42ce067c4eb754cb26a3e2e6bf3",
+      "width": 32,
+      "height": 32
     },
     {
       "source": "Blocks/Gold_Deep_0.png",
@@ -340,32 +340,32 @@
       "height": 16
     },
     {
-      "source": "Blocks/Diamond_0.png",
+      "source": "Blocks/Diamond/Diamond_0_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Diamond/Diamond_0.png",
-      "sha256": "b530065cc1e5309fa7260c17ea2b62310dabe0196fd611fdf108105318f8fcb1",
-      "width": 16,
-      "height": 16
+      "sha256": "ff7beee5ca9a91c69d3683083f3973eb12f2ea19874c1104e7987d895e3ff4de",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Diamond_1.png",
+      "source": "Blocks/Diamond/Diamond_1_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Diamond/Diamond_1.png",
-      "sha256": "385f444acde513829bad547749b5b13eb3c7933dd067ce47c94bb439515ef74b",
-      "width": 16,
-      "height": 16
+      "sha256": "cfe50ca22224198a56f9538f706c4583fc35496a7ed71b6c6b27a11f8ac7fa32",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Diamond_2.png",
+      "source": "Blocks/Diamond/Diamond_2_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Diamond/Diamond_2.png",
-      "sha256": "94c281e68198a77ffcef00d445932ba4fcf64f67bd710b319a5df62b5c3f6ccd",
-      "width": 16,
-      "height": 16
+      "sha256": "eb9e1d24c1b4e13367e833741579beb8ed281b4b21887275447f51c27081b0b8",
+      "width": 32,
+      "height": 32
     },
     {
-      "source": "Blocks/Diamond_3.png",
+      "source": "Blocks/Diamond/Diamond_3_Work.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Diamond/Diamond_3.png",
-      "sha256": "8ccec7f21c67ed92c07d9d23be284922329959fb118f70159e2e4087a973d987",
-      "width": 16,
-      "height": 16
+      "sha256": "13b84b5720187498841afd1785534c048e72c11f2b1b40a9df8e92b559c734be",
+      "width": 32,
+      "height": 32
     },
     {
       "source": "Blocks/Diamond_Deep_0.png",

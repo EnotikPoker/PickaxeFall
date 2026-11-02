@@ -46,7 +46,7 @@ namespace PickaxeFall.Editor
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             PlayerSettings.companyName = "EnotikPoker"; PlayerSettings.productName = "PickaxeFall";
-            PlayerSettings.bundleVersion = "0.1.0";
+            ApplyVersion();
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.enotikpoker.pickaxefall");
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
@@ -92,6 +92,9 @@ namespace PickaxeFall.Editor
             Require(balance.pickaxes[3].damage > balance.pickaxes[2].damage &&
                 balance.pickaxes[3].durability > balance.pickaxes[2].durability,
                 "Iron must be stronger and more durable than gold.");
+            Require(balance.pickaxes[4].durability >= balance.pickaxes[0].durability * 5 && balance.pickaxes[4].damage >= balance.pickaxes[0].damage * 4,
+                "Legendary tools must have a substantial initial advantage.");
+            Require(balance.BlockHealthHalfUnits(BlockKind.Deepstone, 160) > balance.BlockHealthHalfUnits(BlockKind.Deepstone, 45), "Deep layers must get progressively harder.");
             int[] counts = new int[balance.pickaxes.Length]; var random = new System.Random(8127);
             for (int i = 0; i < 100000; i++) counts[balance.Roll(random)]++;
             float total = 0;
@@ -113,10 +116,10 @@ namespace PickaxeFall.Editor
                 {
                     var block = balance.ChooseBlock(first, depth);
                     Require(block == balance.ChooseBlock(second, depth), "World generation must be deterministic.");
-                    Require(depth >= 65 || block != BlockKind.Diamond, "Diamonds appeared too early.");
-                    Require(depth >= 40 || block != BlockKind.Gold, "Gold appeared too early.");
-                    Require(depth >= 22 || block != BlockKind.Iron, "Iron appeared too early.");
-                    Require(depth >= 10 || block != BlockKind.Copper, "Copper appeared too early.");
+                    Require(depth >= balance.Block(BlockKind.Diamond).minimumDepth || block != BlockKind.Diamond, "Diamonds appeared too early.");
+                    Require(depth >= balance.Block(BlockKind.Gold).minimumDepth || block != BlockKind.Gold, "Gold appeared too early.");
+                    Require(depth >= balance.Block(BlockKind.Iron).minimumDepth || block != BlockKind.Iron, "Iron appeared too early.");
+                    Require(depth >= balance.Block(BlockKind.Copper).minimumDepth || block != BlockKind.Copper, "Copper appeared too early.");
                     sawDiamond |= block == BlockKind.Diamond;
                 }
                 if (depth == 70) Require(sawDiamond, "Deep layers must contain diamonds.");
@@ -128,6 +131,7 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Build Linux smoke-test player")]
         public static void BuildLinux()
         {
+            ApplyVersion();
             ValidateBalance();
             PrototypeChecks.ExportPreview(AssetDatabase.LoadAssetAtPath<GameBalance>(DataPath));
             Build(new BuildPlayerOptions
@@ -142,6 +146,7 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Build Android APK")]
         public static void BuildAndroid()
         {
+            ApplyVersion();
             ValidateBalance();
             Directory.CreateDirectory("Builds/Android");
             EditorUserBuildSettings.buildAppBundle = false;
@@ -155,10 +160,17 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Build Android development verification APK")]
         public static void BuildAndroidDevelopment()
         {
+            ApplyVersion();
             ValidateBalance();
             Directory.CreateDirectory("Builds/Android"); EditorUserBuildSettings.buildAppBundle = false;
             Build(new BuildPlayerOptions { scenes = new[] { ScenePath }, target = BuildTarget.Android,
                 locationPathName = "Builds/Android/PickaxeFall-development.apk", options = BuildOptions.Development });
+        }
+
+        static void ApplyVersion()
+        {
+            PlayerSettings.bundleVersion = GameVersion.Name;
+            PlayerSettings.Android.bundleVersionCode = GameVersion.AndroidVersionCode;
         }
 
         static void Build(BuildPlayerOptions options)
