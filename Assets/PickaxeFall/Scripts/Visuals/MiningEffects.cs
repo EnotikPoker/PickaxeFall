@@ -11,13 +11,15 @@ namespace PickaxeFall
         AudioClip hitClip, rewardClip, breakClip;
         float lastSound;
         GameSettings settings;
+        bool silent;
         public bool Muted => settings.Volume < 0.001f;
         public int LastShatterPieces { get; private set; }
         public int ActiveToolFragments { get { int n = 0; foreach (var chip in chips) if (chip.tool && chip.life > 0) n++; return n; } }
 
-        public void Initialize(GameSettings options)
+        public void Initialize(GameSettings options, bool simulation = false)
         {
-            settings = options;
+            settings = options; silent = simulation;
+            if (silent) return;
             audioSource = gameObject.AddComponent<AudioSource>(); audioSource.playOnAwake = false;
             hitClip = Tone(160, 0.045f); rewardClip = Tone(660, 0.14f); breakClip = Tone(85, 0.24f);
             for (int i = 0; i < 320; i++)
@@ -35,6 +37,7 @@ namespace PickaxeFall
 
         public void Impact(Vector2 point, Color color, int count, bool reward = false, bool sound = true)
         {
+            if (silent) return;
             if (settings.ReducedEffects) count = Mathf.Max(1, count / 2);
             int emitted = 0;
             foreach (var chip in chips)
@@ -57,6 +60,7 @@ namespace PickaxeFall
 
         public void Shatter(Sprite sprite, Transform tool, Vector2 velocity)
         {
+            if (silent) return;
             LastShatterPieces = 0;
             Color32[] pixels = sprite.texture.GetPixels32();
             int width = sprite.texture.width, height = sprite.texture.height;

@@ -77,13 +77,13 @@ namespace PickaxeFall
             var bench = game.World.DebugSetCell(-10, 10, BlockKind.Workbench); bench.DestroyBlock(tool);
             check(tool.Durability == tool.MaxDurability && tool.MaxDurability > beforeDurability, "workbench fully restores upgraded maximum");
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.DoubleBench).Index] = 25;
-            int doubleSeed = 1; while (new System.Random(unchecked(doubleSeed ^ 0x6AC690C5)).NextDouble() >= 0.25) doubleSeed++;
+            int doubleSeed = RuntimeSmokeTest.EffectSeed(UpgradeKind.DoubleBench,0.25);
             game.BeginProbeRun(4, doubleSeed, 1); game.Energy.TrySpend(100); tool = game.SelectedTool;
             bench = game.World.DebugSetCell(-10, 10, BlockKind.Workbench); bench.DestroyBlock(tool);
             check(tool.Durability == tool.MaxDurability && game.Energy.Value == game.Energy.Maximum && game.Benefits.DoubleBenches == 1, "double workbench helps maximum-tier tool with full energy");
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.DoubleBench).Index] = 0;
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.LastChance).Index] = 40;
-            int rescueSeed = 1; while (new System.Random(unchecked(rescueSeed ^ 0x6AC690C5)).NextDouble() >= 0.2) rescueSeed++;
+            int rescueSeed = RuntimeSmokeTest.EffectSeed(UpgradeKind.LastChance,0.2);
             game.BeginProbeRun(0, rescueSeed, 1); game.Energy.TrySpend(100); tool = game.SelectedTool; tool.DebugExhaust();
             check(tool.IsAlive && tool.Durability == Mathf.CeilToInt(tool.MaxDurability * 0.5f) && game.Energy.CanSpend(game.AbilityCost(AbilityKind.Plunge)), "rescue restores half durability and at least one plunge");
             game.FinishRun(); yield return new WaitForSeconds(1);
