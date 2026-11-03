@@ -38,8 +38,16 @@ namespace PickaxeFall
             game.Pickaxes[0].DebugExhaust();check(!game.Pickaxes[1].SelectionVisible,"last survivor loses redundant outline");
             var ore=game.World.DebugSetCell(-10,10,BlockKind.Copper);ore.DestroyBlock(game.SelectedTool);
             yield return new WaitForSecondsRealtime(.2f);
-            var popup=root.Q<Label>(className:"loot-number");
-            check(popup!=null && popup.text.StartsWith("+") && root.Q(className:"loot-icon")!=null,"mining produces quantity and resource icon");
+            var popup=root.Query<Label>(className:"loot-number").ToList().FirstOrDefault(x=>x.parent.resolvedStyle.display==DisplayStyle.Flex && x.parent.resolvedStyle.visibility==Visibility.Visible);
+            check(popup!=null && popup.text.StartsWith("+") && popup.parent.Q(className:"loot-icon")!=null,"mining produces visible quantity and resource icon");
+            var popupBox=popup.parent.worldBound;
+            Vector3 screen=Camera.main.WorldToViewportPoint(game.SelectedTool.Body.position);
+            var center=new Vector2(screen.x*root.worldBound.width,(1-screen.y)*root.worldBound.height);
+            Vector3 edge=Camera.main.WorldToViewportPoint(game.SelectedTool.Body.position+Vector2.right*.8f);
+            float half=Mathf.Abs(edge.x-screen.x)*root.worldBound.width;
+            check(!popupBox.Overlaps(new Rect(center.x-half,center.y-half,half*2,half*2)),"loot popup stays outside pickaxe silhouette");
+            float fontSize=popup.resolvedStyle.fontSize,iconWidth=popup.parent.Q(className:"loot-icon").resolvedStyle.width;
+            check(Mathf.Abs(fontSize-28)<.1f && Mathf.Abs(iconWidth-28)<1,"loot quantities and icons remain compact; font="+fontSize+", icon="+iconWidth);
             game.FinishRun();yield return new WaitForSecondsRealtime(1.05f);
             long[] resources=(long[])game.OreCounts.Clone();
             yield return new WaitForSecondsRealtime(1.4f);

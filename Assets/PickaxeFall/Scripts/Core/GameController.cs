@@ -34,7 +34,7 @@ namespace PickaxeFall
         public RunBenefits Benefits { get; } = new();
         public int SelectedToolIndex { get; private set; }
         public FallingPickaxe SelectedTool => tools.Count > SelectedToolIndex ? tools[SelectedToolIndex] : null;
-        public float AbilityCost(AbilityKind kind) => RunUpgrades.EnergyCost(kind == AbilityKind.Dash ? 40 : 50);
+        public float AbilityCost(AbilityKind kind) => RunUpgrades.EnergyCost(kind == AbilityKind.Dash ? 45 : 60);
         public bool ControlsAvailable => Phase == RunPhase.Mining && !Paused && (IsSimulation || hud != null && !hud.ModalOpen);
         public RunUpgrades RunUpgrades { get; private set; }
         public ResourceInventory Inventory { get; private set; }
@@ -196,7 +196,7 @@ namespace PickaxeFall
         public void SimulateMiningStep(Action<GameController> policy = null)
         {
             if (Phase != RunPhase.Mining || Paused) return;
-            Clock.Advance(); StepMiningWorld(); policy?.Invoke(this);
+            Clock.Advance(); Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); policy?.Invoke(this);
             foreach (var tool in tools) if (tool.IsAlive) tool.PhysicsTick();
             Physics2D.SyncTransforms(); PhysicsScene.Simulate(Clock.Delta);
         }
@@ -233,7 +233,6 @@ namespace PickaxeFall
         public void OnPhysicalHit(FallingPickaxe source, bool strong)
         {
             if (Phase != RunPhase.Mining || Paused) return;
-            if (source == SelectedTool) Energy.Add(RunUpgrades.EnergyPerHit);
             if (strong) Benefits.StrongHits++;
         }
         // Bonus TNT is detonated by the world after the mined cell has been retired.

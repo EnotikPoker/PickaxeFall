@@ -10,13 +10,15 @@ namespace PickaxeFall
         sealed class LootFloat
         {
             public VisualElement element,icon;public Label count;
-            public Vector2 origin;public float started;public bool active;
+            public Vector2 worldOrigin; public float side, lane, started; public bool active;
         }
         sealed class PendingLoot { public Vector2 position;public long count;public BlockKind kind; }
         readonly Dictionary<int,PendingLoot> pendingLoot=new();
         readonly List<LootFloat> lootFloats=new();
         VisualElement lootLayer;
         float nextLootFlush, resultsAt;
+        int lootSequence;
+        const float LootWidth = 112, LootHeight = 38;
         RunPhase presentedPhase=(RunPhase)(-1);
         public void ShowLoot(Vector2 position,BlockKind kind,int quantity,int tool)
         {
@@ -34,19 +36,18 @@ namespace PickaxeFall
             }
             if(pendingLoot.Count>0 && Time.unscaledTime>=nextLootFlush)
             {
-                nextLootFlush=Time.unscaledTime+.075f;
+                nextLootFlush=Time.unscaledTime+.12f;
                 foreach(var value in pendingLoot.Values)SpawnLoot(value);
                 pendingLoot.Clear();
             }
             foreach(var item in lootFloats)
             {
                 if(!item.active)continue;
-                float duration=game.Settings.ReducedEffects ? .5f : .9f;
+                float duration=game.Settings.ReducedEffects ? .5f : .8f;
                 float t=Mathf.Clamp01((Time.unscaledTime-item.started)/duration);
                 if(t>=1){item.active=false;Display(item.element,false);continue;}
-                float ease=1-(1-t)*(1-t);item.element.style.left=item.origin.x;
-                item.element.style.top=item.origin.y-ease*(game.Settings.ReducedEffects?28:85);
-                item.element.style.opacity=t<.45f?1:(1-t)/.55f;
+                PlaceLoot(item,t);
+                item.element.style.opacity=t<.4f?1:(1-t)/.6f;
             }
             if(game.Phase!=RunPhase.Finished)return;
             float elapsed=Time.unscaledTime-resultsAt;
@@ -64,7 +65,7 @@ namespace PickaxeFall
             if(!Camera.main || root.worldBound.width<=0)return;
             if(lootLayer==null){lootLayer=Box(root,"loot-layer");root.Insert(1,lootLayer);lootLayer.pickingMode=PickingMode.Ignore;}
             LootFloat item=lootFloats.Find(x=>!x.active);
-            int maximum=game.Settings.ReducedEffects?8:20;
+            int maximum=game.Settings.ReducedEffects?6:12;
             if(item==null && lootFloats.Count<maximum)
             {
                 item=new LootFloat();item.element=Box(lootLayer,"loot-float");item.element.pickingMode=PickingMode.Ignore;
@@ -73,12 +74,59 @@ namespace PickaxeFall
                 lootFloats.Add(item);
             }
             if(item==null){item=lootFloats[0];foreach(var candidate in lootFloats)if(candidate.started<item.started)item=candidate;}
-            Vector3 screen=Camera.main.WorldToScreenPoint(value.position);
-            var bounds=root.worldBound;
-            item.origin=new Vector2(Mathf.Clamp(screen.x/Screen.width*bounds.width-40,8,bounds.width-160),Mathf.Clamp((1-screen.y/Screen.height)*bounds.height-30,80,bounds.height-100));
+            item.worldOrigin=value.position;item.side=(lootSequence&1)==0?1:-1;item.lane=(lootSequence++/2)%3;
             item.count.text="+"+Short(value.count);item.icon.style.backgroundImage=Background.FromSprite(PixelArt.Block(value.kind,0,value.kind==BlockKind.Deepstone));
             item.started=Time.unscaledTime;item.active=true;Display(item.element,true);
+            PlaceLoot(item,0);
             item.element.BringToFront();
+        }
+
+        Vector2 LootPoint(Vector2 world)
+        {
+            Vector3 screen=Camera.main.WorldToViewportPoint(world);
+            return new Vector2(screen.x*root.worldBound.width,(1-screen.y)*root.worldBound.height);
+        }
+        void PlaceLoot(LootFloat item,float t)
+        {
+            if(!Camera.main)return;
+            var bounds=root.worldBound;var view=game.GameplayViewport;
+            float left=view.xMin*bounds.width+8,right=view.xMax*bounds.width-8;
+            float top=(1-view.yMax)*bounds.height+8,bottom=(1-view.yMin)*bounds.height-8;
+            // Follow the original world point through camera motion, then arc to a side.
+            Vector2 point=LootPoint(item.worldOrigin);
+            float blockHalf=Mathf.Abs(LootPoint(item.worldOrigin+Vector2.right*.85f).x-point.x);
+            float drift=game.Settings.ReducedEffects?0:28*(1-(1-t)*(1-t));
+            float x=point.x+(item.side>0?blockHalf+18+drift:-blockHalf-18-drift-LootWidth);
+            if(x<left || x+LootWidth>right)
+                x=point.x+(item.side>0?-blockHalf-18-drift-LootWidth:blockHalf+18+drift);
+            float y=point.y-LootHeight*.5f-item.lane*36-(game.Settings.ReducedEffects?0:46*t);
+            x=Mathf.Clamp(x,left,Mathf.Max(left,right-LootWidth));
+            y=Mathf.Clamp(y,top,Mathf.Max(top,bottom-LootHeight));
+            // Keep every living tool readable, including groups and moving cameras.
+            foreach(var tool in game.Pickaxes)
+            {
+                if(!tool.IsAlive)continue;
+                Vector2 center=LootPoint(tool.Body.position);
+                float half=Mathf.Abs(LootPoint(tool.Body.position+Vector2.right*.85f).x-center.x)+10;
+                var exclusion=new Rect(center.x-half,center.y-half,half*2,half*2);
+                if(!new Rect(x,y,LootWidth,LootHeight).Overlaps(exclusion))continue;
+                float outsideRight=exclusion.xMax+8,outsideLeft=exclusion.xMin-LootWidth-8;
+                if(item.side>0 && outsideRight+LootWidth<=right)x=outsideRight;
+                else if(outsideLeft>=left)x=outsideLeft;
+                else if(outsideRight+LootWidth<=right)x=outsideRight;
+                else y=Mathf.Clamp(exclusion.yMin-LootHeight-8,top,Mathf.Max(top,bottom-LootHeight));
+            }
+            // Dense groups may leave no safe screen space; fade rather than cover a tool.
+            bool overlaps=false;
+            foreach(var tool in game.Pickaxes)
+            {
+                if(!tool.IsAlive)continue;
+                Vector2 center=LootPoint(tool.Body.position);
+                float half=Mathf.Abs(LootPoint(tool.Body.position+Vector2.right*.85f).x-center.x)+8;
+                if(new Rect(x,y,LootWidth,LootHeight).Overlaps(new Rect(center.x-half,center.y-half,half*2,half*2)))overlaps=true;
+            }
+            item.element.style.visibility=overlaps?Visibility.Hidden:Visibility.Visible;
+            item.element.style.left=x;item.element.style.top=y;
         }
     }
 }

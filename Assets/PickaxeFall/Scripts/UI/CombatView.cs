@@ -67,7 +67,7 @@ namespace PickaxeFall
             if (shownUpgrades != game.RunUpgrades)
             {
                 shownUpgrades = game.RunUpgrades;
-                SetText(abilityPrices, $"Свайп: {Progression.Number(game.AbilityCost(AbilityKind.Dash))} · Нажатие вниз: {Progression.Number(game.AbilityCost(AbilityKind.Plunge))}");
+                SetText(abilityPrices, $"Свайп: {Progression.Number(game.AbilityCost(AbilityKind.Dash))} · Нажатие: {Progression.Number(game.AbilityCost(AbilityKind.Plunge))} · +{game.RunUpgrades.EnergyPerSecond.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"))}/с");
             }
         }
         void ShowBenefits()

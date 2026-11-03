@@ -174,11 +174,11 @@ namespace PickaxeFall
             if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + " кирки";
             return key.Kind switch
             {
-                UpgradeKind.EnergyCapacity => (100 + 20 * level) + " энергии",
-                UpgradeKind.EnergyCharge => Progression.Number(2 + 0.1 * level) + " за удар",
-                UpgradeKind.EnergyEfficiency => "−" + (2 * level) + "% расхода",
-                UpgradeKind.DashForce => (12 + level) + " м/с",
-                UpgradeKind.PlungeDepth => (2 + level) + " блоков",
+                UpgradeKind.EnergyCapacity => (60 + 8 * level) + " энергии",
+                UpgradeKind.EnergyCharge => (2 + 0.04 * level).ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("ru-RU")) + " в секунду",
+                UpgradeKind.EnergyEfficiency => "−" + level + "% расхода",
+                UpgradeKind.DashForce => Progression.Number(10 + 0.6 * level) + " м/с",
+                UpgradeKind.PlungeDepth => (1 + level) + " блоков",
                 UpgradeKind.ImpactPower => "+" + Progression.Number(level * 0.5) + " урона сильного удара",
                 UpgradeKind.Shrapnel => Progression.Number(level * 0.5) + " соседям",
                 _ => Progression.Number(level * Progression.ChanceStep(key.Kind) * 100) + "%"

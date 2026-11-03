@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PickaxeFall
@@ -17,21 +18,125 @@ namespace PickaxeFall
 
         readonly GameBalance balance;
         readonly int seed;
+        // Generate a deterministic prefix, including a small look-ahead for growing veins.
+        // Future anchors never grow upwards into a finalized row. Thus reverse queries,
+        // streaming windows and different pickaxe routes all see the same map.
+        readonly List<byte[]> terrain = new();
+        readonly List<Vector2Int> frontier = new(), vein = new();
+        readonly HashSet<Vector2Int> visited = new();
+        static readonly Vector2Int[] Directions = { Vector2Int.left, Vector2Int.right, Vector2Int.up, Vector2Int.down };
+        const byte Air = 255;
+        const int LookAhead = 10;
+        int finalizedRow = -3;
         const uint BenchSalt = 0x68bc21eb, TntSalt = 0x02e5be93;
 
         public MineGenerator(GameBalance balance, int seed) { this.balance = balance; this.seed = seed; }
 
         public Cell Sample(int x, int row)
         {
-            if (!TerrainExists(x, row)) return default;
-            int surface = SurfaceRow(x);
-            var veinRandom = new System.Random(unchecked((int)Hash(Mathf.FloorToInt(x / 2f), row / 2, 173)));
-            BlockKind kind = row < surface + 3 ? BlockKind.Dirt : balance.ChooseBlock(veinRandom, row);
-            if (IsWorkbench(x, row)) kind = BlockKind.Workbench;
-            else if (IsIsolated(x, row, TntSalt, balance.tntMinimumDepth, balance.tntChance, balance.tntSpacing) && !NearWorkbench(x, row))
-                kind = BlockKind.Tnt;
+            if (Mathf.Abs(x) > balance.worldWidth / 2 || row < -2) return default;
+            while (finalizedRow < row)
+            {
+                int next = finalizedRow + 1;
+                while (terrain.Count <= next + LookAhead + 2) AddTerrainRow(terrain.Count - 2);
+                GrowRow(next); finalizedRow = next;
+            }
+            byte material = terrain[row + 2][x + balance.worldWidth / 2];
+            if (material == Air) return default;
+            BlockKind kind = (BlockKind)material;
             return new Cell(kind, (int)(Hash(x, row, 619) % 4),
-                row >= balance.Block(BlockKind.Deepstone).minimumDepth, row == surface);
+                row >= balance.Block(BlockKind.Deepstone).minimumDepth, row == SurfaceRow(x));
+        }
+
+        void AddTerrainRow(int row)
+        {
+            int half = balance.worldWidth / 2;
+            var cells = new byte[half * 2 + 1];
+            for (int x = -half; x <= half; x++)
+            {
+                byte kind = Air;
+                if (TerrainExists(x, row))
+                {
+                    kind = (byte)(row < SurfaceRow(x) + 3 ? BlockKind.Dirt : row >= balance.Block(BlockKind.Deepstone).minimumDepth ? BlockKind.Deepstone : BlockKind.Stone);
+                    if (IsWorkbench(x, row)) kind = (byte)BlockKind.Workbench;
+                    else if (IsIsolated(x, row, TntSalt, balance.tntMinimumDepth, balance.tntChance, balance.tntSpacing) && !NearWorkbench(x, row)) kind = (byte)BlockKind.Tnt;
+                }
+                cells[x + half] = kind;
+            }
+            terrain.Add(cells);
+        }
+
+        public static void VeinRange(BlockKind kind, out int minimum, out int maximum)
+        {
+            minimum = kind == BlockKind.Coal ? 3 : kind == BlockKind.Diamond ? 1 : 2;
+            maximum = kind == BlockKind.Coal ? 10 : kind == BlockKind.Gold ? 9 : kind == BlockKind.Diamond ? 7 : 8;
+        }
+        // Truncated geometric distribution: each extra block is 32% less likely.
+        public static double VeinWeight(int size, int minimum) => System.Math.Pow(.68, size - minimum);
+        static double MeanVeinSize(int minimum, int maximum)
+        {
+            double total = 0, weighted = 0;
+            for (int size = minimum; size <= maximum; size++) { double w = VeinWeight(size, minimum); total += w; weighted += size * w; }
+            return weighted / total;
+        }
+        void GrowRow(int row)
+        {
+            if (row < balance.Block(BlockKind.Coal).minimumDepth) return;
+            int half = balance.worldWidth / 2;
+            // Alternate scan direction so one side does not systematically win conflicts.
+            bool reverse = (Hash(0, row, 317) & 1) != 0;
+            for (int i = 0; i <= half * 2; i++)
+            {
+                int x = reverse ? half - i : i - half;
+                byte cell = terrain[row + 2][x + half];
+                if (cell != (byte)BlockKind.Stone && cell != (byte)BlockKind.Deepstone) continue;
+                double roll = UnitHash(x, row, 173);
+                for (BlockKind kind = BlockKind.Coal; kind <= BlockKind.Diamond; kind++)
+                {
+                    VeinRange(kind, out int min, out int max);
+                    roll -= balance.OreChance(kind, row) / MeanVeinSize(min, max);
+                    if (roll >= 0) continue;
+                    GrowVein(x, row, kind, min, max); break;
+                }
+            }
+        }
+        void GrowVein(int x, int row, BlockKind kind, int minimum, int maximum)
+        {
+            var random = new System.Random(unchecked((int)Hash(x, row, 991)));
+            double sum = 0;
+            for (int n = minimum; n <= maximum; n++) sum += VeinWeight(n, minimum);
+            double roll = random.NextDouble() * sum;
+            int target = maximum;
+            for (int n = minimum; n <= maximum; n++) { roll -= VeinWeight(n, minimum); if (roll < 0) { target = n; break; } }
+            frontier.Clear(); vein.Clear(); visited.Clear();
+            var anchor = new Vector2Int(x, row); frontier.Add(anchor); visited.Add(anchor);
+            while (frontier.Count > 0 && vein.Count < target)
+            {
+                int index = random.Next(frontier.Count); var point = frontier[index]; frontier.RemoveAt(index);
+                if (!CanGrow(point, row, kind)) continue;
+                vein.Add(point);
+                foreach (var direction in Directions)
+                {
+                    var next = point + direction;
+                    if (next.y >= row && next.y < row + LookAhead && Mathf.Abs(next.x) <= balance.worldWidth / 2 && visited.Add(next)) frontier.Add(next);
+                }
+            }
+            // Never leave a truncated or disconnected deposit beside caves/features.
+            if (vein.Count != target) return;
+            foreach (var point in vein) terrain[point.y + 2][point.x + balance.worldWidth / 2] = (byte)kind;
+        }
+        bool CanGrow(Vector2Int point, int anchorRow, BlockKind kind)
+        {
+            if (point.y < anchorRow || point.y < balance.Block(kind).minimumDepth) return false;
+            int half = balance.worldWidth / 2;
+            byte cell = terrain[point.y + 2][point.x + half];
+            if (cell != (byte)BlockKind.Stone && cell != (byte)BlockKind.Deepstone) return false;
+            foreach (var direction in Directions)
+            {
+                var neighbor = point + direction;
+                if (Mathf.Abs(neighbor.x) <= half && neighbor.y >= -2 && neighbor.y + 2 < terrain.Count && terrain[neighbor.y + 2][neighbor.x + half] == (byte)kind) return false;
+            }
+            return true;
         }
 
         public int SurfaceRow(int x)

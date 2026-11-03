@@ -11,7 +11,8 @@ namespace PickaxeFall
         readonly Stack<MineBlock> pool = new();
         readonly List<int> retiredRows = new(), orderedRows = new();
         readonly HashSet<int> wantedRows = new();
-        readonly Queue<(Vector2 center, FallingPickaxe source)> explosions = new();
+        readonly Queue<(Vector2 center, FallingPickaxe source, bool ore)> explosions = new();
+        static readonly Vector2Int[] ShrapnelDirections = { Vector2Int.down, Vector2Int.left, Vector2Int.up, Vector2Int.right };
         readonly BoxCollider2D[] walls = new BoxCollider2D[2];
         readonly List<Collider2D> blastColliders = new();
         bool detonating;
@@ -109,18 +110,18 @@ namespace PickaxeFall
             ActiveBlocks--; Remember(block); block.gameObject.SetActive(false);
             if (wasTnt || createTnt)
             {
-                source?.CancelAbility(); explosions.Enqueue((position, source)); DetonateQueued();
+                source?.CancelAbility(); explosions.Enqueue((position, source, !wasTnt)); DetonateQueued();
             }
         }
-        public void DamageNeighbours(int x, int row, int damage, FallingPickaxe source)
+        public void DamageShrapnelNeighbour(int x, int row, int damage, FallingPickaxe source, int strike)
         {
-            DamageNeighbour(x - 1, row, damage, source); DamageNeighbour(x + 1, row, damage, source);
-            DamageNeighbour(x, row - 1, damage, source); DamageNeighbour(x, row + 1, damage, source);
-        }
-        void DamageNeighbour(int x, int row, int damage, FallingPickaxe source)
-        {
-            var block = CellAt(x, row);
-            if (block && ResourceInventory.IsMaterial(block.Kind)) block.HitHalfUnits(damage, source, DamageOrigin.Shrapnel);
+            for (int i = 0; i < ShrapnelDirections.Length; i++)
+            {
+                var offset = ShrapnelDirections[(strike + i) % ShrapnelDirections.Length];
+                var block = CellAt(x + offset.x, row + offset.y);
+                if (!block || !ResourceInventory.IsMaterial(block.Kind)) continue;
+                block.HitHalfUnits(damage, source, DamageOrigin.Shrapnel); return;
+            }
         }
 
         public int SurfaceRow(int x) => generator.SurfaceRow(x);
@@ -135,7 +136,7 @@ namespace PickaxeFall
                     var blast = explosions.Dequeue();
                     bool doubled = game.RollEffect(UpgradeKind.DoubleBlast);
                     if (doubled) game.Benefits.DoubleBlasts++;
-                    float radius = balance.explosionRadius * (doubled ? Mathf.Sqrt(2) : 1);
+                    float radius = (blast.ore ? Mathf.Min(1.5f, balance.explosionRadius) : balance.explosionRadius) * (doubled ? Mathf.Sqrt(2) : 1);
                     game.Effects.Explosion(blast.center, radius);
                     game.PhysicsScene.OverlapCircle(blast.center,radius,new ContactFilter2D().NoFilter(),blastColliders);
                     foreach (var collider in blastColliders)

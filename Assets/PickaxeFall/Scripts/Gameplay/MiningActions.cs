@@ -8,13 +8,15 @@ namespace PickaxeFall
 
     public sealed class RunEnergy
     {
-        public float Maximum { get; private set; } = 100;
-        public float Value { get; private set; }
-        public float Earned { get; private set; }
-        public void Reset(RunUpgrades upgrades) { Maximum = upgrades.MaxEnergy; Value = Maximum; Earned = 0; }
+        public float Maximum { get; private set; } = 60;
+        double value, earned;
+        public float Value => (float)value;
+        public float Earned => (float)earned;
+        public void Reset(RunUpgrades upgrades) { Maximum = upgrades.MaxEnergy; value = Maximum; earned = 0; }
         public bool CanSpend(float amount) => amount > 0 && Value + 0.0001f >= amount;
-        public bool TrySpend(float amount) { if (!CanSpend(amount)) return false; Value = Mathf.Max(0, Value - amount); return true; }
-        public void Add(float amount) { float before = Value; Value = Mathf.Min(Maximum, Value + Mathf.Max(0, amount)); Earned += Value - before; }
+        public bool TrySpend(float amount) { if (!CanSpend(amount)) return false; value = Math.Max(0, value - amount); return true; }
+        public void Add(float amount) { double before = value; value = Math.Min(Maximum, value + Math.Max(0, amount)); earned += value - before; }
+        public void Regenerate(float seconds, RunUpgrades upgrades) { if (seconds > 0 && !float.IsInfinity(seconds)) Add(seconds * upgrades.EnergyPerSecond); }
         public void Ensure(float minimum) => Add(Mathf.Max(0, minimum - Value));
     }
 

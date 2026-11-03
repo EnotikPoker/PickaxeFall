@@ -88,7 +88,7 @@ namespace PickaxeFall
             if (!IsAlive || AbilityActive || !body.simulated) return false;
             ability = kind; remaining = kind == AbilityKind.Dash ? 1 : game.RunUpgrades.PlungeBlocks;
             abilityUntil = game.Clock.Now + (kind == AbilityKind.Dash ? 0.35f : 0.6f); momentumUntil = abilityUntil;
-            Vector2 desired = kind == AbilityKind.Dash ? direction * game.RunUpgrades.DashSpeed : new Vector2(body.linearVelocity.x * 0.5f, -18);
+            Vector2 desired = kind == AbilityKind.Dash ? direction * game.RunUpgrades.DashSpeed : new Vector2(body.linearVelocity.x * 0.5f, -14);
             body.AddForce((desired - body.linearVelocity) * body.mass, ForceMode2D.Impulse); body.WakeUp(); nextTrail = 0; return true;
         }
         public void CancelAbility() { remaining = 0; abilityUntil = momentumUntil = 0; }
@@ -181,7 +181,7 @@ namespace PickaxeFall
             int damage = DamageHalfUnits + (strong ? game.RunUpgrades.StrongBonusHalfUnits : 0);
             block.HitHalfUnits(damage, this, DamageOrigin.Physical);
             NaturalStrikes++; game.OnPhysicalHit(this, strong);
-            if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageNeighbours(x, row, game.RunUpgrades.ShrapnelHalfUnits, this);
+            if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageShrapnelNeighbour(x, row, game.RunUpgrades.ShrapnelHalfUnits, this, NaturalStrikes);
             game.Effects.Impact(point, color, 3); SpendWear();
         }
         void SpendWear()

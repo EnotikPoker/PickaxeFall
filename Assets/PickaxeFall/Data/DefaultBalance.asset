@@ -35,8 +35,8 @@ MonoBehaviour:
   restitution: 0.78
   minimumReboundSpeed: 2.8
   maximumReboundSpeed: 6.2
-  hardnessStartDepth: 40
-  hardnessDoublingDepth: 50
+  hardnessStartDepth: 60
+  hardnessDoublingDepth: 70
   blocks:
   - kind: 0
     health: 1
@@ -64,11 +64,11 @@ MonoBehaviour:
     oreChance: 0.03
   - kind: 6
     health: 22
-    minimumDepth: 55
-    oreChance: 0.012
+    minimumDepth: 90
+    oreChance: 0.004
   - kind: 7
     health: 10
-    minimumDepth: 45
+    minimumDepth: 75
     oreChance: 0
   - kind: 8
     health: 1

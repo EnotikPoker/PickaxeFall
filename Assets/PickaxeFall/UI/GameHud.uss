@@ -136,9 +136,9 @@ Label { white-space: normal; flex-shrink: 0; }
 .fps-options .settings-choice { flex-basis: 22%; min-width: 160px; height: 104px; font-size: 32px; margin: 6px; }
 .channel-button { font-size: 34px; min-height: 92px; margin: 10px 0 24px; }
 .loot-layer { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
-.loot-float { position: absolute; flex-direction: row; align-items: center; }
-.loot-number { color: rgb(255, 252, 215); font-size: 32px; -unity-text-outline-width: 1px; -unity-text-outline-color: rgb(18, 27, 14); }
-.loot-icon { width: 38px; height: 38px; margin-left: 8px; }
+.loot-float { position: absolute; width: 112px; height: 38px; flex-direction: row; align-items: center; justify-content: center; }
+.loot-number { color: rgb(255, 252, 215); font-size: 28px; -unity-text-outline-width: 1px; -unity-text-outline-color: rgb(18, 27, 14); }
+.loot-icon { width: 28px; height: 28px; margin-left: 6px; flex-shrink: 0; }
 .tutorial-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(13, 22, 15, 0.86); justify-content: center; padding: 64px 32px; }
 .tutorial-scroll { max-height: 96%; }
 .tutorial-art { flex-direction: row; align-items: center; justify-content: center; margin-bottom: 24px; }

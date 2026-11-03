@@ -65,15 +65,15 @@ namespace PickaxeFall
         [Min(0)] public float minimumReboundSpeed = 2.8f;
         [Min(0)] public float maximumReboundSpeed = 6.2f;
         [Header("Depth hardness")]
-        [Min(0)] public int hardnessStartDepth = 40;
-        [Min(20)] public int hardnessDoublingDepth = 50;
+        [Min(0)] public int hardnessStartDepth = 60;
+        [Min(20)] public int hardnessDoublingDepth = 70;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {
             new(BlockKind.Dirt, 1, 0), new(BlockKind.Stone, 6, 3),
             new(BlockKind.Coal, 8, 3, 0.15f), new(BlockKind.Copper, 11, 8, 0.08f),
             new(BlockKind.Iron, 14, 18, 0.055f), new(BlockKind.Gold, 18, 35, 0.03f),
-            new(BlockKind.Diamond, 22, 55, 0.012f), new(BlockKind.Deepstone, 10, 45),
+            new(BlockKind.Diamond, 22, 90, 0.004f), new(BlockKind.Deepstone, 10, 75),
             new(BlockKind.Workbench, 1, 6), new(BlockKind.Tnt, 1, 5)
         };
         [Header("Pickaxes / weighted roulette")]
@@ -120,11 +120,19 @@ namespace PickaxeFall
             double roll = random.NextDouble();
             foreach (var block in blocks)
             {
-                if (block.oreChance <= 0 || depth < block.minimumDepth) continue;
-                roll -= block.oreChance;
+                double chance = OreChance(block.kind, depth);
+                if (chance <= 0) continue;
+                roll -= chance;
                 if (roll < 0) return block.kind;
             }
             return depth >= Block(BlockKind.Deepstone).minimumDepth ? BlockKind.Deepstone : BlockKind.Stone;
+        }
+
+        public double OreChance(BlockKind kind, int depth)
+        {
+            var block = Block(kind);
+            if (depth < block.minimumDepth) return 0;
+            return block.oreChance * (kind == BlockKind.Coal && depth >= Block(BlockKind.Deepstone).minimumDepth ? .35 : 1);
         }
 
         public static string BlockName(BlockKind kind) => kind switch

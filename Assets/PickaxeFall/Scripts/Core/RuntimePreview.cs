@@ -43,7 +43,7 @@ namespace PickaxeFall
                 game.SelectHubTab(HubTab.Inventory);
                 if (game.TestMode == "sale") { yield return null; Submit(root.Q<Button>("sell-Stone")); }
             }
-            yield return new WaitForSecondsRealtime(game.TestMode == "team" ? 5 : 1);
+            yield return new WaitForSecondsRealtime(game.TestMode == "loot" ? .2f : game.TestMode == "team" ? 5 : 1);
             string file = Path.Combine(Application.temporaryCachePath, "pickaxefall-preview-" + game.TestMode + ".png");
 #if !UNITY_ANDROID
             file = "/tmp/pickaxefall-preview-" + game.TestMode + ".png";
