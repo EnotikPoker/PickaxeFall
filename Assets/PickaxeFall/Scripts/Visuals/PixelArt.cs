@@ -7,7 +7,9 @@ namespace PickaxeFall
     public static class PixelArt
     {
         static readonly Dictionary<int, Sprite> Blocks = new();
-        static readonly Dictionary<Color32, Sprite> Pickaxes = new();
+        static readonly Dictionary<int, Sprite> Pickaxes = new();
+        static readonly Dictionary<int, Sprite> PickaxeOutlines = new();
+        static readonly string[] ToolNames = { "Wood", "Stone", "Gold", "Iron", "Diamond" };
         static readonly Sprite[] CrackSprites = new Sprite[9];
         public const float PickaxeScale = 1.15f;
         static Sprite square;
@@ -114,37 +116,23 @@ namespace PickaxeFall
             return $"Blocks/{kind}/{kind}{layer}_{variant % 4}{work}";
         }
 
-        public static Sprite Pickaxe(Color32 color)
+        public static Sprite Pickaxe(int tier)
         {
-            if (Pickaxes.TryGetValue(color, out var cached) && cached) return cached;
-            const int size = 32;
-            var pixels = new Color[size * size];
-            Color outline = Color.Lerp(color, new Color32(29, 38, 33, 255), 0.76f);
-            var handle = new bool[size * size];
-            var head = new bool[size * size];
-            for (int y = 0; y < size; y++) for (int x = 0; x < size; x++)
-            {
-                Vector2 p = new((x + 0.5f) / size - 0.5f, (y + 0.5f) / size - 0.5f);
-                float u = (p.x - p.y) * 0.70710678f, v = (p.x + p.y) * 0.70710678f;
-                handle[y * size + x] = Mathf.Abs(u) < 0.044f && v >= -0.43f && v <= 0.25f;
-                head[y * size + x] = Mathf.Abs(u) <= 0.44f && Mathf.Abs(v - HeadCurve(u)) <= HeadThickness(u);
-            }
-            for (int pass = 0; pass < 2; pass++)
-            {
-                bool[] mask = pass == 0 ? handle : head;
-                for (int y = 1; y < size - 1; y++) for (int x = 1; x < size - 1; x++)
-                    if (mask[y * size + x])
-                    for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++)
-                        pixels[(y + dy) * size + x + dx] = pass == 0 ? new Color32(66, 42, 25, 255) : outline;
-                for (int y = 0; y < size; y++) for (int x = 0; x < size; x++)
-                    if (mask[y * size + x])
-                        pixels[y * size + x] = pass == 0
-                            ? (Color)new Color32((byte)(x > y ? 187 : 140), (byte)(x > y ? 137 : 92), 58, 255)
-                            : Color.Lerp(color, Color.white, (x + y) % 3 == 0 ? 0.22f : 0);
-            }
-            return Pickaxes[color] = Make(size, size, pixels);
+            tier=Mathf.Clamp(tier,0,4);
+            if(Pickaxes.TryGetValue(tier,out var cached) && cached)return cached;
+            return Pickaxes[tier]=Resources.Load<Sprite>("Pickaxes/"+ToolNames[tier]);
         }
-
+        public static Sprite PickaxeOutline(int tier)
+        {
+            if(PickaxeOutlines.TryGetValue(tier,out var cached) && cached)return cached;
+            var sprite=Pickaxe(tier);int size=sprite.texture.width;var source=sprite.texture.GetPixels32();var pixels=new Color[size*size];
+            for(int y=1;y<size-1;y++) for(int x=1;x<size-1;x++)
+            {
+                int i=y*size+x;
+                if(source[i].a==0 && (source[i-1].a>0 || source[i+1].a>0 || source[i-size].a>0 || source[i+size].a>0))pixels[i]=new Color32(255,220,58,255);
+            }
+            return PickaxeOutlines[tier]=Make(size,size,pixels);
+        }
         static float HeadCurve(float u) => 0.25f - 0.23f * Mathf.Pow(Mathf.Abs(u) / 0.44f, 1.7f);
         static float HeadThickness(float u) => Mathf.Lerp(0.052f, 0.027f, Mathf.Abs(u) / 0.44f);
         static Vector2 ToolPoint(float u, float v) => new((v + u) * 0.70710678f, (v - u) * 0.70710678f);

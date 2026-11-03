@@ -23,12 +23,12 @@ namespace PickaxeFall.Editor
                 foreach (Color32 pixel in PixelArt.Cracks(stage).texture.GetPixels32()) if (pixel.a > 200) dark++;
                 Require(dark > previous, "Every crack stage must add more fissures."); previous = dark;
             }
-            var tool = PixelArt.Pickaxe(balance.pickaxes[3].color);
+            var tool = PixelArt.Pickaxe(3);
             Color32[] pixels = tool.texture.GetPixels32(); int width = tool.texture.width;
             var occupied = new List<Vector2>();
             for (int y = 0; y < width; y++) for (int x = 0; x < width; x++)
             {
-                Require(pixels[y * width + x].a == pixels[x * width + y].a, "Pickaxe silhouette must be symmetric about its handle.");
+
                 if (pixels[y * width + x].a > 0) occupied.Add(new Vector2(x, y) / width * PixelArt.PickaxeScale);
             }
             float diameter = 0;
@@ -74,7 +74,7 @@ namespace PickaxeFall.Editor
             float ratio = (central / 5f) / (outer / (balance.worldWidth - 5f));
             Require(benches > 100 && tnt > 100 && ratio > 0.65f && ratio < 1.5f, "Special blocks are unexpectedly biased toward the central path.");
             Debug.Log($"PICKAXEFALL_GENERATOR_OK: {maps} maps, benches={benches}, TNT={tnt}, center/outside density={ratio:F3}, spacing={balance.workbenchSpacing}/{balance.tntSpacing}; route-independent.");
-            Debug.Log($"PICKAXEFALL_VISUALS_OK: opaque blocks, 8 increasing crack stages, symmetric tool, visible diameter={diameter:F3} blocks.");
+            Debug.Log($"PICKAXEFALL_VISUALS_OK: opaque blocks, 8 increasing crack stages, imported tool, visible diameter={diameter:F3} blocks.");
         }
 
         public static void ExportPreview(GameBalance balance)
@@ -91,7 +91,7 @@ namespace PickaxeFall.Editor
                 if (stage > 0) Blit(canvas, PixelArt.Cracks(stage), 8 + stage * 86, 136, 4);
             }
             for (int tier = 0; tier < balance.pickaxes.Length; tier++)
-                Blit(canvas, PixelArt.Pickaxe(balance.pickaxes[tier].color), 16 + tier * 136, 24, 2 * PixelArt.PickaxeScale);
+                Blit(canvas, PixelArt.Pickaxe(tier), 16 + tier * 136, 24, 2 * PixelArt.PickaxeScale);
             canvas.Apply(); Directory.CreateDirectory("Docs/Screenshots");
             File.WriteAllBytes("Docs/Screenshots/06-cracks-and-pickaxes.png", canvas.EncodeToPNG());
             UnityEngine.Object.DestroyImmediate(canvas);

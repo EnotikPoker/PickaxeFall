@@ -19,7 +19,24 @@ namespace PickaxeFall.Editor
                 else if (kind != BlockKind.Workbench && kind != BlockKind.Tnt) ValidateLayer(kind, true, false, paths);
             }
             Require(paths.Count == 72, "The supplied block pack must contain all 72 selected variants.");
-            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 72 PNGs; ordinary terrain/ores at 32px; deep/special blocks at 16px; Point, no compression/mips; all variants one opaque world tile.");
+            string[] names={"Wood","Stone","Gold","Iron","Diamond"};
+            for(int tier=0;tier<5;tier++)
+            {
+                string path="Assets/PickaxeFall/Resources/Pickaxes/"+names[tier]+".png";
+                var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);Require(sprite && PixelArt.Pickaxe(tier)==sprite,"Imported pickaxe is selected: "+path);
+                var importer=(TextureImporter)AssetImporter.GetAtPath(path);
+                Require(sprite.texture.width==32 && sprite.texture.height==32 && sprite.GetPhysicsShapeCount()>0,"Pickaxe art and physics outline: "+path);
+                Require(importer.filterMode==FilterMode.Point && !importer.mipmapEnabled && importer.spritePixelsPerUnit==32 && importer.textureCompression==TextureImporterCompression.Uncompressed,"Pickaxe pixel import: "+path);
+                var pixels=sprite.texture.GetPixels32();var outline=PixelArt.PickaxeOutline(tier).texture.GetPixels32();int marked=0;
+                for(int y=0;y<32;y++)for(int x=0;x<32;x++)
+                {
+                    int i=y*32+x;if(outline[i].a==0)continue;marked++;
+                    Require(pixels[i].a==0,"Selection outline must not fill the tool");
+                    Require(x>0 && pixels[i-1].a>0 || x<31 && pixels[i+1].a>0 || y>0 && pixels[i-32].a>0 || y<31 && pixels[i+32].a>0,"Selection outline must be one texture pixel thick");
+                }
+                Require(marked>20,"Visible silhouette outline");
+            }
+            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 77 PNGs including five supplied pickaxes; ordinary terrain/ores at 32px; deep/special blocks at 16px; Point, no compression/mips; all variants one opaque world tile.");
         }
 
         static void ValidateLayer(BlockKind kind, bool deep, bool surface, HashSet<string> paths)

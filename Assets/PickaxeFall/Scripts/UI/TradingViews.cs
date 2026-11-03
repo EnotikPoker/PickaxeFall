@@ -113,7 +113,7 @@ namespace PickaxeFall
             {
                 int tier = i;
                 var b = Button(tierSelector, "", () => { shopTier = tier; RebuildShop(); }, "stone-button tier-button"); b.tooltip = game.Balance.pickaxes[i].title; b.name = "shop-tier-" + i;
-                Icon(b, PixelArt.Pickaxe(game.Balance.pickaxes[i].color), "tier-icon"); tierButtons.Add(b);
+                Icon(b, PixelArt.Pickaxe(i), "tier-icon"); tierButtons.Add(b);
             }
             selectedToolName = BoldText(parent, "", "selected-tool");
             toolHitCounts = Text(parent, "", "description"); shopCards = Box(parent, "shop-cards");
@@ -187,13 +187,13 @@ namespace PickaxeFall
         sealed class UpgradeCard
         {
             readonly GameHud hud; readonly UpgradeKey key;
-            readonly VisualElement box; readonly Label heading, effect, cost, resources, reason; readonly Button buy;
+            readonly VisualElement box, resources; readonly Label heading, effect, cost, reason; readonly Button buy;
             public UpgradeCard(GameHud owner, VisualElement parent, UpgradeKey upgrade)
             {
                 hud = owner; key = upgrade; box = Box(parent, "upgrade-card inset"); box.name = "upgrade-" + key.Kind + "-" + key.Tier;
                 heading = hud.BoldText(box, "", "upgrade-title");
                 Text(box, Progression.Description(key.Kind), "description"); effect = hud.BoldText(box, "", "upgrade-effect");
-                cost = Text(box, "", "upgrade-price"); resources = Text(box, "", "upgrade-resources"); reason = Text(box, "", "upgrade-reason");
+                cost = Text(box, "", "upgrade-price"); resources = Box(box, "recipe-resources"); reason = Text(box, "", "upgrade-reason");
                 buy = hud.Button(box, "УЛУЧШИТЬ", () =>
                 {
                     if (Time.unscaledTime < hud.nextTrade) return;
@@ -208,11 +208,21 @@ namespace PickaxeFall
                 effect.text = hud.UpgradeEffect(key, level) + (level < max ? " → " + hud.UpgradeEffect(key, level + 1) : " · МАКСИМУМ");
                 box.EnableInClassList("pinned", hud.pinned.Index == key.Index);
                 bool available = hud.game.Economy.CanBuy(key, out string why) && hud.game.CanTrade;
-                buy.SetEnabled(available); buy.text = level < max ? "УЛУЧШИТЬ" : "ПРОКАЧАНО";
-                if (level >= max) { cost.text = resources.text = ""; reason.text = "Максимальный уровень"; return; }
+                buy.SetEnabled(available); buy.text = level>=max ? "ПРОКАЧАНО" : available ? "УЛУЧШИТЬ" : "НЕДОСТУПНО";
+                buy.EnableInClassList("buy-ready",available);buy.EnableInClassList("buy-blocked",!available && level<max);
+                resources.Clear();
+                if (level >= max) { cost.text = ""; reason.text = "Максимальный уровень"; return; }
                 var price = Progression.Cost(key, level + 1);
                 cost.text = $"Цена: {Exact(price.Coins)} монет · есть {Short(hud.game.Wallet)}";
-                resources.text = "Есть / нужно: " + hud.ResourceRecipe(price, true);
+                cost.EnableInClassList("cost-enough",hud.game.Wallet>=price.Coins);cost.EnableInClassList("cost-short",hud.game.Wallet<price.Coins);
+                for(int i=0;i<8;i++)
+                {
+                    if(price.Resources[i]==0)continue;
+                    var kind=(BlockKind)i;bool enough=hud.game.Inventory[kind]>=price.Resources[i];
+                    var item=Box(resources,"recipe-item");item.tooltip=GameBalance.BlockName(kind);
+                    Icon(item,PixelArt.Block(kind,0,kind==BlockKind.Deepstone),"recipe-icon");
+                    var amount=hud.BoldText(item,$"{Short(hud.game.Inventory[kind])} / {Exact(price.Resources[i])}",enough?"recipe-amount cost-enough":"recipe-amount cost-short");amount.name="required-"+kind;
+                }
                 reason.text = available ? "Нажми на карточку, чтобы оставить её целью в рюкзаке." : why;
                 reason.EnableInClassList("missing", !available);
             }

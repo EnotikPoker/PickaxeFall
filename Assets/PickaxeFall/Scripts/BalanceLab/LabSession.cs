@@ -24,12 +24,14 @@ namespace PickaxeFall.BalanceLab
         IEnumerator<LabJob> pending;
         StreamWriter journal;
         Stopwatch timer;
+        double totalWall,nextProgress;
+        int branches;
         public bool Running { get; private set; }
         public string Status { get; private set; } = "Готово к запуску";
         public long Total => (long)Scenarios.Count * Plan.samples;
         public double Elapsed => timer?.Elapsed.TotalSeconds ?? 0;
         public int Busy => workers.Count(w => w.busy);
-        public int CompletedBranches => Results.Values.Sum(r => r.branches);
+        public int CompletedBranches => branches;
         public static LabSession Create(string path, LabPlan plan, LabManifest manifest)
         {
             var session = new LabSession { DirectoryPath = Path.GetFullPath(path), Plan = plan, Manifest = manifest, Scenarios = LabPlanner.Scenarios(plan) };
@@ -72,7 +74,11 @@ namespace PickaxeFall.BalanceLab
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     var row = JsonUtility.FromJson<LabResult>(line);
                     if (string.IsNullOrEmpty(row.id) || row.resources == null || row.resources.Length != 8) throw new IOException("Повреждён журнал результатов: " + journal);
-                    if (string.IsNullOrEmpty(row.error)) session.Results[row.id] = row;
+                    if (string.IsNullOrEmpty(row.error))
+                    {
+                        if(session.Results.TryGetValue(row.id,out var old)){session.totalWall-=old.wallSeconds;session.branches-=old.branches;}
+                        session.Results[row.id]=row;session.totalWall+=row.wallSeconds;session.branches+=row.branches;
+                    }
                 }
             }
             return session;
@@ -88,7 +94,7 @@ namespace PickaxeFall.BalanceLab
             string cancel = Path.Combine(DirectoryPath,"cancel"); if (File.Exists(cancel)) File.Delete(cancel);
             assigned.Clear(); pending = LabPlanner.Jobs(Plan, Scenarios).GetEnumerator();
             journal = new StreamWriter(new FileStream(Path.Combine(DirectoryPath,"results.jsonl"), FileMode.Append, FileAccess.Write, FileShare.Read), new UTF8Encoding(false)) { AutoFlush = true };
-            timer = Stopwatch.StartNew(); Running = true; Status = "Калибровка и первые сценарии…";
+            timer = Stopwatch.StartNew();nextProgress=0; Running = true; Status = "Калибровка и первые сценарии…";
             try
             {
                 for (int i = 0; i < Plan.workers; i++)
@@ -125,7 +131,7 @@ namespace PickaxeFall.BalanceLab
                     var row = JsonUtility.FromJson<LabResult>(message.Item2);
                     if (row.id != message.Item1.job) throw new IOException("Работник вернул чужое задание.");
                     if (!string.IsNullOrEmpty(row.error)) throw new IOException(row.error);
-                    journal.WriteLine(JsonUtility.ToJson(row)); Results[row.id] = row; message.Item1.busy = false;
+                    journal.WriteLine(JsonUtility.ToJson(row)); Results[row.id] = row;totalWall+=row.wallSeconds;branches+=row.branches; message.Item1.busy = false;
                 }
                 if (Plan.seconds > 0 && Elapsed >= Plan.seconds) { Stop("Лимит времени: частичный отчёт сохранён; можно продолжить"); return; }
                 bool exhausted = false;
@@ -139,9 +145,10 @@ namespace PickaxeFall.BalanceLab
                     worker.job = job.Id; worker.busy = true; worker.process.StandardInput.WriteLine(JsonUtility.ToJson(job)); worker.process.StandardInput.Flush();
                 }
                 if (exhausted && Busy == 0) { Stop("Все сценарии завершены"); return; }
-                double perSecond = Results.Values.Sum(r => r.wallSeconds) / Math.Max(1, Plan.workers);
+                double perSecond = totalWall / Math.Max(1, Plan.workers);
                 Status = $"Выполнено {Results.Count:N0} / {Total:N0}; занято работников {Busy}/{workers.Count}; время {Elapsed/60:0.0} мин";
                 if (Results.Count >= 5 && perSecond > 0) Status += $"; ориентир остатка {(Total-Results.Count) * perSecond / Results.Count / 60:0.0} мин";
+                if(Elapsed>=nextProgress){nextProgress=Elapsed+5;WriteProgress();}
             }
             catch (Exception e) { Stop("Ошибка: " + e.Message); }
         }
@@ -156,7 +163,11 @@ namespace PickaxeFall.BalanceLab
             }
             workers.Clear(); assigned.Clear(); pending?.Dispose(); pending = null; journal?.Dispose(); journal = null;
             while (messages.TryDequeue(out _)) { }
-            if (Directory.Exists(DirectoryPath)) LabFiles.Atomic(Path.Combine(DirectoryPath,"status.txt"),reason);
+            if (Directory.Exists(DirectoryPath)){ LabFiles.Atomic(Path.Combine(DirectoryPath,"status.txt"),reason);WriteProgress();}
+        }
+        void WriteProgress()
+        {
+            LabFiles.Write(Path.Combine(DirectoryPath,"progress.json"),new LabProgress {completed=Results.Count,total=Total,branches=branches,elapsedSeconds=Elapsed,running=Running,status=Status});
         }
         public void Dispose() { if (Running) Stop(); journal?.Dispose(); }
     }

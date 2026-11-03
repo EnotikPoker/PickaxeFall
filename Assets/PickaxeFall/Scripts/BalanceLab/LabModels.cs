@@ -37,6 +37,7 @@ namespace PickaxeFall.BalanceLab
             prices=snapshot.ToArray();return this;
         }
     }
+    [Serializable] public sealed class LabProgress { public long completed,total;public int branches;public double elapsedSeconds;public bool running;public string status; }
     [Serializable] public sealed class LabPrice { public int key,level; public long coins; public long[] materials; }
     [Serializable] public sealed class LabPlan
     {
@@ -94,12 +95,16 @@ namespace PickaxeFall.BalanceLab
         {
             var files = Directory.GetFiles(Path.Combine(root, "Assets/PickaxeFall"), "*.cs", SearchOption.AllDirectories).ToList();
             files.Add(Path.Combine(root, "Assets/PickaxeFall/Data/DefaultBalance.asset"));
+            string tools=Path.Combine(root,"Assets/PickaxeFall/Resources/Pickaxes");
+            if(Directory.Exists(tools))foreach(string art in Directory.GetFiles(tools,"*.png")){files.Add(art);files.Add(art+".meta");}
             foreach (string name in new[] { "ProjectVersion.txt", "Physics2DSettings.asset", "TimeManager.asset" }) files.Add(Path.Combine(root, "ProjectSettings", name));
             files.Sort(StringComparer.Ordinal);
             using var hash = SHA256.Create();
             foreach (string path in files)
             {
-                byte[] bytes = Encoding.UTF8.GetBytes(path.Substring(root.Length).Replace('\\','/') + "\n" + File.ReadAllText(path).Replace("\r\n", "\n"));
+                byte[] name=Encoding.UTF8.GetBytes(path.Substring(root.Length).Replace('\\','/')+"\n");
+                hash.TransformBlock(name,0,name.Length,null,0);
+                byte[] bytes=path.EndsWith(".png",StringComparison.Ordinal)?File.ReadAllBytes(path):Encoding.UTF8.GetBytes(File.ReadAllText(path).Replace("\r\n","\n"));
                 hash.TransformBlock(bytes, 0, bytes.Length, null, 0);
             }
             hash.TransformFinalBlock(Array.Empty<byte>(), 0, 0);

@@ -82,6 +82,14 @@ namespace PickaxeFall.BalanceLab
             Application.runInBackground = true; Application.targetFrameRate = 30; Screen.SetResolution(1440,960,false);
             BuildUi();
             yield return null;
+            if(LabFiles.Arg("launch-plan")!=null)
+            {
+                Safe(()=>
+                {
+                    var p=LabFiles.Read<LabPlan>(LabFiles.Arg("launch-plan"));p.Validate();
+                    ShowPlan(p);NewSession();
+                });
+            }
             if (LabFiles.Arg("open") != null) { Safe(() => { folder.value = LabFiles.Arg("open"); Load(folder.value); table.selectedIndex = 0; }); }
             if (Environment.GetCommandLineArgs().Contains("--lab-ui-check"))
             {
@@ -98,7 +106,7 @@ namespace PickaxeFall.BalanceLab
             }
         }
         string Executable() => Path.Combine(home,"PickaxeFallBalanceLab.x86_64");
-        string NewPath() => Path.Combine(home,"Results",DateTime.Now.ToString("yyyyMMdd-HHmmss")+"-"+Guid.NewGuid().ToString("N").Substring(0,5));
+        string NewPath() => LabFiles.Arg("output") ?? Path.Combine(home,"Results",DateTime.Now.ToString("yyyyMMdd-HHmmss")+"-"+Guid.NewGuid().ToString("N").Substring(0,5));
         void Fresh()
         {
             if (!Directory.Exists(manifest.project) || LabFiles.Fingerprint(manifest.project) != manifest.fingerprint) throw new InvalidOperationException("Сборка устарела. В Unity: PickaxeFall → Balance Lab → Build and Open.");
@@ -152,7 +160,7 @@ namespace PickaxeFall.BalanceLab
             foreach (var tool in balance.pickaxes) tierChoices.Add(Toggle(config,tool.title,true));
             folder = new TextField("Папка отчёта"); config.Add(folder);
             Button(config,"Открыть отчёт",() => Load(folder.value));
-            Button(config,"Последний отчёт",() => { string path = Directory.GetDirectories(Path.Combine(home,"Results")).OrderByDescending(x => x).First(); folder.value = path; Load(path); });
+            Button(config,"Последний отчёт",() => { string path = Directory.GetDirectories(Path.Combine(home,"Results")).OrderByDescending(Directory.GetCreationTimeUtc).First(); folder.value = path; Load(path); });
             Button(config,"Открыть HTML",() => { if (session == null) return; string path = Path.Combine(session.DirectoryPath,"report.html"); if (!File.Exists(path)) throw new IOException("Сначала выполни экспорт"); Application.OpenURL(new Uri(path).AbsoluteUri); });
             compareFolder = new TextField("Предыдущий отчёт"); config.Add(compareFolder);
             Button(config,"Загрузить для сравнения",() => { previous?.Dispose(); previous = LabSession.Load(compareFolder.value); ShowComparison(); });
@@ -204,14 +212,20 @@ namespace PickaxeFall.BalanceLab
             var plan = new LabPlan { mode = mode.index, samples = samples.value, workers = workers.value, seconds = checked(budget.value*60), seed = seed.value,
                 passive = passive.value, active = active.value, isolated = mode.index == 0 || mode.index == 3 || isolated.value, background = common.value, diagnostic = diagnostic.value,
                 tiers = tierChoices.Select(t=>t.value).ToArray(), customLevels = levels.Select(l=>l.value).ToArray() };
-            session?.Dispose(); session = LabSession.Create(NewPath(),plan,manifest); folder.value = session.DirectoryPath;
+            session?.Dispose();autoExport=false; session = LabSession.Create(NewPath(),plan,manifest); folder.value = session.DirectoryPath;
             SelectFilters(); session.Start(Executable(),manifest); nextRefresh = 0;
         }
         void Load(string path)
         {
             if (session?.Running == true) throw new InvalidOperationException("Сначала останови текущий анализ");
             var loaded = LabSession.Load(path); session?.Dispose(); session = loaded;
-            samples.value = loaded.Plan.samples; workers.value = loaded.Plan.workers; budget.value = loaded.Plan.seconds/60; SelectFilters(); Refresh();
+            ShowPlan(loaded.Plan); SelectFilters(); Refresh();
+        }
+        void ShowPlan(LabPlan p)
+        {
+            mode.index=p.mode;samples.value=p.samples;workers.value=p.workers;budget.value=p.seconds/60;seed.value=p.seed;
+            passive.value=p.passive;active.value=p.active;isolated.value=p.isolated;common.value=p.background;diagnostic.value=p.diagnostic;
+            for(int i=0;i<5;i++)tierChoices[i].value=p.tiers[i];for(int i=0;i<25;i++)levels[i].value=p.customLevels[i];
         }
         void SelectFilters()
         {
@@ -277,9 +291,10 @@ namespace PickaxeFall.BalanceLab
                 }
                 return;
             }
+            if(wasRunning && !session.Running && !autoExport && session.Status=="Все сценарии завершены"){autoExport=true;Safe(Export);}
             status.text = session.Status;
             if (export != null && export.IsCompleted) { status.text = export.IsFaulted ? "Ошибка экспорта: "+export.Exception.GetBaseException().Message : "CSV и HTML сохранены: "+session.DirectoryPath; export = null; }
-            if (Time.unscaledTime >= nextRefresh && (session.Running || wasRunning)) { nextRefresh = Time.unscaledTime+4; Refresh(); }
+            if (Time.unscaledTime >= nextRefresh && (session.Running || wasRunning)) { nextRefresh = Time.unscaledTime+(session.Results.Count>50000?30:4); Refresh(); }
         }
         void OnDestroy() { session?.Dispose(); previous?.Dispose(); if (ownPanel) Destroy(ownPanel); }
     }

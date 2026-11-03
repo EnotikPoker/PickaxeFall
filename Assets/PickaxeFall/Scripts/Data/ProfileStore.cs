@@ -55,6 +55,13 @@ namespace PickaxeFall
             }
             profile.Validate(); return profile;
         }
+        public void Reset(PlayerProfile empty)
+        {
+            Save(empty);
+            // The primary is committed; recovery must not resurrect the erased progression.
+            try { File.Copy(path,path+".bak",true); }
+            catch(Exception e){Debug.LogWarning("Reset recovery copy: "+e.Message);}
+        }
         public void Save(PlayerProfile profile)
         {
             profile.Validate(); Directory.CreateDirectory(Path.GetDirectoryName(path));

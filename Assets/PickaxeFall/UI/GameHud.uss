@@ -121,3 +121,31 @@ Label { white-space: normal; flex-shrink: 0; }
 .benefit-summary { font-size: 28px; margin: 8px 0; }
 .benefits-button { font-size: 28px; min-height: 64px; margin: 8px 0; }
 .category { font-size: 28px; }
+
+.recipe-resources { flex-direction: row; flex-wrap: wrap; margin-bottom: 12px; }
+.recipe-item { flex-direction: row; align-items: center; margin: 4px 22px 10px 0; }
+.recipe-icon { width: 44px; height: 44px; margin-right: 12px; flex-shrink: 0; }
+.recipe-amount { font-size: 34px; }
+.cost-enough { color: rgb(30, 102, 24); }
+.cost-short { color: rgb(161, 35, 29); }
+.stone-button.buy-ready { background-color: rgb(49, 119, 43); border-top-color: rgb(153, 211, 120); border-left-color: rgb(133, 193, 101); border-right-color: rgb(28, 65, 26); border-bottom-color: rgb(20, 49, 19); }
+.stone-button.buy-ready:hover { background-color: rgb(65, 142, 52); }
+.stone-button.buy-blocked, .stone-button.buy-blocked:disabled { background-color: rgb(146, 47, 40); color: rgb(255, 241, 225); border-top-color: rgb(220, 137, 116); border-left-color: rgb(202, 111, 95); border-right-color: rgb(84, 29, 24); border-bottom-color: rgb(66, 21, 18); -unity-text-outline-width: 0.5px; }
+.tool-selected { border-width: 2px; border-color: rgb(227, 193, 53); background-color: transparent; }
+.fps-options { flex-wrap: wrap; }
+.fps-options .settings-choice { flex-basis: 22%; min-width: 160px; height: 104px; font-size: 32px; margin: 6px; }
+.channel-button { font-size: 34px; min-height: 92px; margin: 10px 0 24px; }
+.loot-layer { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.loot-float { position: absolute; flex-direction: row; align-items: center; }
+.loot-number { color: rgb(255, 252, 215); font-size: 32px; -unity-text-outline-width: 1px; -unity-text-outline-color: rgb(18, 27, 14); }
+.loot-icon { width: 38px; height: 38px; margin-left: 8px; }
+.tutorial-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(13, 22, 15, 0.86); justify-content: center; padding: 64px 32px; }
+.tutorial-scroll { max-height: 96%; }
+.tutorial-art { flex-direction: row; align-items: center; justify-content: center; margin-bottom: 24px; }
+.tutorial-icon { width: 150px; height: 150px; margin: 8px 20px; }
+.tutorial-arrows { font-size: 54px; color: rgb(33, 96, 91); }
+.tutorial-body { font-size: 38px; color: rgb(35, 51, 27); margin-bottom: 28px; }
+.tutorial-actions { flex-direction: row; }
+.tutorial-nav { flex-grow: 1; flex-basis: 0; min-height: 124px; font-size: 38px; margin: 6px; }
+.tutorial-skip { font-size: 30px; min-height: 90px; margin-top: 18px; }
+.tutorial-focus { border-color: rgb(121, 229, 213); }

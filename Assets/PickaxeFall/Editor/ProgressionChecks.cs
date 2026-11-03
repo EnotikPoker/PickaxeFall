@@ -39,6 +39,7 @@ namespace PickaxeFall.Editor
             var failing = new EconomyService(failureProfile, _ => throw new IOException("test storage failure"));
             Check(!failing.TryBuy(new(UpgradeKind.Damage)) && failing.Profile.coins == 1000 && failing.Profile.upgrades[0] == 0, "save failure rolls purchase back");
             Check(!failing.TrySell(BlockKind.Stone, 3) && failing.Profile.resources[1] == 100 && failing.Profile.coins == 1000, "save failure rolls sale back");
+            Check(!failing.TryResetProgress() && failing.Profile.coins==1000 && failing.Profile.resources[1]==100,"failed reset preserves in-memory progress");
             var huge = new PlayerProfile { coins = long.MaxValue }; huge.resources[6] = 1;
             var overflow = new EconomyService(huge);
             Check(!overflow.TrySell(BlockKind.Diamond, 1) && overflow.Profile.resources[6] == 1, "coin overflow rejected atomically");
@@ -80,6 +81,10 @@ namespace PickaxeFall.Editor
                 Check(backup.coins == 123, "recovery transaction preserves previous valid backup");
                 File.WriteAllText(Path.Combine(dir, "profile-v2.json"), "{}");
                 Check(store.Load().coins == 123, "incomplete JSON cannot silently reset the player");
+                store.Reset(new PlayerProfile());
+                Check(store.Load().coins==0 && store.Load().bestDepth==0 && Array.TrueForAll(store.Load().resources,x=>x==0) && Array.TrueForAll(store.Load().upgrades,x=>x==0),"reset persists all progression fields");
+                var resetBackup=JsonUtility.FromJson<PlayerProfile>(File.ReadAllText(Path.Combine(dir,"profile-v2.json.bak")));
+                Check(resetBackup.coins==0 && Array.TrueForAll(resetBackup.resources,x=>x==0),"reset backup cannot resurrect old wealth");
                 int migrations = 0;
                 var legacy = new ProfileStore(Path.Combine(dir, "legacy"), () => { migrations++; return new PlayerProfile { coins = 456, bestDepth = 17 }; });
                 Check(legacy.Load().coins == 456 && legacy.Load().bestDepth == 17 && migrations == 1, "legacy data imported once without overwriting new saves");

@@ -4,15 +4,21 @@ namespace PickaxeFall
 {
     public sealed class EconomyService
     {
-        readonly Action<PlayerProfile> persist;
+        readonly Action<PlayerProfile> persist, resetPersist;
         public PlayerProfile Profile { get; private set; }
         public string LastError { get; private set; }
-        public EconomyService(PlayerProfile profile, Action<PlayerProfile> save = null) { profile.Validate(); Profile = profile; persist = save; }
+        public EconomyService(PlayerProfile profile, Action<PlayerProfile> save = null, Action<PlayerProfile> reset = null) { profile.Validate(); Profile = profile; persist = save;resetPersist=reset??save; }
 
         bool Commit(PlayerProfile next)
         {
             try { next.Validate(); persist?.Invoke(next); Profile = next; LastError = null; return true; }
             catch (Exception) { LastError = "Не удалось сохранить. Покупка или продажа отменена."; return false; }
+        }
+        public bool TryResetProgress()
+        {
+            var empty=new PlayerProfile();
+            try { resetPersist?.Invoke(empty);Profile=empty;LastError=null;return true; }
+            catch(Exception){LastError="Не удалось сохранить сброс. Прогресс не изменён.";return false;}
         }
         public void Save() => persist?.Invoke(Profile);
         public bool Collect(BlockKind kind, long quantity = 1)
