@@ -8,6 +8,19 @@ namespace PickaxeFall
         {
             const int size=32;var random=new System.Random((int)kind*7919+variant*613);
             if(kind==BlockKind.Chest)return Chest();
+            if(kind==BlockKind.Water || kind==BlockKind.Lava || kind==BlockKind.Obsidian)
+            {
+                var fluid=new Color[size*size];
+                for(int y=0;y<size;y++)for(int x=0;x<size;x++)
+                {
+                    float noise=(float)random.NextDouble();Color color;
+                    if(kind==BlockKind.Water)color=Color.Lerp(new Color32(25,92,194,180),new Color32(95,184,239,180),y%9==0?.65f:noise*.22f);
+                    else if(kind==BlockKind.Lava)color=Color.Lerp(new Color32(166,35,8,255),new Color32(255,190,30,255),Mathf.PerlinNoise(x*.2f+variant,y*.2f));
+                    else color=Color.Lerp(new Color32(17,13,29,255),new Color32(89,54,117,255),noise>.88f?.7f:noise*.3f);
+                    fluid[y*size+x]=color;
+                }
+                return Make(size,size,fluid);
+            }
             Color[] pixels;
             if(kind==BlockKind.Emerald || kind==BlockKind.Lapis || kind==BlockKind.Redstone)
             {

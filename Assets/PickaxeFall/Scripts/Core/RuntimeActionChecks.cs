@@ -28,7 +28,7 @@ namespace PickaxeFall
             for(int i=0;i<1000;i++)game.OnPhysicalHit(game.SelectedTool, false);
             check(game.Energy.Value == 0, "even a thousand selected hits cannot charge energy");
             game.SimulateMiningStep();
-            check(Mathf.Abs(game.Energy.Value-2f/60)<.0001f,"shared regeneration happens once per simulation step for entire team");
+            check(Mathf.Abs(game.Energy.Value-game.RunUpgrades.EnergyPerSecond/60)<.0001f,"shared regeneration happens once per simulation step for entire team");
             game.SelectedTool.DebugExhaust(); check(game.SelectedToolIndex == 1 && game.Phase == RunPhase.Mining, "broken selected tool switches to survivor");
             game.BeginProbeRun(0, 8127, 1);
             game.SelectedTool.DebugPlace(new Vector2(game.Balance.worldWidth / 2 - 1, 60), Vector2.zero); game.World.StreamTools(game.Pickaxes);
@@ -43,7 +43,7 @@ namespace PickaxeFall
             check(first.IsBroken && !second.IsBroken && !third.IsBroken && game.Benefits.AbilityBlocks == 1, "base plunge penetrates exactly one block");
             check(second.HealthHalfUnits < 12 && tool.Body.linearVelocity.y > 0, "next intact block gives a physical impact and rebound");
             check(tool.Durability == tool.MaxDurability - tool.TotalStrikes, "each ability block costs one normal wear");
-            check(Mathf.Abs(game.Energy.Value - 2*game.Clock.Now) < 0.01f, "abilities and physical hits cannot bypass time-based regeneration");
+            check(Mathf.Abs(game.Energy.Value - (15+game.RunUpgrades.EnergyPerSecond*game.Clock.Now)) < 0.01f, "abilities and physical hits cannot bypass time-based regeneration");
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.PlungeDepth).Index] = 3;
             game.BeginProbeRun(0, 8127, 1); ClearArea(game); tool = game.SelectedTool;
             for (int row = 0; row <= 5; row++) game.World.DebugSetCell(0, row, BlockKind.Stone);
@@ -79,7 +79,7 @@ namespace PickaxeFall
             tool.DebugPlace(new Vector2(0, 7), Vector2.zero); game.TryUseAbility(AbilityKind.Plunge, Vector2.down);
             int beforeDurability = tool.Durability;
             var bench = game.World.DebugSetCell(-10, 10, BlockKind.Workbench); bench.DestroyBlock(tool);
-            check(tool.Durability == tool.MaxDurability && tool.MaxDurability > beforeDurability, "workbench fully restores upgraded maximum");
+            check(tool.Durability == tool.MaxDurability && tool.MaxDurability == beforeDurability, "ordinary workbench repairs without changing maximum");
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.DoubleBench).Index] = 25;
             int doubleSeed = RuntimeSmokeTest.EffectSeed(UpgradeKind.DoubleBench,0.25);
             game.BeginProbeRun(4, doubleSeed, 1); game.Energy.TrySpend(game.Energy.Maximum); tool = game.SelectedTool;

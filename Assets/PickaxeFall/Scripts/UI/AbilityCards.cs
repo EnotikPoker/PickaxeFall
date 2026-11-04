@@ -11,7 +11,7 @@ namespace PickaxeFall
             {
                 hud=owner;kind=ability;var card=Box(parent,"upgrade-card inset");card.name="ability-"+kind;
                 hud.BoldText(card,kind==AbilityKind.Dash?"РЫВОК · СВАЙП":"ПРОБОЙ · НАЖАТИЕ","upgrade-title");
-                Text(card,kind==AbilityKind.Dash?"Толкает выбранную кирку по одной из четырёх осей и пробивает первый блок. Базовая цена — 45 энергии.":"Направляет выбранную кирку вниз и пробивает блок. Глубина увеличивается отдельной прокачкой. Базовая цена — 60 энергии.","description");
+                Text(card,kind==AbilityKind.Dash?"Толкает выбранную кирку по одной из четырёх осей и пробивает первый блок. Базовая цена — "+Progression.Number(hud.game.Economy.Config.dashCost)+" энергии.":"Направляет выбранную кирку вниз и пробивает блок. Глубина увеличивается отдельной прокачкой. Базовая цена — "+Progression.Number(hud.game.Economy.Config.plungeCost)+" энергии.","description");
                 state=hud.BoldText(card,"","upgrade-effect");price=Text(card,"","upgrade-price");materials=Box(card,"recipe-resources");reason=Text(card,"","upgrade-reason");
                 buy=hud.Button(card,"ОТКРЫТЬ",()=>hud.game.BuyAbility(kind),"stone-button secondary");buy.name="unlock-"+kind;
             }
@@ -22,7 +22,7 @@ namespace PickaxeFall
                 buy.text=unlocked?"ОТКРЫТО":"ОТКРЫТЬ";buy.SetEnabled(can);buy.EnableInClassList("buy-ready",can);buy.EnableInClassList("buy-blocked",!can&&!unlocked);
                 price.text="";reason.text=unlocked?"Уровни прокачки и открытие сохраняются.":can?"После покупки приём будет доступен в каждом спуске.":why;
                 if(unlocked)return;
-                var cost=Progression.AbilityCost(kind);price.text=$"Цена: {Exact(cost.Coins)} монет · есть {Short(hud.game.Wallet)}";
+                var cost=Progression.AbilityCost(kind,hud.game.Economy.Config);price.text=$"Цена: {Exact(cost.Coins)} монет · есть {Short(hud.game.Wallet)}";
                 price.EnableInClassList("cost-enough",hud.game.Wallet>=cost.Coins);price.EnableInClassList("cost-short",hud.game.Wallet<cost.Coins);
                 foreach(var material in ResourceInventory.Materials)
                 {

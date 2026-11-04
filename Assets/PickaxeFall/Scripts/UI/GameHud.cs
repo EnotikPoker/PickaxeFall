@@ -66,7 +66,7 @@ namespace PickaxeFall
             resultArea = Box(mineView, "result-area"); result = Text(resultArea, "", "result");
             runGrid = new ResourceGrid(resultArea, "run-resources", true);
             action = Button(mineView, "КРУТИТЬ РУЛЕТКУ", MainAction, "stone-button primary"); action.name = "main-action";
-            Text(mineView, "Приёмы открываются в магазине. Верстак — полный ремонт и повышение типа.", "footnote");
+            Text(mineView, "Приёмы — в магазине. Верстак чинит, улучшающий повышает тип.", "footnote");
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
             shopView = Page(window, "shop-page"); BuildShop(shopView);
             playfield = Box(safe, "playfield"); playfield.pickingMode = PickingMode.Ignore;
@@ -133,7 +133,7 @@ namespace PickaxeFall
                 case RunPhase.Ready:
                     title.text = "Спуск в шахту"; description.text = "Крути рулетку, добывай и улучшай снаряжение.";
                     heroName.text = "Пять видов кирок";
-                    var preview = new RunUpgrades(game.Economy.Profile);
+                    var preview = new RunUpgrades(game.Economy.Profile,game.Economy.Config);
                     heroDetail.text = $"Отряд: {Progression.Number(preview.Chance(UpgradeKind.TeamChance) * 100)}% · {preview.TeamSize} кирки при удаче";
                     action.text = "КРУТИТЬ РУЛЕТКУ";
                     foreach (var slot in slots) slot.RemoveFromClassList("selected"); break;

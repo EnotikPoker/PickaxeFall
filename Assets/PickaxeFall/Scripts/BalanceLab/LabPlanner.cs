@@ -18,7 +18,7 @@ namespace PickaxeFall.BalanceLab
         public static int Level(UpgradeKind kind, int point) => point == 0 ? 1 : point == 1 ? (Progression.MaxLevel(kind) + 1) / 2 : Progression.MaxLevel(kind);
         public static List<LabScenario> Scenarios(LabPlan plan)
         {
-            plan.Validate(); var result = new List<LabScenario>();
+            plan.Validate();if(plan.mode==4)return ProgressionAudit.Scenarios(plan); var result = new List<LabScenario>();
             for (int tier = 0; tier < 5; tier++)
             {
                 if (!plan.tiers[tier]) continue;
@@ -62,10 +62,15 @@ namespace PickaxeFall.BalanceLab
         }
         public static IEnumerable<LabJob> Jobs(LabPlan plan, List<LabScenario> scenarios)
         {
+            if(plan.mode==4)
+            {
+                foreach(var job in ProgressionAudit.Jobs(plan,scenarios))yield return job;
+                yield break;
+            }
             foreach (int order in scenarios.Select(s => s.order).Distinct().OrderBy(x => x))
             for (int sample = 0; sample < plan.samples; sample++)
             foreach (var scenario in scenarios.Where(s => s.order == order))
-                yield return new LabJob { scenario = scenario, seed = (int)((plan.seed + 104729L * sample) % 2147483646L) + 1, limit = plan.limit, diagnostic = plan.diagnostic };
+                yield return new LabJob { scenario = scenario, seed = (int)((plan.seed + 104729L * sample) % 2147483646L) + 1, limit = plan.limit, diagnostic = plan.diagnostic,balanceJson=plan.balanceJson };
         }
     }
 }

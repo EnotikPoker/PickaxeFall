@@ -17,7 +17,9 @@ namespace PickaxeFall.BalanceLab
             foreach (var item in now.View(tier,point,background,active))
             {
                 if (!old.TryGetValue(item.scenario.id,out var baseline) || !item.scenario.levels.SequenceEqual(baseline.scenario.levels)) continue;
-                var (a,b) = LabAnalysis.Paired(item,baseline); if (a.Count == 0) continue;
+                var (a,b) = LabAnalysis.Paired(item,baseline);
+                var matched=a.Zip(b,(x,y)=>(x,y)).Where(p=>(p.x.limit>0?p.x.limit:current.Plan.limit)==(p.y.limit>0?p.y.limit:previous.Plan.limit)).ToArray();
+                a=matched.Select(p=>p.x).ToList();b=matched.Select(p=>p.y).ToList();if (a.Count == 0) continue;
                 result.AppendLine(item.scenario.Title+": карт "+a.Count+"; Δ м "+LabFiles.Number(a.Average(r=>r.depth)-b.Average(r=>r.depth))+"; Δ стоимость "+LabFiles.Number(a.Average(r=>r.value)-b.Average(r=>r.value))+"; Δ монет/мин "+LabFiles.Number(LabAnalysis.Rate(a)-LabAnalysis.Rate(b)));
             }
             result.AppendLine("Сравниваются только одинаковые уровни и общие seed. Отпечаток баланса может различаться; новая случайность и физика способны изменить траектории."); return result.ToString();

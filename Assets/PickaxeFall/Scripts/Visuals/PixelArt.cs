@@ -36,6 +36,7 @@ namespace PickaxeFall
             BlockKind.Dirt => new Color32(130, 88, 63, 255),
             BlockKind.Deepstone => new Color32(46, 53, 70, 255),
             BlockKind.Workbench => new Color32(187, 129, 67, 255),
+            BlockKind.Obsidian=>new Color32(41,25,62,255),BlockKind.Water=>new Color32(40,113,213,180),BlockKind.Lava=>new Color32(247,100,15,255),
             BlockKind.Tnt => new Color32(196, 63, 46, 255),
             BlockKind.Emerald=>new Color32(35,207,111,255),BlockKind.Lapis=>new Color32(53,94,214,255),BlockKind.Redstone=>new Color32(205,45,46,255),
             BlockKind.Amethyst or BlockKind.AmethystCluster=>new Color32(162,110,220,255),BlockKind.MossyCobblestone=>new Color32(90,122,65,255),
@@ -46,6 +47,7 @@ namespace PickaxeFall
         {
             int key = (int)kind * 32 + variant % 4 + (deep ? 4 : 0) + (surface ? 8 : 0);
             if (Blocks.TryGetValue(key, out var cached) && cached) return cached;
+            if(kind==BlockKind.UpgradeWorkbench)return Blocks[key]=UpgradeBenchSprite(variant);
             var imported = Resources.Load<Sprite>(BlockResourcePath(kind, variant, deep, surface));
             if (imported) return Blocks[key] = imported;
             if(kind>=BlockKind.Emerald)return Blocks[key]=ExtraBlock(kind,variant);
@@ -110,6 +112,15 @@ namespace PickaxeFall
                 Fill(pixels, 16, 2, 14, 12, 1, new Color32(234, 110, 73, 255));
             }
             return Blocks[key] = Make(16, 16, pixels);
+        }
+
+        static Sprite UpgradeBenchSprite(int variant)
+        {
+            var source=Block(BlockKind.Workbench,variant);var pixels=source.texture.GetPixels();int width=source.texture.width;
+            Fill(pixels,width,1,2,width-2,2,new Color32(87,113,124,255));
+            Fill(pixels,width,width/2-2,width/2-2,4,4,new Color32(81,233,228,255));
+            Fill(pixels,width,1,width-3,width-2,1,new Color32(168,225,232,255));
+            return Make(width,width,pixels);
         }
 
         public static string BlockResourcePath(BlockKind kind, int variant, bool deep = false, bool surface = false)

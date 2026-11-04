@@ -12,8 +12,8 @@ namespace PickaxeFall.BalanceLab
 {
     [Serializable] public sealed class LabManifest
     {
-        public int schema = 3;
-        public string version, unity, fingerprint, project, builtUtc, policy = "active-10s-v1";
+        public int schema = 4;
+        public string version, unity, fingerprint, project, builtUtc, policy = "reachable-energy-v2";
         public string balance;
         public double[] roulette;
         public long[] sellPrices;
@@ -21,15 +21,16 @@ namespace PickaxeFall.BalanceLab
         public LabPrice[] prices;
         public LabManifest CaptureEconomy()
         {
-            sellPrices=(long[])Progression.SellPrices.Clone();
-            chanceSteps=Enumerable.Range(0,17).Select(i=>Progression.ChanceStep((UpgradeKind)i)).ToArray();
+            var c=string.IsNullOrEmpty(balance)?Progression.Default:JsonUtility.FromJson<BalanceEnvelope>(balance).progression;
+            c??=Progression.Default;c.Validate();sellPrices=(long[])c.sellPrices.Clone();
+            chanceSteps=Enumerable.Range(0,17).Select(i=>Progression.ChanceStep((UpgradeKind)i,c)).ToArray();
             var snapshot=new List<LabPrice>();
             foreach(var key in Progression.Keys)
             {
                 long coins=0;var resources=new long[ResourceInventory.SlotCount];
                 for(int level=1;level<=Progression.MaxLevel(key.Kind);level++)
                 {
-                    var cost=Progression.Cost(key,level);coins+=cost.Coins;
+                    var cost=Progression.Cost(key,level,c);coins+=cost.Coins;
                     for(int i=0;i<ResourceInventory.SlotCount;i++)resources[i]+=cost.Resources[i];
                     snapshot.Add(new LabPrice { key=key.Index,level=level,coins=coins,materials=(long[])resources.Clone() });
                 }
@@ -37,19 +38,22 @@ namespace PickaxeFall.BalanceLab
             prices=snapshot.ToArray();return this;
         }
     }
+    [Serializable] public sealed class BalanceEnvelope { public ProgressionBalance progression; }
     [Serializable] public sealed class LabProgress { public long completed,total;public int branches;public double elapsedSeconds;public bool running;public string status; }
     [Serializable] public sealed class LabPrice { public int key,level; public long coins; public long[] materials; }
     [Serializable] public sealed class LabPlan
     {
         public int mode, samples = 8, workers = Math.Min(6, Math.Max(1, Environment.ProcessorCount / 2)), seconds = 900, seed = 8127;
+        public string balanceJson;
         public bool passive = true, active = true, isolated = true, background = true, diagnostic;
         public bool[] tiers = { true, true, true, true, true };
         public int[] customLevels = new int[25];
-        public int limit => mode == 0 ? 600 : 1800;
+        public int limit => mode == 0 || mode==4 ? 600 : 1800;
         public void Validate(bool checkLevels = true)
         {
-            if (mode < 0 || mode > 3 || samples < 1 || samples > 100000 || workers < 1 || workers > 32 || seconds < 0 || seconds > 604800 || seed < 1)
+            if (mode < 0 || mode > 4 || samples < 1 || samples > 100000 || workers < 1 || workers > 32 || seconds < 0 || seconds > 604800 || seed < 1)
                 throw new ArgumentException("Недопустимые параметры запуска.");
+            if(mode==4 && (seconds<=0 || seconds>7200))throw new ArgumentException("Аудит прогрессии ограничен двумя часами; выбери 1–120 минут.");
             if (!passive && !active || !isolated && !background || tiers == null || tiers.Length != 5 || !tiers.Any(x => x)) throw new ArgumentException("Выбери кирку, управление и способ сравнения.");
             if (customLevels == null || customLevels.Length != 25) throw new ArgumentException("Нужно 25 уровней.");
             if(checkLevels) new PlayerProfile { upgrades = customLevels }.Validate();
@@ -59,16 +63,22 @@ namespace PickaxeFall.BalanceLab
     {
         public string id;
         public int tier, point, mask, background, order;
-        public bool active;
+        public bool active,hourly,holdout;
+        public int regime,stage,sampleCount,strategy;
+        public string cohort;
+
         public int[] levels;
-        public string Family => $"t{tier}-p{point}-b{background}-a{(active ? 1 : 0)}";
+        public string Family => $"t{tier}-p{point}-b{background}-a{(active ? 1 : 0)}"+(string.IsNullOrEmpty(cohort)?"":"-"+cohort);
         static readonly string[] ToolTitles={"дерево","камень","золото","железо","алмаз"};
         public string Title
         {
             get
             {
+                if(cohort=="full-max")return "Вся прокачка · максимум";
+                if(hourly)return "Час развития · "+new[] {"Кирки","Приёмы","Добыча"}[strategy];
+                string prefix=cohort=="r0"?"Обычная генерация · ":regime==1?"Без верстаков · ":regime==2?"Только ремонт · ":holdout?"Независимые карты · ":"";
                 var names = Progression.Keys.Where(k => (mask & (1 << k.Index)) != 0).Select(k => Progression.Title(k.Kind)+(k.Kind<=UpgradeKind.Durability?" · "+ToolTitles[k.Tier]:""));
-                return mask == 0 ? (background == 0 ? "Без улучшений" : "Вся прокачка") : (background == 1 ? "Без: " : "") + string.Join(" + ", names);
+                return prefix+(mask == 0 ? (background == 0 ? "Без улучшений" : "Вся прокачка") : (background == 1 ? "Без: " : "") + string.Join(" + ", names));
             }
         }
     }
@@ -77,15 +87,23 @@ namespace PickaxeFall.BalanceLab
         public LabScenario scenario;
         public int seed, limit;
         public bool diagnostic;
+        public string balanceJson;
         public string Id => scenario.id + "-" + seed;
     }
+    [Serializable] public sealed class LabOutcome { public double weight,depth,seconds; }
     [Serializable] public sealed class LabResult
     {
         public string id, scenario, error;
-        public int seed, branches;
+        public int seed, branches, limit;
         public double seconds, depth, value, blocks, strikes, tools, benches, abilities, censored;
         public double[] resources = new double[ResourceInventory.SlotCount], attempts = new double[17], successes = new double[17];
-        public double wallSeconds;
+        public double wallSeconds,upgradeBenches,restoredWear,lavaWear,energySpent;
+        public LabOutcome[] outcomes;
+        public BenchVisit[] benchVisits;
+        public PurchaseEvent[] purchases;
+        public double firstPurchase,runCount,dashOpenedAt,plungeOpenedAt;
+        public int[] finalLevels;
+
     }
     [Serializable] public sealed class ScenarioList { public List<LabScenario> scenarios = new(); }
     public static class LabFiles

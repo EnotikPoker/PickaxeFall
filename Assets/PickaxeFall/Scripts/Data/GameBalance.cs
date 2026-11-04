@@ -5,7 +5,7 @@ namespace PickaxeFall
 {
     // Append-only IDs preserve all existing resource slots and saved block kinds.
     public enum BlockKind { Dirt, Stone, Coal, Copper, Iron, Gold, Diamond, Deepstone, Workbench, Tnt,
-        Emerald, Lapis, Redstone, Amethyst, AmethystCluster, Cobblestone, MossyCobblestone, Chest, Spawner }
+        Emerald, Lapis, Redstone, Amethyst, AmethystCluster, Cobblestone, MossyCobblestone, Chest, Spawner, UpgradeWorkbench, Obsidian, Water, Lava }
     public enum RunPhase { Ready, Spinning, Equipped, Mining, Breaking, Finished }
 
     [Serializable]
@@ -40,6 +40,25 @@ namespace PickaxeFall
     [CreateAssetMenu(menuName = "PickaxeFall/Game balance")]
     public class GameBalance : ScriptableObject
     {
+        public int rulesVersion = 2;
+        public ProgressionBalance progression = new();
+        public static bool IsWorkbench(BlockKind kind)=>kind==BlockKind.Workbench || kind==BlockKind.UpgradeWorkbench;
+        [Range(0,1)] public float upgradeWorkbenchFraction=.2f;
+        public int[] benchDepths = {6,30,75,125,200,300};
+        public float[] benchDensity = {1,.8f,.5f,.3f,.18f,.1f};
+        public float WorkbenchChanceAt(int row)
+        {
+            if(rulesVersion<2)return workbenchChance;
+            float multiplier=benchDensity[benchDensity.Length-1];
+            if(row<=benchDepths[0])multiplier=benchDensity[0];
+            else for(int i=1;i<benchDepths.Length;i++)if(row<=benchDepths[i]){multiplier=Mathf.Lerp(benchDensity[i-1],benchDensity[i],(row-benchDepths[i-1])/(float)(benchDepths[i]-benchDepths[i-1]));break;}
+            return workbenchChance*multiplier;
+        }
+        [Header("Small finite lakes / chance per 32-row band")]
+        [Range(0,1)] public float waterLakeChance=.16f,lavaLakeChance=.20f,mixedLakeChance=.05f;
+        [Range(0,.01f)] public float lavaPocketChance=.0015f;
+        public int waterMinimumDepth=8,lavaMinimumDepth=35;
+        public float lavaWearPerSecond=8,waterDamageMultiplier=.7f;
         [Header("World (one block = one metre)")]
         [Min(15)] public int worldWidth = 41;
         [Min(20)] public int rowsAhead = 32;
@@ -70,28 +89,28 @@ namespace PickaxeFall
         [Min(0)] public int hardnessStartDepth = 60;
         [Min(20)] public int hardnessDoublingDepth = 70;
         [Header("Rare structures / probability per 64-row band")]
-        [Range(0,1)] public float dungeonChance=.08f;
-        [Range(0,1)] public float geodeChance=.12f;
+        [Range(0,1)] public float dungeonChance=.12f;
+        [Range(0,1)] public float geodeChance=.18f;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {
             new(BlockKind.Dirt, 1, 0), new(BlockKind.Stone, 6, 3),
             new(BlockKind.Coal, 8, 3, 0.15f), new(BlockKind.Copper, 11, 8, 0.08f),
             new(BlockKind.Iron, 14, 18, 0.055f), new(BlockKind.Gold, 18, 35, 0.03f),
-            new(BlockKind.Diamond, 22, 90, 0.004f), new(BlockKind.Deepstone, 10, 75),
+            new(BlockKind.Diamond, 22, 90, 0.006f), new(BlockKind.Deepstone, 10, 75),
             new(BlockKind.Workbench, 1, 6), new(BlockKind.Tnt, 1, 5),
-            new(BlockKind.Emerald,30,75,.001f),new(BlockKind.Lapis,18,75,.024f),new(BlockKind.Redstone,16,75,.035f),
+            new(BlockKind.Emerald,30,75,.0015f),new(BlockKind.Lapis,18,75,.024f),new(BlockKind.Redstone,16,75,.035f),
             new(BlockKind.Amethyst,12,30),new(BlockKind.AmethystCluster,4,30),new(BlockKind.Cobblestone,8,30),
-            new(BlockKind.MossyCobblestone,8,30),new(BlockKind.Chest,1,30),new(BlockKind.Spawner,18,30)
+            new(BlockKind.MossyCobblestone,8,30),new(BlockKind.Chest,1,30),new(BlockKind.Spawner,18,30),new(BlockKind.UpgradeWorkbench,1,6),new(BlockKind.Obsidian,55,35),new(BlockKind.Water,1,8),new(BlockKind.Lava,1,35)
         };
         [Header("Pickaxes / weighted roulette")]
         public PickaxeStats[] pickaxes =
         {
-            new("Деревянная", "ОБЫЧНАЯ", new Color32(184, 130, 78, 255), 2, 40, 45, 1),
-            new("Каменная", "НЕОБЫЧНАЯ", new Color32(173, 188, 198, 255), 4, 72, 30, 1.2f),
-            new("Золотая", "РЕДКАЯ", new Color32(255, 203, 92, 255), 6, 108, 15, 1.3f),
-            new("Железная", "ЭПИЧЕСКАЯ", new Color32(226, 235, 232, 255), 10, 200, 8, 1.4f),
-            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 26, 480, 2, 1.5f)
+            new("Деревянная", "ОБЫЧНАЯ", new Color32(184, 130, 78, 255), 2, 64, 45, 1),
+            new("Каменная", "НЕОБЫЧНАЯ", new Color32(173, 188, 198, 255), 4, 100, 30, 1.2f),
+            new("Золотая", "РЕДКАЯ", new Color32(255, 203, 92, 255), 6, 140, 15, 1.3f),
+            new("Железная", "ЭПИЧЕСКАЯ", new Color32(226, 235, 232, 255), 10, 160, 8, 1.4f),
+            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 26, 280, 2, 1.5f)
         };
 
         public int Roll(System.Random random)
@@ -152,7 +171,7 @@ namespace PickaxeFall
             BlockKind.Emerald => "Изумруд",BlockKind.Lapis => "Лазурит",BlockKind.Redstone => "Красная пыль",
             BlockKind.Amethyst or BlockKind.AmethystCluster => "Кристаллы аметиста",BlockKind.Cobblestone => "Булыжник",
             BlockKind.MossyCobblestone => "Замшелый булыжник",BlockKind.Chest => "Сундук",BlockKind.Spawner => "Спавнер",
-            BlockKind.Tnt => "Динамит", _ => "Верстак"
+            BlockKind.UpgradeWorkbench=>"Улучшающий верстак",BlockKind.Obsidian=>"Обсидиан",BlockKind.Water=>"Вода",BlockKind.Lava=>"Лава",BlockKind.Tnt => "Динамит", _ => "Верстак"
         };
     }
 }

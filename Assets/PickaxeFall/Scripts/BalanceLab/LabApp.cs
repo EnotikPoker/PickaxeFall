@@ -39,6 +39,17 @@ namespace PickaxeFall.BalanceLab
             if (!File.Exists(path)) { Debug.LogError("Balance Lab manifest missing: " + path); Application.Quit(1); yield break; }
             manifest = LabFiles.Read<LabManifest>(path);
             JsonUtility.FromJsonOverwrite(manifest.balance,balance);
+            if(LabFiles.Arg("lab-export")!=null)
+            {
+                try
+                {
+                    using var saved=LabSession.Load(LabFiles.Arg("lab-export"));new LabAnalysis(saved).Export(saved.DirectoryPath);
+                    LabFiles.Write(Path.Combine(saved.DirectoryPath,"analysis.json"),new LabManifest {version=manifest.version,fingerprint=manifest.fingerprint,policy=manifest.policy,builtUtc=DateTime.UtcNow.ToString("O")});
+                    Debug.Log("PICKAXEFALL_LAB_EXPORT_OK: "+saved.DirectoryPath);Application.Quit(0);
+                }
+                catch(Exception e){Debug.LogException(e);Application.Quit(1);}
+                yield break;
+            }
             if (Environment.GetCommandLineArgs().Contains("--balance-worker")) { yield return LabWorker.Serve(balance,LabFiles.Arg("cancel") ?? Path.Combine(home,"cancel"),LabFiles.Arg("response")); yield break; }
             if (Environment.GetCommandLineArgs().Contains("--lab-parity"))
             {
@@ -65,10 +76,11 @@ namespace PickaxeFall.BalanceLab
                 try
                 {
                     Fresh(); Application.targetFrameRate = 30; Application.runInBackground = true;
-                    var plan = LabFiles.Arg("plan") != null ? LabFiles.Read<LabPlan>(LabFiles.Arg("plan")) : new LabPlan { mode = cli == "full" ? 1 : cli == "triples" ? 2 : 0 };
+                    var plan = LabFiles.Arg("plan") != null ? LabFiles.Read<LabPlan>(LabFiles.Arg("plan")) : new LabPlan { mode = cli == "full" ? 1 : cli == "triples" ? 2 : cli=="audit"?4:0 };
                     plan.samples = int.Parse(LabFiles.Arg("samples") ?? (LabFiles.Arg("plan") != null ? plan.samples.ToString() : plan.mode == 0 ? "8" : "32"));
-                    plan.seconds = int.Parse(LabFiles.Arg("seconds") ?? (LabFiles.Arg("plan") != null ? plan.seconds.ToString() : plan.mode == 0 ? "900" : "0"));
+                    plan.seconds = int.Parse(LabFiles.Arg("seconds") ?? (LabFiles.Arg("plan") != null ? plan.seconds.ToString() : plan.mode == 0 ? "900" : plan.mode==4?"7200":"0"));
                     plan.workers = int.Parse(LabFiles.Arg("workers") ?? plan.workers.ToString());
+                    if(LabFiles.Arg("balance")!=null)plan.balanceJson=File.ReadAllText(LabFiles.Arg("balance"));
                     string existing = LabFiles.Arg("resume");
                     string output = existing ?? LabFiles.Arg("output") ?? NewPath();
                     session = existing != null ? LabSession.Load(output) : LabSession.Create(output,plan,manifest);
@@ -148,8 +160,8 @@ namespace PickaxeFall.BalanceLab
             Button(actions,"Экспорт CSV + HTML",Export);
             var split = Row(root); split.style.flexGrow = 1; split.style.flexShrink = 1; split.style.minHeight = 0;
             var config = new ScrollView(); config.style.width = 380; config.style.flexShrink = 0; config.style.paddingRight = 14; split.Add(config);
-            mode = Drop(config,"Режим","Быстрый","Все пары","Все тройки","Свой набор");
-            mode.RegisterValueChangedCallback(_ => { samples.value = mode.index == 0 ? 8 : 32; budget.value = mode.index == 0 ? 15 : 0; });
+            mode = Drop(config,"Режим","Быстрый","Все пары","Все тройки","Свой набор","Аудит прогрессии");
+            mode.RegisterValueChangedCallback(_ => { samples.value = mode.index == 0 ? 8 : 32; budget.value = mode.index == 0 ? 15 : mode.index==4?120:0; });
             samples = Number(config,"Карт на сценарий",8); workers = Number(config,"Работников",Math.Min(6,Math.Max(1,Environment.ProcessorCount/2)));
             budget = Number(config,"Лимит минут (0 — без)",15); seed = Number(config,"Начальный seed",8127);
             passive = Toggle(config,"Без жестов",true); active = Toggle(config,"Активная стратегия",true);
@@ -205,7 +217,7 @@ namespace PickaxeFall.BalanceLab
             }
         }
         public static string SkillName(UpgradeKey key) => Progression.Title(key.Kind)+(key.Kind <= UpgradeKind.Durability ? " ("+new[] {"дерево","камень","золото","железо","алмаз"}[key.Tier]+")" : "");
-        static string Title(LabScenario s) => s.mask == 0 ? s.Title : (s.background == 1 ? "Без: " : "")+string.Join(" + ",Progression.Keys.Where(k => (s.mask & (1 << k.Index)) != 0).Select(SkillName));
+        static string Title(LabScenario s) => s.mask == 0 || !string.IsNullOrEmpty(s.cohort) ? s.Title : (s.background == 1 ? "Без: " : "")+string.Join(" + ",Progression.Keys.Where(k => (s.mask & (1 << k.Index)) != 0).Select(SkillName));
         void NewSession()
         {
             if (session?.Running == true) throw new InvalidOperationException("Сначала останови текущий анализ"); Fresh();

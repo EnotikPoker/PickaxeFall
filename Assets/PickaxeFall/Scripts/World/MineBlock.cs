@@ -61,7 +61,7 @@ namespace PickaxeFall
         public bool DestroyBlock(FallingPickaxe source, bool explosion) => DestroyBlock(source, explosion ? DamageOrigin.Explosion : DamageOrigin.Physical);
         public bool DestroyBlock(FallingPickaxe source, DamageOrigin origin = DamageOrigin.Physical)
         {
-            if (IsBroken || !world.CanMine || origin == DamageOrigin.Explosion && Kind == BlockKind.Workbench || origin == DamageOrigin.Shrapnel && !ResourceInventory.IsMaterial(Kind)) return false;
+            if (IsBroken || !world.CanMine || origin == DamageOrigin.Explosion && GameBalance.IsWorkbench(Kind) || origin == DamageOrigin.Shrapnel && !ResourceInventory.IsMaterial(Kind)) return false;
             if(Kind==BlockKind.Redstone && (origin==DamageOrigin.Physical || origin==DamageOrigin.Dash || origin==DamageOrigin.Plunge))
             {world.ActivateRedstone(Column,Row,source);if(IsBroken)return false;}
             HealthHalfUnits = 0; IsBroken = true; hitbox.enabled = false; world.Break(this, source, origin); return true;

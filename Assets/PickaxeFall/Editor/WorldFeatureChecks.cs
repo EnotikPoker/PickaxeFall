@@ -41,7 +41,7 @@ namespace PickaxeFall.Editor
             }
             Check(ResourceInventory.DropKind(BlockKind.Cobblestone)==BlockKind.Stone && ResourceInventory.DropKind(BlockKind.MossyCobblestone)==BlockKind.Stone,"cobblestone drops ordinary stone");
             Check(ResourceInventory.DropKind(BlockKind.AmethystCluster)==BlockKind.Amethyst,"crystal resource mapping");
-            Check(balance.pickaxes[4].damage>=balance.pickaxes[3].damage*2 && balance.pickaxes[4].durability>=balance.pickaxes[3].durability*2,"distinct diamond tier");
+            Check(balance.pickaxes[4].damage>=balance.pickaxes[3].damage*2 && balance.pickaxes[4].durability>=balance.pickaxes[3].durability*1.5f,"distinct diamond tier");
             Check(balance.OreChance(BlockKind.Emerald,100)<balance.OreChance(BlockKind.Diamond,100),"emerald rarer than diamond");
             foreach(var kind in new[] {BlockKind.Emerald,BlockKind.Lapis,BlockKind.Redstone})Check(balance.OreChance(kind,balance.Block(BlockKind.Deepstone).minimumDepth-1)==0,"deep-only ore");
             var profile=new PlayerProfile {coins=10000};foreach(var kind in ResourceInventory.Materials)profile.resources[(int)kind]=1000;

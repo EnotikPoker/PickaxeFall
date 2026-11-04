@@ -23,8 +23,9 @@ namespace PickaxeFall
 
     [Serializable] public sealed class RunBenefits
     {
-        public int BonusOre, SavedWear, AbilityBlocks, ShrapnelBlocks, StrongHits, BonusTnt, DoubleBenches, DoubleBlasts, Rescues, RestoredDurability, Abilities;
-        public void Reset() { BonusOre = SavedWear = AbilityBlocks = ShrapnelBlocks = StrongHits = BonusTnt = DoubleBenches = DoubleBlasts = Rescues = RestoredDurability = Abilities = 0; }
+        public float EnergySpent;
+        public int BonusOre, SavedWear, AbilityBlocks, ShrapnelBlocks, StrongHits, BonusTnt, DoubleBenches, DoubleBlasts, Rescues, RestoredDurability, Abilities, UpgradeBenches, LavaWear, ObsidianCreated;
+        public void Reset() { EnergySpent=0; BonusOre = SavedWear = AbilityBlocks = ShrapnelBlocks = StrongHits = BonusTnt = DoubleBenches = DoubleBlasts = Rescues = RestoredDurability = Abilities = UpgradeBenches = LavaWear = ObsidianCreated = 0; }
         public string Summary => $"Пробито: {AbilityBlocks} · Доп. руда: {BonusOre} · Сбережено: {SavedWear}";
         public string Details(float energy) => $"Активных действий: {Abilities}\nБлоков пробито: {AbilityBlocks}\nДополнительная руда: {BonusOre}\nСбережено прочности: {SavedWear}\nСильных ударов: {StrongHits}\nБлоков добыто осколками: {ShrapnelBlocks}\nВзрывных находок: {BonusTnt}\nДвойных верстаков: {DoubleBenches}\nУсиленных взрывов: {DoubleBlasts}\nСпасений: {Rescues}\nВосстановлено прочности: {RestoredDurability}\nПолучено энергии: {Progression.Number(energy)}";
     }

@@ -94,7 +94,7 @@ namespace PickaxeFall
                 var tool = game.Pickaxes[i]; Check(tool.IsAlive && tool.OriginalTier == 0 && tool.transform.position.y > 5, "group spawn above terrain " + i);
                 for (int j = 0; j < i; j++) Check(Vector2.Distance(tool.Body.position, game.Pickaxes[j].Body.position) > 1.1f, "separated group spawn");
             }
-            var bench = game.World.DebugSetCell(-10, 13, BlockKind.Workbench); int before = game.Pickaxes[2].DamageHalfUnits;
+            var bench = game.World.DebugSetCell(-10, 13, BlockKind.UpgradeWorkbench); int before = game.Pickaxes[2].DamageHalfUnits;
             bench.DestroyBlock(game.Pickaxes[2]);
             Check(game.Pickaxes[2].Tier == 2 && game.Pickaxes[2].OriginalTier == 0 && game.Pickaxes[2].DamageHalfUnits > before && game.Pickaxes[0].Tier == 0, "workbench targets hitting tool and retains original upgrades");
             game.Pickaxes[0].DebugExhaust(); Check(game.Phase == RunPhase.Mining && game.Pickaxes[1].IsAlive, "one broken tool cannot end a group run");
@@ -121,6 +121,7 @@ namespace PickaxeFall
             Check(game.Depth == 0 && game.Pickaxe.transform.position.y > 5, "retry resets both physics and camera spawn");
             yield return RuntimeActionChecks.Run(game, root, Check);
             yield return RuntimePresentationChecks.Run(game,root,Check);
+            yield return RuntimeProgressionChecks.Run(game,Check);
             Debug.Log("PICKAXEFALL_SMOKE_OK: " + assertions + " checks; trading, half damage, opaque cracks, stronger hops, group lifecycle, streaming, camera, workbench and rescue.");
             Application.Quit(0);
         }
