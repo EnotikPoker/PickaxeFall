@@ -9,7 +9,8 @@ namespace PickaxeFall
 {
     public sealed partial class GameHud
     {
-        readonly Label[] bagCounts = new Label[8];
+        readonly Label[] bagCounts = new Label[ResourceInventory.SlotCount];
+        readonly List<AbilityCard> abilityCards=new();
         readonly List<UpgradeCard> upgradeCards = new();
         readonly List<Button> categoryButtons = new(), tierButtons = new();
         Label bagValue, bagGoal, selectedToolName;
@@ -25,11 +26,11 @@ namespace PickaxeFall
             bagValue = Text(parent, "", "description"); bagValue.name = "bag-value";
             bagGoal = Text(parent, "", "goal-note"); bagGoal.name = "bag-goal";
             var grid = Box(parent, "bag-grid");
-            for (int i = 0; i < 8; i++)
+            foreach(var kind in ResourceInventory.Materials)
             {
-                var kind = (BlockKind)i;
+                int i=(int)kind;
                 var card = Button(grid, "", () => OpenSale(kind), "resource-card inset"); card.name = "sell-" + kind;
-                Icon(card, PixelArt.Block(kind, 0, kind == BlockKind.Deepstone), "bag-icon");
+                Icon(card, PixelArt.ResourceIcon(kind), "bag-icon");
                 BoldText(card, kind == BlockKind.Deepstone ? "Глубинный сланец" : GameBalance.BlockName(kind), "bag-name");
                 bagCounts[i] = BoldText(card, "0", "bag-count"); bagCounts[i].name = "count-" + kind;
                 Text(card, Progression.SellPrices[i] + " мон. за шт.", "bag-price");
@@ -42,7 +43,7 @@ namespace PickaxeFall
             bool quote = game.Economy.TryInventoryValue(out long total);
             bagValue.text = quote ? $"Предметов: {Short(game.Inventory.Total)}\nМожно продать за {Exact(total)} монет" : "Большой запас: продавай ресурсы частями.";
             sellBag.SetEnabled(quote && total > 0 && game.CanTrade);
-            for (int i = 0; i < 8; i++) bagCounts[i].text = Short(game.Inventory[(BlockKind)i]);
+            foreach(var kind in ResourceInventory.Materials)bagCounts[(int)kind].text=Short(game.Inventory[kind]);
             int next = game.Economy.Profile.Level(pinned) + 1;
             if (next > Progression.MaxLevel(pinned.Kind)) bagGoal.text = "Выбранное улучшение прокачано полностью.";
             else
@@ -124,12 +125,16 @@ namespace PickaxeFall
         }
         void RebuildShop()
         {
-            shopCards.Clear(); upgradeCards.Clear();
+            shopCards.Clear(); upgradeCards.Clear();abilityCards.Clear();
             Display(tierSelector, shopCategory == 0); Display(selectedToolName, shopCategory == 0); Display(toolHitCounts, shopCategory == 0); Display(soonPanel, shopCategory == 4);
             if (shopCategory == 0) { AddCard(new(UpgradeKind.Damage, shopTier)); AddCard(new(UpgradeKind.Durability, shopTier)); }
             else if (shopCategory == 1) foreach (var kind in new[] { UpgradeKind.Fortune, UpgradeKind.TntFind, UpgradeKind.Careful, UpgradeKind.ImpactPower, UpgradeKind.Shrapnel }) AddCard(new(kind));
             else if (shopCategory == 2) foreach (var kind in new[] { UpgradeKind.TeamChance, UpgradeKind.TeamSize, UpgradeKind.DoubleBench, UpgradeKind.DoubleBlast, UpgradeKind.LastChance }) AddCard(new(kind));
-            else if (shopCategory == 3) foreach (var kind in new[] { UpgradeKind.EnergyCapacity, UpgradeKind.EnergyCharge, UpgradeKind.EnergyEfficiency, UpgradeKind.DashForce, UpgradeKind.PlungeDepth }) AddCard(new(kind));
+            else if (shopCategory == 3)
+            {
+                foreach(var kind in new[] {AbilityKind.Dash,AbilityKind.Plunge})abilityCards.Add(new AbilityCard(this,shopCards,kind));
+                foreach (var kind in new[] { UpgradeKind.EnergyCapacity, UpgradeKind.EnergyCharge, UpgradeKind.EnergyEfficiency, UpgradeKind.DashForce, UpgradeKind.PlungeDepth }) AddCard(new(kind));
+            }
             RefreshShop();
         }
         void AddCard(UpgradeKey key) => upgradeCards.Add(new UpgradeCard(this, shopCards, key));
@@ -146,6 +151,7 @@ namespace PickaxeFall
                 toolHitCounts.text = "Ударов на глубине появления" + (canUpgrade ? " сейчас → после +урона:" : ":") + "\nКамень " + HitComparison(BlockKind.Stone, damage, nextDamage) + " · Медь " + HitComparison(BlockKind.Copper, damage, nextDamage) + " · Железо " + HitComparison(BlockKind.Iron, damage, nextDamage) + " · Алмаз " + HitComparison(BlockKind.Diamond, damage, nextDamage);
             }
             foreach (var card in upgradeCards) card.Refresh();
+            foreach(var card in abilityCards)card.Refresh();
         }
         Label toolHitCounts;
         string HitComparison(BlockKind kind, int damage, int nextDamage) => Hits(kind, damage) + (damage == nextDamage ? "" : "→" + Hits(kind, nextDamage));
@@ -157,7 +163,7 @@ namespace PickaxeFall
         string ResourceRecipe(UpgradeCost cost, bool owned = false)
         {
             var text = new StringBuilder();
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < ResourceInventory.SlotCount; i++)
             {
                 if (cost.Resources[i] == 0) continue;
                 if (text.Length > 0) text.Append(" · ");
@@ -174,11 +180,11 @@ namespace PickaxeFall
             if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + " кирки";
             return key.Kind switch
             {
-                UpgradeKind.EnergyCapacity => (100 + 20 * level) + " энергии",
-                UpgradeKind.EnergyCharge => Progression.Number(2 + 0.1 * level) + " за удар",
-                UpgradeKind.EnergyEfficiency => "−" + (2 * level) + "% расхода",
-                UpgradeKind.DashForce => (12 + level) + " м/с",
-                UpgradeKind.PlungeDepth => (2 + level) + " блоков",
+                UpgradeKind.EnergyCapacity => (60 + 8 * level) + " энергии",
+                UpgradeKind.EnergyCharge => (2 + 0.04 * level).ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("ru-RU")) + " в секунду",
+                UpgradeKind.EnergyEfficiency => "−" + level + "% расхода",
+                UpgradeKind.DashForce => Progression.Number(10 + 0.6 * level) + " м/с",
+                UpgradeKind.PlungeDepth => (1 + level) + " блоков",
                 UpgradeKind.ImpactPower => "+" + Progression.Number(level * 0.5) + " урона сильного удара",
                 UpgradeKind.Shrapnel => Progression.Number(level * 0.5) + " соседям",
                 _ => Progression.Number(level * Progression.ChanceStep(key.Kind) * 100) + "%"
@@ -215,12 +221,12 @@ namespace PickaxeFall
                 var price = Progression.Cost(key, level + 1);
                 cost.text = $"Цена: {Exact(price.Coins)} монет · есть {Short(hud.game.Wallet)}";
                 cost.EnableInClassList("cost-enough",hud.game.Wallet>=price.Coins);cost.EnableInClassList("cost-short",hud.game.Wallet<price.Coins);
-                for(int i=0;i<8;i++)
+                for(int i=0;i<ResourceInventory.SlotCount;i++)
                 {
                     if(price.Resources[i]==0)continue;
                     var kind=(BlockKind)i;bool enough=hud.game.Inventory[kind]>=price.Resources[i];
                     var item=Box(resources,"recipe-item");item.tooltip=GameBalance.BlockName(kind);
-                    Icon(item,PixelArt.Block(kind,0,kind==BlockKind.Deepstone),"recipe-icon");
+                    Icon(item,PixelArt.ResourceIcon(kind),"recipe-icon");
                     var amount=hud.BoldText(item,$"{Short(hud.game.Inventory[kind])} / {Exact(price.Resources[i])}",enough?"recipe-amount cost-enough":"recipe-amount cost-short");amount.name="required-"+kind;
                 }
                 reason.text = available ? "Нажми на карточку, чтобы оставить её целью в рюкзаке." : why;

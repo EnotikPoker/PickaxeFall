@@ -17,41 +17,51 @@ namespace PickaxeFall
     [Serializable]
     public sealed class PlayerProfile
     {
-        public int version = 3;
+        public int version = 4;
         public long coins;
         public int bestDepth;
-        public long[] resources = new long[8];
+        public long[] resources = new long[ResourceInventory.SlotCount];
         public int[] upgrades = new int[25];
+        public bool dashUnlocked, plungeUnlocked;
+        // JsonUtility expands null inline classes into empty objects. Keep the
+        // optional snapshot as a JSON string so a finished run stays truly absent.
+        [NonSerialized] public RunSnapshot run;
+        public string activeRunJson;
         public PlayerProfile Copy() => new() { version = version, coins = coins, bestDepth = bestDepth,
-            resources = (long[])resources.Clone(), upgrades = (int[])upgrades.Clone() };
+            resources = (long[])resources.Clone(), upgrades = (int[])upgrades.Clone(), dashUnlocked=dashUnlocked,plungeUnlocked=plungeUnlocked,run=run,activeRunJson=activeRunJson };
         public int Level(UpgradeKey key) => key.IsValid ? upgrades[key.Index] : 0;
         public void Validate()
         {
-            if (version != 3 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != 8 || upgrades == null || upgrades.Length != 25)
+            if (version != 4 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
                 throw new InvalidOperationException("Invalid player profile.");
             foreach (long count in resources) if (count < 0) throw new InvalidOperationException("Negative resource count.");
+            if(resources[8]!=0 || resources[9]!=0)throw new InvalidOperationException("Invalid reserved resource slots.");
             foreach (var key in Progression.Keys)
                 if (Level(key) < 0 || Level(key) > Progression.MaxLevel(key.Kind)) throw new InvalidOperationException("Invalid upgrade level.");
+            run?.Validate();
         }
     }
 
     public sealed class UpgradeCost
     {
         public long Coins;
-        public readonly long[] Resources = new long[8];
+        public readonly long[] Resources = new long[ResourceInventory.SlotCount];
     }
 
     public sealed class RunUpgrades
     {
         readonly int[] levels;
-        public RunUpgrades(PlayerProfile profile) { levels = (int[])profile.upgrades.Clone(); }
+        public readonly bool DashUnlocked,PlungeUnlocked;
+        public RunUpgrades(PlayerProfile profile) { levels = (int[])profile.upgrades.Clone();DashUnlocked=profile.dashUnlocked;PlungeUnlocked=profile.plungeUnlocked; }
+        public int[] CaptureLevels() => (int[])levels.Clone();
         public int Level(UpgradeKind kind, int tier = 0) => levels[new UpgradeKey(kind, tier).Index];
         public double Chance(UpgradeKind kind) => Level(kind) * Progression.ChanceStep(kind);
-        public float MaxEnergy => 100 + 20 * Level(UpgradeKind.EnergyCapacity);
-        public float EnergyPerHit => 2 + 0.1f * Level(UpgradeKind.EnergyCharge);
-        public float EnergyCost(float baseCost) => baseCost * (1 - 0.02f * Level(UpgradeKind.EnergyEfficiency));
-        public float DashSpeed => 12 + Level(UpgradeKind.DashForce);
-        public int PlungeBlocks => 2 + Level(UpgradeKind.PlungeDepth);
+        public float MaxEnergy => 60 + 8 * Level(UpgradeKind.EnergyCapacity);
+        // EnergyCharge keeps its saved index; purchased levels now improve regeneration.
+        public float EnergyPerSecond => 2 + 0.04f * Level(UpgradeKind.EnergyCharge);
+        public float EnergyCost(float baseCost) => baseCost * (1 - 0.01f * Level(UpgradeKind.EnergyEfficiency));
+        public float DashSpeed => 10 + 0.6f * Level(UpgradeKind.DashForce);
+        public int PlungeBlocks => 1 + Level(UpgradeKind.PlungeDepth);
         public int StrongBonusHalfUnits => Level(UpgradeKind.ImpactPower);
         public int ShrapnelHalfUnits => Level(UpgradeKind.Shrapnel);
         public int TeamSize => 2 + Level(UpgradeKind.TeamSize);
@@ -62,11 +72,11 @@ namespace PickaxeFall
     public static class Progression
     {
         public static readonly UpgradeKey[] Keys = CreateKeys();
-        public static readonly long[] SellPrices = { 1, 2, 5, 10, 22, 45, 120, 3 };
+        public static readonly long[] SellPrices = { 1, 2, 5, 10, 22, 45, 120, 3, 0, 0, 240, 16, 12, 30 };
         static readonly double[] TierPrices = { 1, 1.4, 2.3, 3.4, 5 };
-        static readonly int[] BasePrices = { 30, 25, 10, 10, 250, 8, 12, 12, 6, 12, 40, 35, 30, 60, 250, 60, 90 };
-        static readonly int[] DamageSteps = { 1, 2, 3, 4, 6 }, DurabilitySteps = { 3, 6, 9, 14, 22 };
-        static readonly double[] Growth = { 1.28, 1.26, 1.3, 1.35, 1, 1.29, 1.32, 1.32, 1.3, 1.24, 2.2, 1.3, 1.5, 2.5, 1, 1.55, 1.6 };
+        static readonly int[] BasePrices = { 30, 25, 10, 10, 250, 8, 12, 12, 6, 12, 40, 25, 30, 60, 250, 60, 55 };
+        static readonly int[] DamageSteps = { 1, 2, 3, 4, 8 }, DurabilitySteps = { 3, 6, 9, 14, 32 };
+        static readonly double[] Growth = { 1.28, 1.26, 1.3, 1.35, 1, 1.19, 1.32, 1.32, 1.18, 1.18, 2.2, 1.22, 1.5, 2.5, 1, 1.55, 1.45 };
         public static string Number(double value) => value.ToString("0.#", CultureInfo.GetCultureInfo("ru-RU"));
         public static int MaxLevel(UpgradeKind kind) => kind switch
         {
@@ -86,7 +96,15 @@ namespace PickaxeFall
         };
         public static int DamageStepHalfUnits(int tier) => DamageSteps[tier];
         public static int DurabilityStep(int tier) => DurabilitySteps[tier];
-        public static bool IsOre(BlockKind kind) => kind >= BlockKind.Coal && kind <= BlockKind.Diamond;
+        public static bool IsOre(BlockKind kind) => kind >= BlockKind.Coal && kind <= BlockKind.Diamond || kind >= BlockKind.Emerald && kind <= BlockKind.AmethystCluster;
+        public static readonly BlockKind[] VeinOres={BlockKind.Coal,BlockKind.Copper,BlockKind.Iron,BlockKind.Gold,BlockKind.Diamond,BlockKind.Emerald,BlockKind.Lapis,BlockKind.Redstone};
+        public static UpgradeCost AbilityCost(AbilityKind kind)
+        {
+            var cost=new UpgradeCost { Coins=kind==AbilityKind.Dash?200:350 };
+            cost.Resources[(int)BlockKind.Stone]=kind==AbilityKind.Dash?20:30;
+            cost.Resources[(int)(kind==AbilityKind.Dash?BlockKind.Coal:BlockKind.Copper)]=kind==AbilityKind.Dash?10:6;
+            return cost;
+        }
         public static string Title(UpgradeKind kind) => kind switch
         {
             UpgradeKind.Damage => "Острота", UpgradeKind.Durability => "Крепкая рукоять",
@@ -94,7 +112,7 @@ namespace PickaxeFall
             UpgradeKind.TeamSize => "Размер отряда", UpgradeKind.TntFind => "Взрывная находка",
             UpgradeKind.DoubleBench => "Двойной верстак", UpgradeKind.DoubleBlast => "Усиленный TNT",
             UpgradeKind.Careful => "Бережный удар", UpgradeKind.LastChance => "Последний шанс",
-            UpgradeKind.EnergyCapacity => "Запас энергии", UpgradeKind.EnergyCharge => "Заряд от удара",
+            UpgradeKind.EnergyCapacity => "Запас энергии", UpgradeKind.EnergyCharge => "Восстановление энергии",
             UpgradeKind.EnergyEfficiency => "Экономия энергии", UpgradeKind.DashForce => "Сила рывка",
             UpgradeKind.PlungeDepth => "Глубокий пробой", UpgradeKind.ImpactPower => "Мощный удар", _ => "Осколочный удар"
         };
@@ -105,18 +123,18 @@ namespace PickaxeFall
             UpgradeKind.Fortune => "Шанс получить ещё одну единицу руды, в том числе от взрыва. +2 п.п. за уровень, до 50%.",
             UpgradeKind.TeamChance => "Один бросок шанса даёт весь отряд одинаковых кирок. +0,5 п.п. за уровень.",
             UpgradeKind.TeamSize => "Увеличивает отряд при удаче. Не повышает шанс его выпадения.",
-            UpgradeKind.TntFind => "После прямой добычи руда иногда сразу взрывается как TNT. Ресурс остаётся в рюкзаке. Максимум 20%.",
+            UpgradeKind.TntFind => "После прямой добычи руда иногда взрывается малым взрывом радиусом 1,5 м. Ресурс остаётся в рюкзаке. Максимум 20%.",
             UpgradeKind.DoubleBench => "Верстак полностью чинит кирку, повышает тип на две ступени и заполняет общую энергию. +1 п.п. за уровень, до 25%.",
             UpgradeKind.DoubleBlast => "Взрыв охватывает вдвое большую площадь. +1 п.п. за уровень, до 25%.",
             UpgradeKind.Careful => "Шанс не потратить прочность при ударе. +0,5 п.п. за уровень, до 20%.",
             UpgradeKind.LastChance => "Один раз за забег последняя кирка может восстановить 50% прочности и энергию на пробой. +0,5 п.п. за уровень, до 20%.",
-            UpgradeKind.EnergyCapacity => "+20 к общему запасу. Спуск начинается с полной энергией. Максимум 200.",
-            UpgradeKind.EnergyCharge => "+0,1 энергии за обычное попадание выбранной кирки. Способности и взрывы не заряжают запас.",
-            UpgradeKind.EnergyEfficiency => "Рывок и пробой расходуют на 2% меньше энергии за уровень. Максимум −20%.",
-            UpgradeKind.DashForce => "+1 м/с к начальному импульсу рывка. Пробивает один блок при любой прокачке.",
-            UpgradeKind.PlungeDepth => "+1 пробиваемый блок к удару вниз за уровень. Максимум пять.",
+            UpgradeKind.EnergyCapacity => "+8 к общему запасу. Спуск начинается с полной энергией. Максимум 100.",
+            UpgradeKind.EnergyCharge => "+0,04 энергии в секунду за уровень: от 2 до 2,8. Восстановление идёт только во время спуска и не зависит от ударов и числа кирок.",
+            UpgradeKind.EnergyEfficiency => "Рывок и пробой расходуют на 1% меньше энергии за уровень. Максимум −10%.",
+            UpgradeKind.DashForce => "+0,6 м/с к начальному импульсу рывка. Пробивает один блок при любой прокачке.",
+            UpgradeKind.PlungeDepth => "+1 пробиваемый блок к удару вниз за уровень. От одного до четырёх блоков.",
             UpgradeKind.ImpactPower => "+0,5 урона при обычном столкновении от 4 м/с. Не влияет на пробитие способностей.",
-            _ => "Сильный обычный удар повреждает четыре соседних материала: +0,5 урона за уровень. Без дополнительного износа."
+            _ => "Сильный обычный удар повреждает один соседний материал: +0,5 урона за уровень. Направления чередуются. Без дополнительного износа."
         };
 
         public static UpgradeCost Cost(UpgradeKey key, int nextLevel)

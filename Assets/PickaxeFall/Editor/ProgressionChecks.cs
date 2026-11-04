@@ -12,6 +12,7 @@ namespace PickaxeFall.Editor
         {
             assertions = 0;
             ActionChecks.Validate();
+            ProfileV4Checks.Validate();
             var p = new PlayerProfile(); var economy = new EconomyService(p);
             foreach (var key in Progression.Keys)
             {
@@ -35,7 +36,7 @@ namespace PickaxeFall.Editor
             Check(!economy.TryBuy(new(UpgradeKind.TeamSize)), "team size needs team chance");
             Check(economy.TrySellAll() && economy.Profile.coins == 18 && Array.TrueForAll(economy.Profile.resources, v => v == 0), "bulk sale exact and clears all materials");
             Check(!economy.TrySellAll() && economy.Profile.coins == 18, "empty bulk sale cannot duplicate coins");
-            var failureProfile = new PlayerProfile { coins = 1000 }; Array.Fill(failureProfile.resources, 100L);
+            var failureProfile = new PlayerProfile { coins = 1000 }; foreach(var resource in ResourceInventory.Materials)failureProfile.resources[(int)resource]=100L;
             var failing = new EconomyService(failureProfile, _ => throw new IOException("test storage failure"));
             Check(!failing.TryBuy(new(UpgradeKind.Damage)) && failing.Profile.coins == 1000 && failing.Profile.upgrades[0] == 0, "save failure rolls purchase back");
             Check(!failing.TrySell(BlockKind.Stone, 3) && failing.Profile.resources[1] == 100 && failing.Profile.coins == 1000, "save failure rolls sale back");
@@ -64,6 +65,9 @@ namespace PickaxeFall.Editor
                 double chance = maxSnapshot.Chance(kind); var random = new System.Random(8127 + (int)kind); int hits = 0;
                 for (int i = 0; i < 100000; i++) if (random.NextDouble() < chance) hits++;
                 Check(Math.Abs(hits / 100000d - chance) < 0.006, "probability audit " + kind);
+                var actual=new EffectRolls();actual.Reset(8127+(int)kind);hits=0;
+                for(int i=0;i<100000;i++)if(actual.Roll(kind,chance))hits++;
+                Check(Math.Abs(hits/100000d-chance)<.006,"serializable production RNG probability "+kind);
             }
             string dir = Path.Combine(Application.temporaryCachePath, "profile-audit-" + Guid.NewGuid().ToString("N"));
             try

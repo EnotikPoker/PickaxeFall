@@ -29,6 +29,19 @@ namespace PickaxeFall
             else if(game.TestMode=="tutorial"){Submit(root.Q<Button>("open-settings"));Submit(root.Q<Button>("settings-tutorial"));}
             else if(game.TestMode=="reset"){Submit(root.Q<Button>("open-settings"));Submit(root.Q<Button>("settings-reset-progress"));}
             else if(game.TestMode=="loot"){game.BeginProbeRun(0,8127,1);yield return new WaitForSeconds(.8f);game.World.DebugSetCell(-10,8,BlockKind.Copper).DestroyBlock(game.Pickaxe);}
+            else if(game.TestMode=="dungeon" || game.TestMode=="geode")
+            {
+                MineGenerator.Structure found=default;int seed=1;
+                for(;seed<1000;seed++){var gen=new MineGenerator(game.Balance,seed);if(gen.TryStructure(0,out found) && found.geode==(game.TestMode=="geode"))break;}
+                game.BeginProbeRun(4,seed,1);game.Pickaxe.DebugPlace(new Vector2(found.x,-found.row+1),Vector2.zero);game.Pickaxe.Body.gravityScale=0;game.Pickaxe.Body.simulated=false;
+                game.StepMiningWorld();Camera.main.GetComponent<MineCamera>().SnapToTools();
+            }
+            else if(game.TestMode=="ores")
+            {
+                game.BeginProbeRun(4,8127,1);game.Pickaxe.DebugPlace(new Vector2(0,-92),Vector2.zero);game.Pickaxe.Body.gravityScale=0;game.Pickaxe.Body.simulated=false;game.StepMiningWorld();
+                foreach(var kind in new[] {BlockKind.Emerald,BlockKind.Lapis,BlockKind.Redstone,BlockKind.Amethyst,BlockKind.AmethystCluster})game.World.DebugSetCell((int)kind-12,94,kind);
+                game.World.ActivateRedstone(0,94,game.Pickaxe);Camera.main.GetComponent<MineCamera>().SnapToTools();
+            }
             else if (game.TestMode == "controls") game.BeginProbeRun(0, 8127, 3);
             else if (game.TestMode == "abilities") { game.SelectHubTab(HubTab.Shop); yield return null; Submit(root.Q<Button>("shop-category-3")); }
             else if (game.TestMode == "mine") { }
@@ -43,7 +56,7 @@ namespace PickaxeFall
                 game.SelectHubTab(HubTab.Inventory);
                 if (game.TestMode == "sale") { yield return null; Submit(root.Q<Button>("sell-Stone")); }
             }
-            yield return new WaitForSecondsRealtime(game.TestMode == "team" ? 5 : 1);
+            yield return new WaitForSecondsRealtime(game.TestMode == "loot" ? .2f : game.TestMode == "team" ? 5 : 1);
             string file = Path.Combine(Application.temporaryCachePath, "pickaxefall-preview-" + game.TestMode + ".png");
 #if !UNITY_ANDROID
             file = "/tmp/pickaxefall-preview-" + game.TestMode + ".png";

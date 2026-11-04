@@ -108,7 +108,7 @@ namespace PickaxeFall.Editor
                 Require(Math.Abs(counts[i] / 100000f - balance.RollChance(i)) < 0.008f, "Roulette weight mismatch.");
                 Debug.Log($"ROULETTE_AUDIT: {balance.pickaxes[i].title}: expected={balance.RollChance(i) * 100:F3}% actual={counts[i] / 1000f:F3}% count={counts[i]}/100000");
             }
-            foreach (int depth in new[] { 0, 5, 15, 30, 45, 70 })
+            foreach (int depth in new[] { 0, 5, 15, 30, 45, 70, balance.Block(BlockKind.Diamond).minimumDepth + 20 })
             {
                 var first = new System.Random(73); var second = new System.Random(73);
                 bool sawDiamond = false;
@@ -122,9 +122,11 @@ namespace PickaxeFall.Editor
                     Require(depth >= balance.Block(BlockKind.Copper).minimumDepth || block != BlockKind.Copper, "Copper appeared too early.");
                     sawDiamond |= block == BlockKind.Diamond;
                 }
-                if (depth == 70) Require(sawDiamond, "Deep layers must contain diamonds.");
+                if (depth > balance.Block(BlockKind.Diamond).minimumDepth) Require(sawDiamond, "Deep layers must contain diamonds.");
             }
             PrototypeChecks.Validate(balance);
+            VeinChecks.Validate(balance);
+            WorldFeatureChecks.Validate(balance);
             Debug.Log("PICKAXEFALL_BALANCE_OK: 100000 roulette rolls; deterministic generation and ore depth gates.");
         }
 

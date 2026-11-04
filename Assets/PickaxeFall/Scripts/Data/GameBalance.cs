@@ -3,7 +3,9 @@ using UnityEngine;
 
 namespace PickaxeFall
 {
-    public enum BlockKind { Dirt, Stone, Coal, Copper, Iron, Gold, Diamond, Deepstone, Workbench, Tnt }
+    // Append-only IDs preserve all existing resource slots and saved block kinds.
+    public enum BlockKind { Dirt, Stone, Coal, Copper, Iron, Gold, Diamond, Deepstone, Workbench, Tnt,
+        Emerald, Lapis, Redstone, Amethyst, AmethystCluster, Cobblestone, MossyCobblestone, Chest, Spawner }
     public enum RunPhase { Ready, Spinning, Equipped, Mining, Breaking, Finished }
 
     [Serializable]
@@ -65,16 +67,22 @@ namespace PickaxeFall
         [Min(0)] public float minimumReboundSpeed = 2.8f;
         [Min(0)] public float maximumReboundSpeed = 6.2f;
         [Header("Depth hardness")]
-        [Min(0)] public int hardnessStartDepth = 40;
-        [Min(20)] public int hardnessDoublingDepth = 50;
+        [Min(0)] public int hardnessStartDepth = 60;
+        [Min(20)] public int hardnessDoublingDepth = 70;
+        [Header("Rare structures / probability per 64-row band")]
+        [Range(0,1)] public float dungeonChance=.08f;
+        [Range(0,1)] public float geodeChance=.12f;
         [Header("Blocks / ore chance is an absolute probability per cell")]
         public BlockStats[] blocks =
         {
             new(BlockKind.Dirt, 1, 0), new(BlockKind.Stone, 6, 3),
             new(BlockKind.Coal, 8, 3, 0.15f), new(BlockKind.Copper, 11, 8, 0.08f),
             new(BlockKind.Iron, 14, 18, 0.055f), new(BlockKind.Gold, 18, 35, 0.03f),
-            new(BlockKind.Diamond, 22, 55, 0.012f), new(BlockKind.Deepstone, 10, 45),
-            new(BlockKind.Workbench, 1, 6), new(BlockKind.Tnt, 1, 5)
+            new(BlockKind.Diamond, 22, 90, 0.004f), new(BlockKind.Deepstone, 10, 75),
+            new(BlockKind.Workbench, 1, 6), new(BlockKind.Tnt, 1, 5),
+            new(BlockKind.Emerald,30,75,.001f),new(BlockKind.Lapis,18,75,.024f),new(BlockKind.Redstone,16,75,.035f),
+            new(BlockKind.Amethyst,12,30),new(BlockKind.AmethystCluster,4,30),new(BlockKind.Cobblestone,8,30),
+            new(BlockKind.MossyCobblestone,8,30),new(BlockKind.Chest,1,30),new(BlockKind.Spawner,18,30)
         };
         [Header("Pickaxes / weighted roulette")]
         public PickaxeStats[] pickaxes =
@@ -83,7 +91,7 @@ namespace PickaxeFall
             new("Каменная", "НЕОБЫЧНАЯ", new Color32(173, 188, 198, 255), 4, 72, 30, 1.2f),
             new("Золотая", "РЕДКАЯ", new Color32(255, 203, 92, 255), 6, 108, 15, 1.3f),
             new("Железная", "ЭПИЧЕСКАЯ", new Color32(226, 235, 232, 255), 10, 200, 8, 1.4f),
-            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 16, 320, 2, 1.5f)
+            new("Алмазная", "ЛЕГЕНДАРНАЯ", new Color32(95, 241, 213, 255), 26, 480, 2, 1.5f)
         };
 
         public int Roll(System.Random random)
@@ -120,11 +128,20 @@ namespace PickaxeFall
             double roll = random.NextDouble();
             foreach (var block in blocks)
             {
-                if (block.oreChance <= 0 || depth < block.minimumDepth) continue;
-                roll -= block.oreChance;
+                double chance = OreChance(block.kind, depth);
+                if (chance <= 0) continue;
+                roll -= chance;
                 if (roll < 0) return block.kind;
             }
             return depth >= Block(BlockKind.Deepstone).minimumDepth ? BlockKind.Deepstone : BlockKind.Stone;
+        }
+
+        public double OreChance(BlockKind kind, int depth)
+        {
+            var block = Block(kind);
+            if (depth < block.minimumDepth) return 0;
+            if(kind>=BlockKind.Emerald && kind<=BlockKind.Redstone && depth<Block(BlockKind.Deepstone).minimumDepth)return 0;
+            return block.oreChance * (kind == BlockKind.Coal && depth >= Block(BlockKind.Deepstone).minimumDepth ? .35 : 1);
         }
 
         public static string BlockName(BlockKind kind) => kind switch
@@ -132,6 +149,9 @@ namespace PickaxeFall
             BlockKind.Dirt => "Земля", BlockKind.Stone => "Камень", BlockKind.Coal => "Уголь",
             BlockKind.Copper => "Медь", BlockKind.Iron => "Железо", BlockKind.Gold => "Золото",
             BlockKind.Diamond => "Алмаз", BlockKind.Deepstone => "Глубинный сланец",
+            BlockKind.Emerald => "Изумруд",BlockKind.Lapis => "Лазурит",BlockKind.Redstone => "Красная пыль",
+            BlockKind.Amethyst or BlockKind.AmethystCluster => "Кристаллы аметиста",BlockKind.Cobblestone => "Булыжник",
+            BlockKind.MossyCobblestone => "Замшелый булыжник",BlockKind.Chest => "Сундук",BlockKind.Spawner => "Спавнер",
             BlockKind.Tnt => "Динамит", _ => "Верстак"
         };
     }

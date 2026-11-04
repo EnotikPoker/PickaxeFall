@@ -66,7 +66,7 @@ namespace PickaxeFall
             resultArea = Box(mineView, "result-area"); result = Text(resultArea, "", "result");
             runGrid = new ResourceGrid(resultArea, "run-resources", true);
             action = Button(mineView, "КРУТИТЬ РУЛЕТКУ", MainAction, "stone-button primary"); action.name = "main-action";
-            Text(mineView, "Свайп — рывок. Нажатие — пробой вниз. Верстак — полный ремонт.", "footnote");
+            Text(mineView, "Приёмы открываются в магазине. Верстак — полный ремонт и повышение типа.", "footnote");
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
             shopView = Page(window, "shop-page"); BuildShop(shopView);
             playfield = Box(safe, "playfield"); playfield.pickingMode = PickingMode.Ignore;
@@ -217,21 +217,21 @@ namespace PickaxeFall
         }
         sealed class ResourceGrid
         {
-            readonly Label[] counts = new Label[8]; readonly long[] previous = new long[8];
+            readonly Label[] counts = new Label[ResourceInventory.SlotCount]; readonly long[] previous = new long[ResourceInventory.SlotCount];
             public ResourceGrid(VisualElement parent, string name, bool compact)
             {
                 var grid = Box(parent, compact ? "resource-grid compact" : "resource-grid"); grid.name = name;
-                for (int i = 0; i < 8; i++)
+                foreach(var kind in ResourceInventory.Materials)
                 {
-                    var kind = (BlockKind)i; previous[i] = -1; var slot = Box(grid, "resource-slot inset");
-                    Icon(slot, PixelArt.Block(kind, 0, kind == BlockKind.Deepstone), "resource-icon");
+                    int i=(int)kind;previous[i] = -1; var slot = Box(grid, "resource-slot inset");
+                    Icon(slot, PixelArt.ResourceIcon(kind), "resource-icon");
                     counts[i] = Text(slot, "0", "stack-count"); counts[i].name = "count-" + kind;
                     if (!compact) Text(slot, kind == BlockKind.Deepstone ? "Сланец" : GameBalance.BlockName(kind), "resource-name");
                 }
             }
             public void Update(Func<BlockKind, long> quantity)
             {
-                for (int i = 0; i < 8; i++) { long n = quantity((BlockKind)i); if (n == previous[i]) continue; previous[i] = n; counts[i].text = Short(n); }
+                foreach(var kind in ResourceInventory.Materials){int i=(int)kind;long n=quantity(kind);if(n==previous[i])continue;previous[i]=n;counts[i].text=Short(n);}
             }
         }
     }

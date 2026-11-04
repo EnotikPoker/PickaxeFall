@@ -14,6 +14,8 @@ namespace PickaxeFall
         public bool IsDeep { get; private set; }
         public Color BaseColor => PixelArt.BlockColor(Kind, IsDeep);
         public int DamageStage { get; private set; }
+        public float LitUntil { get; private set; }
+        public bool IsLit=>Kind==BlockKind.Redstone && LitUntil>world.Now;
         SpriteRenderer visual, cracks;
         BoxCollider2D hitbox;
         MiningWorld world;
@@ -22,7 +24,7 @@ namespace PickaxeFall
         public void Setup(MiningWorld owner, BlockKind kind, int x, int row, int variant, bool deep = false, bool surface = false)
         {
             world = owner; Kind = kind; Row = row; Column = x; IsDeep = deep;
-            HealthHalfUnits = maxHealthHalfUnits = owner.Balance.BlockHealthHalfUnits(kind, row); IsBroken = false; DamageStage = 0;
+            HealthHalfUnits = maxHealthHalfUnits = owner.Balance.BlockHealthHalfUnits(kind, row); IsBroken = false; DamageStage = 0;LitUntil=0;
             visual ??= GetComponent<SpriteRenderer>(); hitbox ??= GetComponent<BoxCollider2D>();
             if (!cracks)
             {
@@ -32,6 +34,7 @@ namespace PickaxeFall
             }
             cracks.enabled = false; cracks.sprite = null;
             transform.position = new Vector3(x, -row - 0.5f, 0);
+            transform.rotation=Quaternion.identity;
             visual.sprite = PixelArt.Block(kind, variant, deep, surface); visual.color = Color.white;
             hitbox.size = new Vector2(0.99f, 0.99f); hitbox.enabled = true;
             gameObject.SetActive(true);
@@ -40,6 +43,7 @@ namespace PickaxeFall
         {
             HealthHalfUnits = Mathf.Clamp(halfUnits, 1, maxHealthHalfUnits); UpdateCracks();
         }
+        public void SetLit(float until){LitUntil=until;world.Remember(this);}
         void UpdateCracks()
         {
             if (HealthHalfUnits >= maxHealthHalfUnits) { DamageStage = 0; cracks.enabled = false; return; }
@@ -49,6 +53,7 @@ namespace PickaxeFall
         public bool HitHalfUnits(int damage, FallingPickaxe source, DamageOrigin origin = DamageOrigin.Physical)
         {
             if (IsBroken || damage <= 0 || !world.CanMine || origin == DamageOrigin.Shrapnel && !ResourceInventory.IsMaterial(Kind)) return false;
+            if(Kind==BlockKind.Redstone && origin!=DamageOrigin.Shrapnel)world.ActivateRedstone(Column,Row,source);
             HealthHalfUnits = damage >= HealthHalfUnits ? 0 : HealthHalfUnits - damage;
             if (HealthHalfUnits == 0) return DestroyBlock(source, origin);
             UpdateCracks(); world.Remember(this); return false;
@@ -57,6 +62,8 @@ namespace PickaxeFall
         public bool DestroyBlock(FallingPickaxe source, DamageOrigin origin = DamageOrigin.Physical)
         {
             if (IsBroken || !world.CanMine || origin == DamageOrigin.Explosion && Kind == BlockKind.Workbench || origin == DamageOrigin.Shrapnel && !ResourceInventory.IsMaterial(Kind)) return false;
+            if(Kind==BlockKind.Redstone && (origin==DamageOrigin.Physical || origin==DamageOrigin.Dash || origin==DamageOrigin.Plunge))
+            {world.ActivateRedstone(Column,Row,source);if(IsBroken)return false;}
             HealthHalfUnits = 0; IsBroken = true; hitbox.enabled = false; world.Break(this, source, origin); return true;
         }
         // Legacy full-damage entrypoint for editor inspection; production impacts carry a source.

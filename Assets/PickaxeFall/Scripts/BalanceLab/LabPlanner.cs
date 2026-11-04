@@ -22,7 +22,9 @@ namespace PickaxeFall.BalanceLab
             for (int tier = 0; tier < 5; tier++)
             {
                 if (!plan.tiers[tier]) continue;
-                var keys = Progression.Keys.Where(k => k.Kind > UpgradeKind.Durability || k.Tier == tier).ToArray();
+                // Purchased stats follow the current type after a workbench.
+                // Include every future reachable type, rather than just the roll.
+                var keys = Progression.Keys.Where(k => k.Kind > UpgradeKind.Durability || k.Tier >= tier).ToArray();
                 var masks = new HashSet<int> { 0 };
                 if (plan.mode == 3) masks.Add(Progression.Keys.Where(k => plan.customLevels[k.Index] > 0).Aggregate(0, (a,k) => a | (1 << k.Index)));
                 else

@@ -5,13 +5,14 @@ namespace PickaxeFall
 {
     public class MiningWorld : MonoBehaviour
     {
-        struct CellState { public BlockKind kind; public int health; public bool broken; }
+        struct CellState { public BlockKind kind; public int health; public bool broken;public float litUntil; }
         readonly Dictionary<int, List<MineBlock>> rows = new();
         readonly Dictionary<Vector2Int, CellState> changes = new();
         readonly Stack<MineBlock> pool = new();
         readonly List<int> retiredRows = new(), orderedRows = new();
         readonly HashSet<int> wantedRows = new();
-        readonly Queue<(Vector2 center, FallingPickaxe source)> explosions = new();
+        readonly Queue<(Vector2 center, FallingPickaxe source, bool ore)> explosions = new();
+        static readonly Vector2Int[] ShrapnelDirections = { Vector2Int.down, Vector2Int.left, Vector2Int.up, Vector2Int.right };
         readonly BoxCollider2D[] walls = new BoxCollider2D[2];
         readonly List<Collider2D> blastColliders = new();
         bool detonating;
@@ -23,6 +24,9 @@ namespace PickaxeFall
         public int LoadedRows => rows.Count;
         public GameBalance Balance => balance;
         public bool CanMine => game.Phase == RunPhase.Mining && !game.Paused;
+        public float Now=>game.Clock.Now;
+        public IEnumerable<MineBlock> LoadedBlocks { get {foreach(var list in rows.Values)foreach(var block in list)if(!block.IsBroken)yield return block;} }
+        public void SetBalance(GameBalance config)=>balance=config;
 
         public void Initialize(GameController owner, GameBalance config)
         {
@@ -33,10 +37,11 @@ namespace PickaxeFall
                 walls[i].transform.position = new Vector3((i == 0 ? -1 : 1) * (balance.worldWidth / 2 + 1), 0, 0);
             }
         }
-        public void ResetWorld(int runSeed)
+        public void ResetWorld(int runSeed,CellSnapshot[] saved=null)
         {
             foreach (var row in rows.Values) foreach (var block in row) Return(block);
             rows.Clear(); changes.Clear(); explosions.Clear(); ActiveBlocks = 0;
+            if(saved!=null)foreach(var cell in saved)changes[new Vector2Int(cell.x,cell.row)]=new CellState {kind=cell.kind,health=cell.health,broken=cell.broken,litUntil=cell.litUntil};
             generator = new MineGenerator(balance, runSeed); Stream(0);
         }
         public void Stream(float depth) { wallTopHint = -depth + balance.spawnHeight + 12; wallBottomHint = -depth - 12; wantedRows.Clear(); WantWindow(depth); ApplyWindows(); }
@@ -94,13 +99,50 @@ namespace PickaxeFall
                 if (pool.Count > 0) block = pool.Pop();
                 else { var obj = new GameObject("Mine block"); obj.transform.SetParent(transform); block = obj.AddComponent<MineBlock>(); }
                 block.Setup(this, modified ? state.kind : cell.kind, x, row, cell.variant, cell.deep, cell.surface);
-                if (modified) block.RestoreHealth(state.health);
+                if (modified){block.RestoreHealth(state.health);if(state.litUntil>0)block.SetLit(state.litUntil);}
                 blocks.Add(block); ActiveBlocks++;
             }
             rows.Add(row, blocks);
         }
         public void Remember(MineBlock block) => changes[new Vector2Int(block.Column, block.Row)] = new CellState
-            { kind = block.Kind, health = block.HealthHalfUnits, broken = block.IsBroken };
+            { kind = block.Kind, health = block.HealthHalfUnits, broken = block.IsBroken,litUntil=block.LitUntil };
+        public CellSnapshot[] CaptureChanges()
+        {
+            var result=new List<CellSnapshot>();
+            foreach(var pair in changes)result.Add(new CellSnapshot {x=pair.Key.x,row=pair.Key.y,kind=pair.Value.kind,health=pair.Value.health,broken=pair.Value.broken,litUntil=pair.Value.litUntil});
+            result.Sort((a,b)=>a.row==b.row?a.x.CompareTo(b.x):a.row.CompareTo(b.row));return result.ToArray();
+        }
+        public bool BlocksLight(int x,int row)
+        {
+            if(changes.TryGetValue(new Vector2Int(x,row),out var state))return !state.broken && state.kind!=BlockKind.AmethystCluster;
+            var cell=generator.Sample(x,row);return cell.exists && cell.kind!=BlockKind.AmethystCluster;
+        }
+        MineBlock EnsureCell(int x,int row)
+        {
+            if(Mathf.Abs(x)>balance.worldWidth/2 || row< -2)return null;
+            if(!rows.ContainsKey(row))GenerateRow(row);return CellAt(x,row);
+        }
+        public void ActivateRedstone(int x,int row,FallingPickaxe source)
+        {
+            if(!CanMine)return;
+            var first=EnsureCell(x,row);if(!first || first.Kind!=BlockKind.Redstone || first.IsLit)return;
+            var queue=new Queue<Vector2Int>();var seen=new HashSet<Vector2Int>();var tnt=new List<MineBlock>();
+            queue.Enqueue(new Vector2Int(x,row));
+            while(queue.Count>0 && seen.Count<128)
+            {
+                var at=queue.Dequeue();if(!seen.Add(at))continue;
+                var block=EnsureCell(at.x,at.y);if(!block || block.Kind!=BlockKind.Redstone)continue;
+                block.SetLit(Now+8);
+                foreach(var offset in ShrapnelDirections)
+                {
+                    var next=at+offset;var neighbor=EnsureCell(next.x,next.y);if(!neighbor)continue;
+                    if(neighbor.Kind==BlockKind.Redstone && !seen.Contains(next))queue.Enqueue(next);
+                    else if(neighbor.Kind==BlockKind.Tnt && !tnt.Contains(neighbor))tnt.Add(neighbor);
+                }
+            }
+            // Finish propagation before blasts remove any of the connected ore.
+            foreach(var block in tnt)if(!block.IsBroken)block.DestroyBlock(source);
+        }
         public void Break(MineBlock block, FallingPickaxe source, DamageOrigin origin)
         {
             bool wasTnt = block.Kind == BlockKind.Tnt;
@@ -109,18 +151,18 @@ namespace PickaxeFall
             ActiveBlocks--; Remember(block); block.gameObject.SetActive(false);
             if (wasTnt || createTnt)
             {
-                source?.CancelAbility(); explosions.Enqueue((position, source)); DetonateQueued();
+                source?.CancelAbility(); explosions.Enqueue((position, source, !wasTnt)); DetonateQueued();
             }
         }
-        public void DamageNeighbours(int x, int row, int damage, FallingPickaxe source)
+        public void DamageShrapnelNeighbour(int x, int row, int damage, FallingPickaxe source, int strike)
         {
-            DamageNeighbour(x - 1, row, damage, source); DamageNeighbour(x + 1, row, damage, source);
-            DamageNeighbour(x, row - 1, damage, source); DamageNeighbour(x, row + 1, damage, source);
-        }
-        void DamageNeighbour(int x, int row, int damage, FallingPickaxe source)
-        {
-            var block = CellAt(x, row);
-            if (block && ResourceInventory.IsMaterial(block.Kind)) block.HitHalfUnits(damage, source, DamageOrigin.Shrapnel);
+            for (int i = 0; i < ShrapnelDirections.Length; i++)
+            {
+                var offset = ShrapnelDirections[(strike + i) % ShrapnelDirections.Length];
+                var block = CellAt(x + offset.x, row + offset.y);
+                if (!block || !ResourceInventory.IsMaterial(block.Kind)) continue;
+                block.HitHalfUnits(damage, source, DamageOrigin.Shrapnel); return;
+            }
         }
 
         public int SurfaceRow(int x) => generator.SurfaceRow(x);
@@ -135,7 +177,7 @@ namespace PickaxeFall
                     var blast = explosions.Dequeue();
                     bool doubled = game.RollEffect(UpgradeKind.DoubleBlast);
                     if (doubled) game.Benefits.DoubleBlasts++;
-                    float radius = balance.explosionRadius * (doubled ? Mathf.Sqrt(2) : 1);
+                    float radius = (blast.ore ? Mathf.Min(1.5f, balance.explosionRadius) : balance.explosionRadius) * (doubled ? Mathf.Sqrt(2) : 1);
                     game.Effects.Explosion(blast.center, radius);
                     game.PhysicsScene.OverlapCircle(blast.center,radius,new ContactFilter2D().NoFilter(),blastColliders);
                     foreach (var collider in blastColliders)

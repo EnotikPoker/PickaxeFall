@@ -41,8 +41,8 @@ namespace PickaxeFall
             Directory.CreateDirectory(outputDirectory);
             active = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--active-controls");
             if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--economy-probe")) { yield return EconomyTrace(); yield break; }
-            var game = GetComponent<GameController>();
-            var csv = new List<string> { "profile,tier,seed,tools,seconds,depth,potentialSaleValue,blocks,strikes,benches,dirt,stone,coal,copper,iron,gold,diamond,deepstone" };
+            var game = GetComponent<GameController>();game.Economy.Profile.dashUnlocked=game.Economy.Profile.plungeUnlocked=active;
+            var csv = new List<string> { "profile,tier,seed,tools,seconds,depth,potentialSaleValue,blocks,strikes,benches,dirt,stone,coal,copper,iron,gold,diamond,deepstone,emerald,lapis,redstone,amethyst" };
             int[] seeds = { 8127, 19073, 40211, 73417, 120011, 88191, 55513, 90913 };
             string seedArgument = Array.Find(Environment.GetCommandLineArgs(), a => a.StartsWith("--balance-seed="));
             int singleSeed = 0;
@@ -76,7 +76,7 @@ namespace PickaxeFall
             }
             File.WriteAllLines(output, csv); Debug.Log("PICKAXEFALL_BALANCE_PROBE_OK: " + (csv.Count - 1) + " physical runs."); Application.Quit(0);
         }
-        static string[] ResourceCounts(GameController game) { var values = new string[8]; for (int i = 0; i < 8; i++) values[i] = game.OreCounts[i].ToString(); return values; }
+        static string[] ResourceCounts(GameController game) { var values=new List<string>();foreach(var kind in ResourceInventory.Materials)values.Add(game.OreCounts[(int)kind].ToString());return values.ToArray(); }
         static bool TradeAfterRun(GameController game, UpgradeKey[] targets, ref int target, int maximum)
         {
             var keys = new List<UpgradeKey>(); var positions = new List<int>();
@@ -86,23 +86,23 @@ namespace PickaxeFall
                 if (game.Economy.Profile.Level(key) < Progression.MaxLevel(key.Kind)) { keys.Add(key); positions.Add(target + i + 1); }
             }
             if (keys.Count == 0) return false;
-            int count = 1; var reserve = new long[8];
+            int count = 1; var reserve = new long[ResourceInventory.SlotCount];
             for (int n = keys.Count; n >= 1; n--)
             {
-                Array.Clear(reserve, 0, 8); long coins = 0, available = game.Wallet; bool materials = true;
+                Array.Clear(reserve, 0, ResourceInventory.SlotCount); long coins = 0, available = game.Wallet; bool materials = true;
                 for (int k = 0; k < n; k++)
                 {
                     var cost = Progression.Cost(keys[k], game.Economy.Profile.Level(keys[k]) + 1); coins += cost.Coins;
-                    for (int i = 0; i < 8; i++) reserve[i] += cost.Resources[i];
+                    for (int i = 0; i < ResourceInventory.SlotCount; i++) reserve[i] += cost.Resources[i];
                 }
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < ResourceInventory.SlotCount; i++)
                 {
                     long surplus = game.Inventory[(BlockKind)i] - reserve[i];
                     if (surplus < 0) materials = false; else available += surplus * Progression.SellPrices[i];
                 }
                 if (materials && available >= coins || n == 1) { count = n; break; }
             }
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < ResourceInventory.SlotCount; i++)
             {
                 long surplus = Math.Max(0, game.Inventory[(BlockKind)i] - reserve[i]);
                 if (surplus > 0 && !game.Economy.TrySell((BlockKind)i, surplus)) throw new Exception(game.Economy.LastError);
@@ -116,17 +116,31 @@ namespace PickaxeFall
             }
             return bought;
         }
+        static int UnlockActions(GameController game,int maximum)
+        {
+            int opened=0;
+            foreach(var ability in new[] {AbilityKind.Dash,AbilityKind.Plunge})
+            {
+                if(opened>=maximum || game.Economy.AbilityUnlocked(ability))continue;
+                var price=Progression.AbilityCost(ability);long available=game.Wallet;bool materials=true;
+                foreach(var kind in ResourceInventory.Materials){long surplus=game.Inventory[kind]-price.Resources[(int)kind];if(surplus<0)materials=false;else available+=surplus*Progression.SellPrices[(int)kind];}
+                if(!materials || available<price.Coins)continue;
+                foreach(var kind in ResourceInventory.Materials){long surplus=game.Inventory[kind]-price.Resources[(int)kind];if(surplus>0 && !game.Economy.TrySell(kind,surplus))throw new Exception(game.Economy.LastError);}
+                if(!game.Economy.TryUnlock(ability))throw new Exception(game.Economy.LastError);opened++;
+            }
+            return opened;
+        }
         IEnumerator EconomyTrace()
         {
             var game = GetComponent<GameController>();
-            Array.Clear(game.Economy.Profile.upgrades, 0, game.Economy.Profile.upgrades.Length); Array.Clear(game.Economy.Profile.resources, 0, 8); game.Economy.Profile.coins = 0; game.Economy.Profile.bestDepth = 0;
+            Array.Clear(game.Economy.Profile.upgrades, 0, game.Economy.Profile.upgrades.Length); Array.Clear(game.Economy.Profile.resources, 0, ResourceInventory.SlotCount); game.Economy.Profile.coins = 0; game.Economy.Profile.bestDepth = 0;
             var targets = new[] { new UpgradeKey(UpgradeKind.Damage, 0), new UpgradeKey(UpgradeKind.Durability, 0), new UpgradeKey(UpgradeKind.Damage, 1), new UpgradeKey(UpgradeKind.Durability, 1), new UpgradeKey(UpgradeKind.EnergyCharge), new UpgradeKey(UpgradeKind.Fortune), new UpgradeKey(UpgradeKind.EnergyEfficiency), new UpgradeKey(UpgradeKind.TeamChance) };
             string seedArg = Array.Find(Environment.GetCommandLineArgs(), a => a.StartsWith("--economy-seed="));
             int economySeed = seedArg == null ? 190738127 : int.Parse(seedArg.Substring(15));
             int maxPurchases = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--single-buy") ? 1 : 3;
             string economyOutput = Path.Combine(outputDirectory, "pickaxefall-action-economy-" + economySeed + "-" + (active ? "active" : "idle") + "-buys" + maxPurchases + ".csv");
             var random = new System.Random(economySeed); int target = 0, run = 0; float elapsed = 0, firstPurchase = -1;
-            var csv = new List<string> { "run,elapsedSeconds,tier,runSeconds,depth,saleValue,wallet,woodDamage,woodDurability,stoneDamage,stoneDurability,teamChanceLevel,bestDepth,energyCharge,fortune,efficiency,abilities,energyEarned,censored" };
+            var csv = new List<string> { "run,elapsedSeconds,tier,runSeconds,depth,saleValue,wallet,woodDamage,woodDurability,stoneDamage,stoneDurability,teamChanceLevel,bestDepth,energyCharge,fortune,efficiency,abilities,energyEarned,censored,dashUnlocked,plungeUnlocked" };
             while (elapsed < 3600)
             {
                 if (3600 - elapsed <= 8) { elapsed = 3600; break; }
@@ -139,10 +153,11 @@ namespace PickaxeFall
                 else if (game.Phase == RunPhase.Mining) throw new Exception("Economy run timeout");
                 float duration = Time.time - start; elapsed = Mathf.Min(3600, elapsed + duration + 8); Time.timeScale = 8;
                 while (game.Phase == RunPhase.Breaking) yield return null;
-                bool bought = !censored && TradeAfterRun(game, targets, ref target, maxPurchases);
+                bool bought=false;
+                if(!censored){int opened=active?UnlockActions(game,maxPurchases):0;bought=opened>0;bought|=TradeAfterRun(game,targets,ref target,maxPurchases-opened);}
                 if (bought && firstPurchase < 0) firstPurchase = elapsed;
                 string line = string.Join(",", ++run, elapsed.ToString("F2", CultureInfo.InvariantCulture), tier, duration.ToString("F2", CultureInfo.InvariantCulture), game.Depth, game.PotentialSaleValue,
-                    game.Wallet, game.Economy.Profile.upgrades[0], game.Economy.Profile.upgrades[5], game.Economy.Profile.upgrades[1], game.Economy.Profile.upgrades[6], game.Economy.Profile.Level(new(UpgradeKind.TeamChance)), game.BestDepth, game.Economy.Profile.Level(new(UpgradeKind.EnergyCharge)), game.Economy.Profile.Level(new(UpgradeKind.Fortune)), game.Economy.Profile.Level(new(UpgradeKind.EnergyEfficiency)), game.Benefits.Abilities, game.Energy.Earned.ToString("F1", CultureInfo.InvariantCulture), censored ? 1 : 0);
+                    game.Wallet, game.Economy.Profile.upgrades[0], game.Economy.Profile.upgrades[5], game.Economy.Profile.upgrades[1], game.Economy.Profile.upgrades[6], game.Economy.Profile.Level(new(UpgradeKind.TeamChance)), game.BestDepth, game.Economy.Profile.Level(new(UpgradeKind.EnergyCharge)), game.Economy.Profile.Level(new(UpgradeKind.Fortune)), game.Economy.Profile.Level(new(UpgradeKind.EnergyEfficiency)), game.Benefits.Abilities, game.Energy.Earned.ToString("F1", CultureInfo.InvariantCulture), censored ? 1 : 0, game.Economy.Profile.dashUnlocked ? 1 : 0, game.Economy.Profile.plungeUnlocked ? 1 : 0);
                 csv.Add(line); File.WriteAllLines(economyOutput, csv); Debug.Log("ECONOMY_RUN: " + line);
             }
             File.WriteAllLines(economyOutput, csv);

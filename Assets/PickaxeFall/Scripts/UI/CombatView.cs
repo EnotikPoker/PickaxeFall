@@ -33,7 +33,7 @@ namespace PickaxeFall
                 if (recognized && game.ControlsAvailable && playfield.worldBound.Contains(e.position))
                 {
                     bool accepted = game.TryUseAbility(kind, direction);
-                    if (!accepted) Toast(game.Energy.CanSpend(game.AbilityCost(kind)) ? "ДОЖДИСЬ ОКОНЧАНИЯ ПРОБИТИЯ" : "НУЖНО БОЛЬШЕ ЭНЕРГИИ");
+                    if (!accepted) Toast(!game.AbilityUnlocked(kind)?"ОТКРОЙ ПРИЁМ В МАГАЗИНЕ":game.Energy.CanSpend(game.AbilityCost(kind)) ? "ДОЖДИСЬ ОКОНЧАНИЯ ПРОБИТИЯ" : "НУЖНО БОЛЬШЕ ЭНЕРГИИ");
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     Debug.Log($"PICKAXEFALL_GESTURE: {kind}; accepted={accepted}; selected={game.SelectedToolIndex}; energy={game.Energy.Value}");
 #endif
@@ -67,7 +67,9 @@ namespace PickaxeFall
             if (shownUpgrades != game.RunUpgrades)
             {
                 shownUpgrades = game.RunUpgrades;
-                SetText(abilityPrices, $"Свайп: {Progression.Number(game.AbilityCost(AbilityKind.Dash))} · Нажатие вниз: {Progression.Number(game.AbilityCost(AbilityKind.Plunge))}");
+                string dash=game.AbilityUnlocked(AbilityKind.Dash)?Progression.Number(game.AbilityCost(AbilityKind.Dash)):"в магазине";
+                string plunge=game.AbilityUnlocked(AbilityKind.Plunge)?Progression.Number(game.AbilityCost(AbilityKind.Plunge)):"в магазине";
+                SetText(abilityPrices,$"Свайп: {dash} · Нажатие: {plunge} · +{game.RunUpgrades.EnergyPerSecond.ToString("0.00",System.Globalization.CultureInfo.GetCultureInfo("ru-RU"))}/с");
             }
         }
         void ShowBenefits()

@@ -28,9 +28,9 @@ namespace PickaxeFall
         public int ToolIndex { get; private set; }
         public bool IsAlive => gameObject.activeSelf && Durability > 0 && visual.enabled;
         public bool AbilityActive => remaining > 0 && game.Clock.Now < abilityUntil;
-        public int DamageHalfUnits => Stats.damage * 2 + game.RunUpgrades.DamageBonusHalfUnits(OriginalTier);
+        public int DamageHalfUnits => Stats.damage * 2 + game.RunUpgrades.DamageBonusHalfUnits(Tier);
         public int Durability { get; private set; }
-        public int MaxDurability => Stats.durability + game.RunUpgrades.DurabilityBonus(OriginalTier);
+        public int MaxDurability => Stats.durability + game.RunUpgrades.DurabilityBonus(Tier);
         public PickaxeStats Stats => game.Balance.pickaxes[Tier];
         public Rigidbody2D Body => body;
 
@@ -88,7 +88,7 @@ namespace PickaxeFall
             if (!IsAlive || AbilityActive || !body.simulated) return false;
             ability = kind; remaining = kind == AbilityKind.Dash ? 1 : game.RunUpgrades.PlungeBlocks;
             abilityUntil = game.Clock.Now + (kind == AbilityKind.Dash ? 0.35f : 0.6f); momentumUntil = abilityUntil;
-            Vector2 desired = kind == AbilityKind.Dash ? direction * game.RunUpgrades.DashSpeed : new Vector2(body.linearVelocity.x * 0.5f, -18);
+            Vector2 desired = kind == AbilityKind.Dash ? direction * game.RunUpgrades.DashSpeed : new Vector2(body.linearVelocity.x * 0.5f, -14);
             body.AddForce((desired - body.linearVelocity) * body.mass, ForceMode2D.Impulse); body.WakeUp(); nextTrail = 0; return true;
         }
         public void CancelAbility() { remaining = 0; abilityUntil = momentumUntil = 0; }
@@ -154,6 +154,7 @@ namespace PickaxeFall
         {
             if (game.Phase != RunPhase.Mining || game.Paused || !IsAlive || collision.contactCount == 0) return;
             var block = collision.collider.GetComponent<MineBlock>(); if (!block || block.IsBroken) return;
+            if(block.Kind==BlockKind.Redstone){game.World.ActivateRedstone(block.Column,block.Row,this);if(block.IsBroken)return;}
             var contact = collision.GetContact(0); float approach = -Vector2.Dot(PointVelocity(contact.point), contact.normal);
             for (int i = 1; i < collision.contactCount; i++)
             {
@@ -181,7 +182,7 @@ namespace PickaxeFall
             int damage = DamageHalfUnits + (strong ? game.RunUpgrades.StrongBonusHalfUnits : 0);
             block.HitHalfUnits(damage, this, DamageOrigin.Physical);
             NaturalStrikes++; game.OnPhysicalHit(this, strong);
-            if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageNeighbours(x, row, game.RunUpgrades.ShrapnelHalfUnits, this);
+            if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageShrapnelNeighbour(x, row, game.RunUpgrades.ShrapnelHalfUnits, this, NaturalStrikes);
             game.Effects.Impact(point, color, 3); SpendWear();
         }
         void SpendWear()
@@ -208,6 +209,21 @@ namespace PickaxeFall
         }
         public void Revive() { Durability = Mathf.Max(1, Mathf.CeilToInt(MaxDurability * 0.5f)); body.WakeUp(); }
         public void Stop() { CancelAbility(); body.linearVelocity = Vector2.zero; body.angularVelocity = 0; body.simulated = false; SetSelected(false); }
+        public ToolSnapshot Capture()=>new ToolSnapshot
+        {
+            tier=Tier,originalTier=OriginalTier,index=ToolIndex,alive=IsAlive,durability=Durability,strikes=TotalStrikes,naturalStrikes=NaturalStrikes,hops=HopCount,step=step,
+            position=body.position,velocity=body.linearVelocity,rotation=body.rotation,angularVelocity=body.angularVelocity,incomingVelocity=incomingVelocity,incomingAngular=incomingAngular,
+            lastRebound=lastReboundTime,remaining=remaining,ability=(int)ability,abilityUntil=abilityUntil,momentumUntil=momentumUntil,nextTrail=nextTrail,contacts=impacts.Capture()
+        };
+        public void Restore(ToolSnapshot s)
+        {
+            Equip(s.tier,s.index);OriginalTier=s.originalTier;Durability=Mathf.Clamp(s.durability,0,MaxDurability);
+            TotalStrikes=s.strikes;NaturalStrikes=s.naturalStrikes;HopCount=s.hops;step=s.step;
+            transform.SetPositionAndRotation(s.position,Quaternion.Euler(0,0,s.rotation));body.position=s.position;body.rotation=s.rotation;
+            body.linearVelocity=s.velocity;body.angularVelocity=s.angularVelocity;incomingVelocity=s.incomingVelocity;incomingAngular=s.incomingAngular;
+            lastReboundTime=s.lastRebound;remaining=s.remaining;ability=(AbilityKind)s.ability;abilityUntil=s.abilityUntil;momentumUntil=s.momentumUntil;nextTrail=s.nextTrail;
+            impacts.Restore(s.contacts);visual.enabled=s.alive;body.simulated=s.alive;gameObject.SetActive(s.alive);
+        }
         public void BreakApart() { game.Effects.Shatter(visual.sprite, transform, body.linearVelocity); visual.enabled = false; Stop(); }
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         public void DebugExhaust() { Durability = 0; game.OnPickaxeExhausted(this); }

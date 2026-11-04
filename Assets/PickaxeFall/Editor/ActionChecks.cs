@@ -11,16 +11,22 @@ namespace PickaxeFall.Editor
         public static void Validate()
         {
             checks = 0;
-            var profile = new PlayerProfile(); Check(profile.version == 3 && profile.upgrades.Length == 25, "schema v3");
+            var profile = new PlayerProfile(); Check(profile.version == 4 && profile.upgrades.Length == 25, "schema v4");
             for (int i = 0; i < Progression.Keys.Length; i++) Check(Progression.Keys[i].Index == i && Progression.Keys[i].IsValid, "stable upgrade index " + i);
             var run = new RunUpgrades(profile); var energy = new RunEnergy(); energy.Reset(run);
-            Check(energy.Maximum == 100 && energy.Value == 100, "initial energy");
-            Check(energy.TrySpend(40) && energy.TrySpend(50) && !energy.TrySpend(40) && energy.Value == 10, "failed action is free");
-            energy.Add(2); Check(energy.Value == 12 && energy.Earned == 2, "charge from impacts");
-            energy.Ensure(50); Check(energy.Value == 50, "rescue energy");
+            Check(energy.Maximum == 60 && energy.Value == 60, "initial energy allows one action");
+            Check(energy.TrySpend(45) && !energy.TrySpend(60) && energy.Value == 15, "failed action is free");
+            energy.Regenerate(10, run); Check(energy.Value == 35 && energy.Earned == 20, "time-based regeneration");
+            energy.Regenerate(0, run); energy.Regenerate(-1, run); Check(energy.Value == 35, "invalid time cannot grant energy");
+            energy.Regenerate(1000, run); Check(energy.Value == 60 && energy.Earned == 45, "regeneration clamps and records actual gain");
+            energy.TrySpend(60);
+            for(int i=0;i<1349;i++)energy.Regenerate(1f/60,run);
+            Check(!energy.CanSpend(45), "base dash needs at least 22.5 seconds from empty");
+            energy.Regenerate(1f/60,run); Check(energy.CanSpend(45), "base dash recharges after 22.5 seconds");
+            energy.Ensure(60); Check(energy.Value == 60, "rescue energy");
             foreach (var key in Progression.Keys) profile.upgrades[key.Index] = Progression.MaxLevel(key.Kind);
             run = new RunUpgrades(profile); energy.Reset(run);
-            Check(run.MaxEnergy == 200 && run.EnergyPerHit == 4 && Math.Abs(run.EnergyCost(40) - 32) < 0.001f && run.PlungeBlocks == 5 && run.DashSpeed == 17, "maximum action upgrades");
+            Check(run.MaxEnergy == 100 && Math.Abs(run.EnergyPerSecond - 2.8f) < .001f && Math.Abs(run.EnergyCost(45) - 40.5f) < 0.001f && run.PlungeBlocks == 4 && run.DashSpeed == 13, "bounded maximum action upgrades");
             for (int tier = 1; tier < 5; tier++) Check(run.DurabilityBonus(tier) > run.DurabilityBonus(tier - 1), "different durability steps");
             profile.upgrades[new UpgradeKey(UpgradeKind.EnergyEfficiency).Index] = 1;
             Check(new RunUpgrades(profile).EnergyCost(40) < 40, "first efficiency level actually reduces cost");
@@ -44,11 +50,11 @@ namespace PickaxeFall.Editor
             try
             {
                 Directory.CreateDirectory(directory); string file = Path.Combine(directory, "profile-v2.json");
-                var old = new PlayerProfile { version = 2, coins = 900719925474099L, bestDepth = 123, upgrades = new int[18] };
+                var old = new PlayerProfile { version = 2, coins = 900719925474099L, bestDepth = 123, upgrades = new int[18], resources=new long[8] };
                 old.upgrades[0] = 7; old.upgrades[10] = 25; old.resources[6] = 3000000000L;
                 string original = JsonUtility.ToJson(old); File.WriteAllText(file, original);
                 var store = new ProfileStore(directory); var migrated = store.Load();
-                Check(migrated.version == 3 && migrated.upgrades.Length == 25 && migrated.coins == old.coins && migrated.resources[6] == old.resources[6] && migrated.bestDepth == 123, "v2 data preserved");
+                Check(migrated.version == 4 && migrated.upgrades.Length == 25 && migrated.coins == old.coins && migrated.resources[6] == old.resources[6] && migrated.bestDepth == 123, "v2 data preserved");
                 Check(migrated.upgrades[0] == 7 && migrated.upgrades[10] == 25 && migrated.upgrades[24] == 0, "old levels kept, new zero");
                 Check(File.ReadAllText(file + ".pre-v3.bak") == original, "original migration backup");
                 Check(store.Load().coins == old.coins, "migration is idempotent");
