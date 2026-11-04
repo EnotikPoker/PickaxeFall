@@ -15,6 +15,7 @@ namespace PickaxeFall
         public static IEnumerator Run(GameController game, VisualElement root, Action<bool,string> check)
         {
             Array.Clear(game.Economy.Profile.upgrades, 0, game.Economy.Profile.upgrades.Length);
+            game.Economy.Profile.dashUnlocked=game.Economy.Profile.plungeUnlocked=true;
             game.BeginProbeRun(0, 8127, 2);
             check(game.Energy.Value == 60 && root.Q("run-energy") != null, "energy UI starts full");
             check(game.SelectTool(1) && game.SelectedToolIndex == 1 && game.Energy.Value == 60, "selecting another tool keeps shared energy");

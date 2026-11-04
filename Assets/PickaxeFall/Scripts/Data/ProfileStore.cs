@@ -22,7 +22,15 @@ namespace PickaxeFall
                 // A migration write failure must never fall back to an older, poorer profile.
                 if (migrated)
                 {
-                    string snapshot = path + ".pre-v3.bak";
+                    // Preserve both historical v2->v3 backup semantics and the exact
+                    // original file before expanding resources to v4. Failures here
+                    // abort migration, never fall back to an older poorer backup.
+                    if(JsonUtility.FromJson<PlayerProfile>(json).version==2)
+                    {
+                        string v3=path+".pre-v3.bak";
+                        if(!File.Exists(v3))File.WriteAllText(v3,json);
+                    }
+                    string snapshot = path + ".pre-v4.bak";
                     if (!File.Exists(snapshot)) File.WriteAllText(snapshot, json);
                     Save(result);
                 }
@@ -53,6 +61,16 @@ namespace PickaxeFall
                 var expanded = new int[Progression.Keys.Length]; Array.Copy(profile.upgrades, expanded, 18);
                 profile.upgrades = expanded; profile.version = 3; migrated = true;
             }
+            if(profile.version==3)
+            {
+                if(profile.resources==null || profile.resources.Length!=8 || profile.upgrades==null || profile.upgrades.Length!=25)
+                    throw new InvalidOperationException("Invalid v3 profile.");
+                var expanded=new long[ResourceInventory.SlotCount];
+                Array.Copy(profile.resources,expanded,8);
+                profile.resources=expanded;profile.version=4;migrated=true;
+                profile.run=null;profile.activeRunJson=null;profile.dashUnlocked=profile.plungeUnlocked=false;
+            }
+            if(!string.IsNullOrEmpty(profile.activeRunJson))profile.run=JsonUtility.FromJson<RunSnapshot>(profile.activeRunJson);
             profile.Validate(); return profile;
         }
         public void Reset(PlayerProfile empty)
@@ -64,6 +82,7 @@ namespace PickaxeFall
         }
         public void Save(PlayerProfile profile)
         {
+            profile.activeRunJson=profile.run==null?null:JsonUtility.ToJson(profile.run);
             profile.Validate(); Directory.CreateDirectory(Path.GetDirectoryName(path));
             string temp = path + ".tmp";
             using (var stream = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))

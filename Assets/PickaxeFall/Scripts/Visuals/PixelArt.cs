@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PickaxeFall
 {
     // Imported block PNGs, plus procedural tools, effects, scenery and missing-asset fallback.
-    public static class PixelArt
+    public static partial class PixelArt
     {
         static readonly Dictionary<int, Sprite> Blocks = new();
         static readonly Dictionary<int, Sprite> Pickaxes = new();
@@ -15,6 +15,7 @@ namespace PickaxeFall
         static Sprite square;
         static Sprite chest;
         public static Sprite Square => square ? square : square = Make(1, 1, new[] { Color.white });
+        public static Sprite ResourceIcon(BlockKind kind)=>Block(kind==BlockKind.Amethyst?BlockKind.AmethystCluster:kind,0,kind==BlockKind.Deepstone || kind>=BlockKind.Emerald && kind<=BlockKind.Redstone);
 
         public static Sprite Chest()
         {
@@ -36,6 +37,8 @@ namespace PickaxeFall
             BlockKind.Deepstone => new Color32(46, 53, 70, 255),
             BlockKind.Workbench => new Color32(187, 129, 67, 255),
             BlockKind.Tnt => new Color32(196, 63, 46, 255),
+            BlockKind.Emerald=>new Color32(35,207,111,255),BlockKind.Lapis=>new Color32(53,94,214,255),BlockKind.Redstone=>new Color32(205,45,46,255),
+            BlockKind.Amethyst or BlockKind.AmethystCluster=>new Color32(162,110,220,255),BlockKind.MossyCobblestone=>new Color32(90,122,65,255),
             _ => deep ? new Color32(46, 53, 70, 255) : new Color32(103, 111, 123, 255)
         };
 
@@ -45,6 +48,7 @@ namespace PickaxeFall
             if (Blocks.TryGetValue(key, out var cached) && cached) return cached;
             var imported = Resources.Load<Sprite>(BlockResourcePath(kind, variant, deep, surface));
             if (imported) return Blocks[key] = imported;
+            if(kind>=BlockKind.Emerald)return Blocks[key]=ExtraBlock(kind,variant);
             var random = new System.Random(key * 7919 + 23);
             Color[] pixels = new Color[16 * 16];
             Color baseColor = BlockColor(kind, deep);
@@ -154,6 +158,8 @@ namespace PickaxeFall
         {
             stage = Mathf.Clamp(stage, 1, 8);
             if (CrackSprites[stage]) return CrackSprites[stage];
+            var imported=Resources.Load<Sprite>("Cracks/Cracks_"+stage);
+            if(imported)return CrackSprites[stage]=imported;
             var pixels = new Color[256];
             int[][] paths =
             {

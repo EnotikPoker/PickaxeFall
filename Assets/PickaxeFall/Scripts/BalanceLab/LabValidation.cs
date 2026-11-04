@@ -15,21 +15,22 @@ namespace PickaxeFall.BalanceLab
         public static void Validate()
         {
             count = 0; var quick = new LabPlan(); var scenarios = LabPlanner.Scenarios(quick);
-            Check(scenarios.Count == 280,"quick matrix: 28 profiles × 5 tools × 2 policies");
+            Check(scenarios.Count == 480,"quick matrix with all future reachable tool upgrades");
             Check(scenarios.Select(s=>s.id).Distinct().Count()==scenarios.Count,"unique scenario ids");
             Check(scenarios.All(s=>s.point==0 && s.background==0 && s.order<=2),"quick scope");
-            Check(LabPlanner.Jobs(quick,scenarios).Count()==2240,"quick eight-map count");
+            Check(LabPlanner.Jobs(quick,scenarios).Count()==3840,"quick eight-map count");
             var full = new LabPlan { mode=1, samples=32 }; var pairs = LabPlanner.Scenarios(full);
-            Check(pairs.Count==9240,"pair matrix 154 × 5 × 3 × 2 × 2");
+            Check(pairs.Count==14160,"pair matrix for 25/23/21/19/17 reachable keys");
             var triples = LabPlanner.Scenarios(new LabPlan { mode=2 });
-            Check(triples.Count==50040,"triple matrix");
-            Check(triples.Count(s=>s.order==3)==40800,"680 triples × 5 × 3 × 2 × 2");
+            Check(triples.Count==98760,"triple matrix");
+            Check(triples.Count(s=>s.order==3)==84600,"reachable-key triple count × 3 × 2 × 2");
             foreach (var s in scenarios)
             {
                 Check(s.levels.Length==25,"profile length");
-                Check(Progression.Keys.Where(k=>k.Kind<=UpgradeKind.Durability && k.Tier!=s.tier).All(k=>s.levels[k.Index]==0),"irrelevant type excluded");
+                Check(Progression.Keys.Where(k=>k.Kind<=UpgradeKind.Durability && k.Tier<s.tier).All(k=>s.levels[k.Index]==0),"unreachable lower type excluded");
             }
             Check(LabPlanner.Level(UpgradeKind.TeamSize,1)==2 && LabPlanner.Level(UpgradeKind.Fortune,1)==13,"ceil middle levels");
+            Check(scenarios.Any(s=>s.tier==0 && s.mask==(1<<4)),"diamond damage sampled for a wooden start that can reach diamond");
             var rolls = new EffectRolls(); rolls.Reset(8127); bool[] expected = Enumerable.Range(0,100).Select(_=>rolls.Roll(UpgradeKind.Fortune,.5)).ToArray();
             rolls.Reset(8127); bool[] actual = Enumerable.Range(0,100).Select(_=> { rolls.Roll(UpgradeKind.Careful,.5); return rolls.Roll(UpgradeKind.Fortune,.5); }).ToArray();
             Check(expected.SequenceEqual(actual),"independent random streams");
@@ -124,7 +125,7 @@ namespace PickaxeFall.BalanceLab
                     while(game.Phase==RunPhase.Mining && game.Clock.Ticks<36000)yield return null;
                     driver.enabled=false;
                     Debug.Log($"LAB_PARITY_SAMPLE: fixture={fixture}; manual={manual.seconds}/{manual.depth}/{manual.value}; auto={game.Clock.Now}/{game.Depth}/{game.PotentialSaleValue}; autoResources={string.Join(",",game.OreCounts)}; manualResources={string.Join(",",manual.resources)}");
-                    Check(game.Clock.Now==manual.seconds && game.Depth==manual.depth && game.PotentialSaleValue==manual.value && Enumerable.Range(0,8).All(i=>game.OreCounts[i]==manual.resources[i]),"batch / rendered-frame physics parity fixture "+fixture);
+                    Check(game.Clock.Now==manual.seconds && game.Depth==manual.depth && game.PotentialSaleValue==manual.value && Enumerable.Range(0,ResourceInventory.SlotCount).All(i=>game.OreCounts[i]==manual.resources[i]),"batch / rendered-frame physics parity fixture "+fixture);
                     UnityEngine.Object.DestroyImmediate(root);root=null;LabWorker.Unload(scene);yield return LabWorker.FlushWorlds();
                 }
                 Debug.Log("PICKAXEFALL_LAB_PARITY_OK: four exact batch / rendered-frame fixed-step comparisons, including rotation, upgrades and active abilities.");

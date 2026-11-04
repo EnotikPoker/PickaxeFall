@@ -61,6 +61,7 @@ namespace PickaxeFall
                     if (IsWorkbench(x, row)) kind = (byte)BlockKind.Workbench;
                     else if (IsIsolated(x, row, TntSalt, balance.tntMinimumDepth, balance.tntChance, balance.tntSpacing) && !NearWorkbench(x, row)) kind = (byte)BlockKind.Tnt;
                 }
+                if(TryStructureCell(x,row,out byte structure))kind=structure;
                 cells[x + half] = kind;
             }
             terrain.Add(cells);
@@ -68,8 +69,8 @@ namespace PickaxeFall
 
         public static void VeinRange(BlockKind kind, out int minimum, out int maximum)
         {
-            minimum = kind == BlockKind.Coal ? 3 : kind == BlockKind.Diamond ? 1 : 2;
-            maximum = kind == BlockKind.Coal ? 10 : kind == BlockKind.Gold ? 9 : kind == BlockKind.Diamond ? 7 : 8;
+            minimum = kind == BlockKind.Coal || kind==BlockKind.Redstone ? 3 : kind == BlockKind.Diamond || kind==BlockKind.Emerald ? 1 : 2;
+            maximum = kind switch { BlockKind.Coal=>10,BlockKind.Gold or BlockKind.Redstone=>9,BlockKind.Diamond or BlockKind.Lapis=>7,BlockKind.Emerald=>3,_=>8 };
         }
         // Truncated geometric distribution: each extra block is 32% less likely.
         public static double VeinWeight(int size, int minimum) => System.Math.Pow(.68, size - minimum);
@@ -91,7 +92,7 @@ namespace PickaxeFall
                 byte cell = terrain[row + 2][x + half];
                 if (cell != (byte)BlockKind.Stone && cell != (byte)BlockKind.Deepstone) continue;
                 double roll = UnitHash(x, row, 173);
-                for (BlockKind kind = BlockKind.Coal; kind <= BlockKind.Diamond; kind++)
+                foreach(BlockKind kind in Progression.VeinOres)
                 {
                     VeinRange(kind, out int min, out int max);
                     roll -= balance.OreChance(kind, row) / MeanVeinSize(min, max);
@@ -184,6 +185,42 @@ namespace PickaxeFall
             for (int dy = -2; dy <= 2; dy++) for (int dx = -2; dx <= 2; dx++)
                 if (dx * dx + dy * dy <= 4 && IsWorkbench(x + dx, row + dy)) return true;
             return false;
+        }
+
+        public readonly struct Structure
+        {
+            public readonly int x,row,radius;public readonly bool geode,twoChests;
+            public Structure(int x,int row,int radius,bool geode,bool twoChests){this.x=x;this.row=row;this.radius=radius;this.geode=geode;this.twoChests=twoChests;}
+        }
+        public bool TryStructure(int band,out Structure structure)
+        {
+            structure=default;if(band<0)return false;
+            double roll=UnitHash(0,band,0x123abb19);
+            if(roll>=balance.dungeonChance+balance.geodeChance)return false;
+            bool geode=roll>=balance.dungeonChance;
+            var random=new System.Random(unchecked((int)Hash(0,band,0x71c49b3)));
+            int margin=Mathf.Max(0,balance.worldWidth/2-5);
+            int x=random.Next(-margin,margin+1),row=band*64+random.Next(band==0?36:10,54);
+            structure=new Structure(x,row,geode?random.Next(3,5):2,geode,random.Next(2)==0);return true;
+        }
+        bool TryStructureCell(int x,int row,out byte kind)
+        {
+            kind=Air;if(row<25)return false;
+            if(!TryStructure(row/64,out var s))return false;
+            int dx=x-s.x,dy=row-s.row;
+            if(Mathf.Abs(dx)>s.radius || Mathf.Abs(dy)>s.radius)return false;
+            if(!s.geode)
+            {
+                if(Mathf.Abs(dx)==2 || Mathf.Abs(dy)==2)kind=(byte)(dx==2 && dy==2 || !(dx==-2 && dy==-2) && UnitHash(x,row,728)<.42?BlockKind.MossyCobblestone:BlockKind.Cobblestone);
+                else if(dy==1 && dx==0)kind=(byte)BlockKind.Spawner;
+                else if(dy==1 && (dx==-1 || dx==1 && s.twoChests))kind=(byte)BlockKind.Chest;
+                return true;
+            }
+            float distance=dx*dx+dy*dy;
+            if(distance>(s.radius+.3f)*(s.radius+.3f))return false;
+            if(distance>=(s.radius-1f)*(s.radius-1f))kind=(byte)BlockKind.Amethyst;
+            else if(dy>=0 && dx*dx+(dy+1)*(dy+1)>=(s.radius-1f)*(s.radius-1f) && (dx==0 || UnitHash(x,row,628)>.2))kind=(byte)BlockKind.AmethystCluster;
+            return true;
         }
 
         double UnitHash(int x, int row, uint salt) => Hash(x, row, salt) / 4294967296.0;

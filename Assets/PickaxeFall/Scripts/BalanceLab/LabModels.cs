@@ -12,7 +12,7 @@ namespace PickaxeFall.BalanceLab
 {
     [Serializable] public sealed class LabManifest
     {
-        public int schema = 2;
+        public int schema = 3;
         public string version, unity, fingerprint, project, builtUtc, policy = "active-10s-v1";
         public string balance;
         public double[] roulette;
@@ -26,11 +26,11 @@ namespace PickaxeFall.BalanceLab
             var snapshot=new List<LabPrice>();
             foreach(var key in Progression.Keys)
             {
-                long coins=0;var resources=new long[8];
+                long coins=0;var resources=new long[ResourceInventory.SlotCount];
                 for(int level=1;level<=Progression.MaxLevel(key.Kind);level++)
                 {
                     var cost=Progression.Cost(key,level);coins+=cost.Coins;
-                    for(int i=0;i<8;i++)resources[i]+=cost.Resources[i];
+                    for(int i=0;i<ResourceInventory.SlotCount;i++)resources[i]+=cost.Resources[i];
                     snapshot.Add(new LabPrice { key=key.Index,level=level,coins=coins,materials=(long[])resources.Clone() });
                 }
             }
@@ -62,11 +62,12 @@ namespace PickaxeFall.BalanceLab
         public bool active;
         public int[] levels;
         public string Family => $"t{tier}-p{point}-b{background}-a{(active ? 1 : 0)}";
+        static readonly string[] ToolTitles={"дерево","камень","золото","железо","алмаз"};
         public string Title
         {
             get
             {
-                var names = Progression.Keys.Where(k => (mask & (1 << k.Index)) != 0).Select(k => Progression.Title(k.Kind));
+                var names = Progression.Keys.Where(k => (mask & (1 << k.Index)) != 0).Select(k => Progression.Title(k.Kind)+(k.Kind<=UpgradeKind.Durability?" · "+ToolTitles[k.Tier]:""));
                 return mask == 0 ? (background == 0 ? "Без улучшений" : "Вся прокачка") : (background == 1 ? "Без: " : "") + string.Join(" + ", names);
             }
         }
@@ -83,7 +84,7 @@ namespace PickaxeFall.BalanceLab
         public string id, scenario, error;
         public int seed, branches;
         public double seconds, depth, value, blocks, strikes, tools, benches, abilities, censored;
-        public double[] resources = new double[8], attempts = new double[17], successes = new double[17];
+        public double[] resources = new double[ResourceInventory.SlotCount], attempts = new double[17], successes = new double[17];
         public double wallSeconds;
     }
     [Serializable] public sealed class ScenarioList { public List<LabScenario> scenarios = new(); }

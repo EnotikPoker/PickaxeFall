@@ -8,6 +8,8 @@ namespace PickaxeFall
         Camera view;
         Vector3 velocity;
         float zoomVelocity;
+        bool snap;
+        public void SnapToTools(){snap=true;LateUpdate();}
         SpriteRenderer backdrop;
         SpriteRenderer landscape;
         const float SurfaceCameraY = 3.2f;
@@ -54,17 +56,19 @@ namespace PickaxeFall
                 Rect space = game.GameplayViewport;
                 float width = Mathf.Max(0.2f, space.width), height = Mathf.Max(0.2f, space.height);
                 float required = Mathf.Max(minimumSize, (bounds.extents.x + 1.5f) / (view.aspect * width), (bounds.extents.y + 1.5f) / height);
-                view.orthographicSize = Mathf.SmoothDamp(view.orthographicSize, required, ref zoomVelocity, required > view.orthographicSize ? 0.08f : 0.35f);
+                bool instant=snap || game.Paused;
+                view.orthographicSize = instant?required:Mathf.SmoothDamp(view.orthographicSize, required, ref zoomVelocity, required > view.orthographicSize ? 0.08f : 0.35f);
                 Vector3 offset = new((space.center.x - 0.5f) * 2 * view.orthographicSize * view.aspect,
                     (space.center.y - 0.5f) * 2 * view.orthographicSize, 0);
                 Vector3 target = bounds.center - offset; target.z = -10;
                 target.y = Mathf.Min(SurfaceCameraY, target.y);
                 float maxX = Mathf.Max(0, game.Balance.worldWidth / 2f - view.orthographicSize * view.aspect);
                 target.x = Mathf.Clamp(target.x, -maxX, maxX);
-                transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, 0.16f);
+                transform.position = instant?target:Vector3.SmoothDamp(transform.position, target, ref velocity, 0.16f);
+                if(instant){velocity=Vector3.zero;zoomVelocity=0;}
             }
             else if (game.Phase == RunPhase.Ready || game.Phase == RunPhase.Equipped || game.Phase == RunPhase.Spinning) SetFraming();
-            UpdateBackground();
+            snap=false;UpdateBackground();
         }
 
         void UpdateBackground()

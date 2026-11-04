@@ -73,7 +73,7 @@ namespace PickaxeFall.BalanceLab
                     result.abilities += weight * game.Benefits.Abilities;
                     if (game.Phase == RunPhase.Mining) result.censored += weight;
                     foreach (var tool in game.Pickaxes) result.strikes += weight * tool.TotalStrikes;
-                    for (int i = 0; i < 8; i++) result.resources[i] += weight * game.OreCounts[i];
+                    for (int i = 0; i < ResourceInventory.SlotCount; i++) result.resources[i] += weight * game.OreCounts[i];
                     for (int i = 0; i < 17; i++) { result.attempts[i] += weight * game.Rolls.Attempts[i]; result.successes[i] += weight * game.Rolls.Successes[i]; }
                 }
                 finally { UnityEngine.Object.DestroyImmediate(root); Unload(scene); }

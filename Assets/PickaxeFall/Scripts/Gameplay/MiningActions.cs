@@ -18,9 +18,10 @@ namespace PickaxeFall
         public void Add(float amount) { double before = value; value = Math.Min(Maximum, value + Math.Max(0, amount)); earned += value - before; }
         public void Regenerate(float seconds, RunUpgrades upgrades) { if (seconds > 0 && !float.IsInfinity(seconds)) Add(seconds * upgrades.EnergyPerSecond); }
         public void Ensure(float minimum) => Add(Mathf.Max(0, minimum - Value));
+        public void Restore(float savedValue,float savedEarned){value=Math.Max(0,Math.Min(Maximum,savedValue));earned=Math.Max(0,savedEarned);}
     }
 
-    public sealed class RunBenefits
+    [Serializable] public sealed class RunBenefits
     {
         public int BonusOre, SavedWear, AbilityBlocks, ShrapnelBlocks, StrongHits, BonusTnt, DoubleBenches, DoubleBlasts, Rescues, RestoredDurability, Abilities;
         public void Reset() { BonusOre = SavedWear = AbilityBlocks = ShrapnelBlocks = StrongHits = BonusTnt = DoubleBenches = DoubleBlasts = Rescues = RestoredDurability = Abilities = 0; }
@@ -40,6 +41,17 @@ namespace PickaxeFall
         readonly System.Collections.Generic.Dictionary<Vector2Int, Contact> contacts = new();
         readonly System.Collections.Generic.List<Vector2Int> retired = new();
         public void Clear() => contacts.Clear();
+        public ContactSnapshot[] Capture()
+        {
+            var result=new System.Collections.Generic.List<ContactSnapshot>();
+            foreach(var pair in contacts)result.Add(new ContactSnapshot {cell=pair.Key,armed=pair.Value.Armed,hitStep=pair.Value.HitStep,seenStep=pair.Value.SeenStep,normal=pair.Value.Normal,localPoint=pair.Value.LocalPoint});
+            return result.ToArray();
+        }
+        public void Restore(ContactSnapshot[] saved)
+        {
+            contacts.Clear();if(saved==null)return;
+            foreach(var c in saved)contacts[c.cell]=new Contact {Armed=c.armed,HitStep=c.hitStep,SeenStep=c.seenStep,Normal=c.normal,LocalPoint=c.localPoint};
+        }
         public static Vector2 Rotate(Vector2 point, float degrees)
         {
             float angle=degrees*Mathf.Deg2Rad, c=Mathf.Cos(angle), s=Mathf.Sin(angle);

@@ -14,11 +14,22 @@ namespace PickaxeFall.Editor
             var paths = new HashSet<string>();
             foreach (BlockKind kind in Enum.GetValues(typeof(BlockKind)))
             {
+                if(kind>BlockKind.Tnt)continue; // New blocks use the built-in pixel-art fallback until supplied.
                 ValidateLayer(kind, false, false, paths);
                 if (kind == BlockKind.Dirt) ValidateLayer(kind, false, true, paths);
                 else if (kind != BlockKind.Workbench && kind != BlockKind.Tnt) ValidateLayer(kind, true, false, paths);
             }
             Require(paths.Count == 72, "The supplied block pack must contain all 72 selected variants.");
+            int previous=0;
+            for(int stage=1;stage<=8;stage++)
+            {
+                var sprite=AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/PickaxeFall/Resources/Cracks/Cracks_{stage}.png");
+                Require(sprite,"Missing crack sprite "+stage);
+                Require(sprite.texture.width==32,"Crack width "+stage+": "+sprite.texture.width);
+                Require(sprite==PixelArt.Cracks(stage),"Crack resource selection "+stage+": "+PixelArt.Cracks(stage).texture.width);
+                int visible=0;foreach(var p in sprite.texture.GetPixels32())if(p.a>200)visible++;
+                Require(visible>previous,"Cracks must grow at every stage");previous=visible;
+            }
             string[] names={"Wood","Stone","Gold","Iron","Diamond"};
             for(int tier=0;tier<5;tier++)
             {
@@ -36,7 +47,7 @@ namespace PickaxeFall.Editor
                 }
                 Require(marked>20,"Visible silhouette outline");
             }
-            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 77 PNGs including five supplied pickaxes; ordinary terrain/ores at 32px; deep/special blocks at 16px; Point, no compression/mips; all variants one opaque world tile.");
+            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 85 supplied PNGs: 72 blocks, 8 crack stages, 5 tools; terrain/deep ores and cracks 32px, TNT/workbench 16px; Point, no compression/mips, exact world-tile scale.");
         }
 
         static void ValidateLayer(BlockKind kind, bool deep, bool surface, HashSet<string> paths)
@@ -48,7 +59,7 @@ namespace PickaxeFall.Editor
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 Require(sprite, "Missing imported sprite: " + path);
                 Require(PixelArt.Block(kind, variant, deep, surface) == sprite, "The game selected generated art instead of the supplied PNG: " + path);
-                int size = !deep && kind <= BlockKind.Diamond ? 32 : 16;
+                int size = kind==BlockKind.Workbench || kind==BlockKind.Tnt ? 16 : 32;
                 Require(sprite.texture.width == size && sprite.texture.height == size, "Incorrect source variant or resolution: " + path);
                 Require(Mathf.Abs(sprite.bounds.size.x - 1) < 0.001f && Mathf.Abs(sprite.bounds.size.y - 1) < 0.001f,
                     "Mixed pixel sizes must still fill exactly one world tile: " + path);

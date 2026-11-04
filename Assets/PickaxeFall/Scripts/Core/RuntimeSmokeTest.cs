@@ -16,7 +16,11 @@ namespace PickaxeFall
         IEnumerator Start()
         {
             yield return null;
-            var game = GetComponent<GameController>(); var root = GetComponent<UIDocument>().rootVisualElement;
+            var game = GetComponent<GameController>();var root = GetComponent<UIDocument>().rootVisualElement;
+            game.BeginProbeRun(0,8127,1);float lockedEnergy=game.Energy.Value;
+            Check(!game.AbilityUnlocked(AbilityKind.Dash) && !game.AbilityUnlocked(AbilityKind.Plunge) && !game.TryUseAbility(AbilityKind.Dash,Vector2.right) && !game.TryUseAbility(AbilityKind.Plunge,Vector2.down) && game.Energy.Value==lockedEnergy,"unbought gestures cannot act or spend energy during mining");
+            game.FinishRun();yield return new WaitForSeconds(1);game.NewRun();
+            game.Economy.Profile.dashUnlocked=game.Economy.Profile.plungeUnlocked=true;
             Check(game.ProfileDirectory.StartsWith(Application.temporaryCachePath), "verification always uses an isolated cache profile");
             Check(game.Phase == RunPhase.Ready && game.Pickaxes.Count == 5, "ready state and tool pool");
             Check(root.Q<Button>("main-action").resolvedStyle.fontSize >= 48, "large primary label");
@@ -32,7 +36,7 @@ namespace PickaxeFall
             Check(game.Settings.FrameRate == 30 && Mathf.Abs(game.Settings.Volume - 0.4f) < 0.01f, "settings controls change actual values");
             (root.Q<Button>("settings-close").userData as Action)(); game.Settings.Reset();
 
-            game.Economy.Profile.coins = 100000; Array.Fill(game.Economy.Profile.resources, 1000L);
+            game.Economy.Profile.coins = 100000; foreach(var resource in ResourceInventory.Materials)game.Economy.Profile.resources[(int)resource]=1000L;
             Check(game.Buy(new(UpgradeKind.Damage)) && game.PreviewDamageHalfUnits(0) == game.Balance.pickaxes[0].damage * 2 + Progression.DamageStepHalfUnits(0), "half-unit upgrade applies only to wood");
             Check(game.Buy(new(UpgradeKind.Durability)) && game.PreviewDurability(0) == game.Balance.pickaxes[0].durability + Progression.DurabilityStep(0) && game.PreviewDamageHalfUnits(1) == game.Balance.pickaxes[1].damage * 2, "durability and tier isolation");
             game.BeginProbeRun(0, 8127, 1); long wallet = game.Wallet;

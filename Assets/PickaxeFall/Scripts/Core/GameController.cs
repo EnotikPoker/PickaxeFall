@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 namespace PickaxeFall
 {
     [DefaultExecutionOrder(-100)]
-    public class GameController : MonoBehaviour
+    public partial class GameController : MonoBehaviour
     {
         [SerializeField] GameBalance balance;
         [SerializeField] PanelSettings panelSettings;
@@ -42,7 +42,7 @@ namespace PickaxeFall
         public int BlocksBroken { get; private set; }
         public int BestDepth => Economy.Profile.bestDepth;
         public long Wallet => Economy.Profile.coins;
-        public long PotentialSaleValue { get { long value = 0; for (int i = 0; i < 8; i++) value += OreCounts[i] * Progression.SellPrices[i]; return value; } }
+        public long PotentialSaleValue { get { long value = 0; foreach(var kind in ResourceInventory.Materials)value+=OreCounts[(int)kind]*Progression.SellPrices[(int)kind];return value; } }
         public int WorkbenchesUsed { get; private set; }
         public int RunToolCount { get; private set; } = 1;
         public int LivingToolCount { get { int count=0;foreach(var tool in tools)if(tool.IsAlive)count++;return count; } }
@@ -52,7 +52,7 @@ namespace PickaxeFall
         public bool Paused { get; private set; }
         public bool CanTrade => Phase == RunPhase.Ready || Phase == RunPhase.Equipped || Phase == RunPhase.Finished;
         public Rect GameplayViewport => hud != null ? hud.GameplayViewport : new Rect(0.04f, 0.24f, 0.92f, 0.53f);
-        public readonly long[] OreCounts = new long[Enum.GetValues(typeof(BlockKind)).Length];
+        public readonly long[] OreCounts = new long[ResourceInventory.SlotCount];
         public event Action Changed;
         GameHud hud;
         MineCamera cameraFollow;
@@ -83,11 +83,18 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores" }, TestMode) < 0) TestMode = "";
             bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
             if (probe) TestMode = "probe";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
+            foreach(string mode in new[] {"savewrite","saveread","savefinished"})if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--"+mode+"-check"))TestMode=mode;
             if (TestMode.Length > 0) { Application.runInBackground=true; ProfileDirectory = Path.Combine(Application.temporaryCachePath, "verification", Guid.NewGuid().ToString("N")); }
+            if(TestMode.StartsWith("save",StringComparison.Ordinal))
+            {
+                string id=Array.Find(Environment.GetCommandLineArgs(),a=>a.StartsWith("--resume-check-id=",StringComparison.Ordinal))?.Substring(18);
+                if(!Guid.TryParseExact(id,"N",out var guid))throw new InvalidOperationException("A fresh resume-check-id GUID is required.");
+                ProfileDirectory=Path.Combine(Application.temporaryCachePath,"verification","resume-"+guid.ToString("N"));
+            }
 #endif
             Settings = new GameSettings(TestMode.Length > 0);
             var store = new ProfileStore(ProfileDirectory, TestMode.Length > 0 ? () => new PlayerProfile() : null);
@@ -108,18 +115,22 @@ namespace PickaxeFall
             cameraFollow = cameraObject.AddComponent<MineCamera>(); cameraFollow.Initialize(this);
             var document = gameObject.AddComponent<UIDocument>(); document.panelSettings = panelSettings;
             hud = new GameHud(this, document.rootVisualElement, interfaceStyle);
-            initialized = true; NewRun();
+            initialized = true;
+            if(Economy.Profile.run!=null)RestoreRun(Economy.Profile.run);else NewRun();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (TestMode == "smoke" || Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test")) gameObject.AddComponent<RuntimeSmokeTest>();
-            if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe") gameObject.AddComponent<RuntimePreview>();
+            if(TestMode.StartsWith("save",StringComparison.Ordinal))gameObject.AddComponent<RuntimeResumeCheck>();
+            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe") gameObject.AddComponent<RuntimePreview>();
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe" || arg == "--economy-probe")) gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
 
         void InitializeWorldAndTools()
         {
+            originalBalance=balance;
             Effects = new GameObject("Mining effects").AddComponent<MiningEffects>(); Effects.transform.SetParent(transform); Effects.Initialize(Settings, IsSimulation);
             World = new GameObject("Streamed mine").AddComponent<MiningWorld>(); World.transform.SetParent(transform); World.Initialize(this, balance);
+            if(!IsSimulation){var lighting=new GameObject("Mine light and shadows");lighting.transform.SetParent(transform);lighting.AddComponent<MineLighting>().Initialize(this);}
             for (int i = 0; i < 5; i++)
             {
                 var tool = new GameObject("Physical pickaxe " + (i + 1)).AddComponent<FallingPickaxe>();
@@ -132,6 +143,7 @@ namespace PickaxeFall
             if (!initialized) return;
             StopAllCoroutines(); Time.timeScale = 1; Paused = false; Effects.Clear();
             foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
+            UseOriginalBalance();Economy.Profile.run=null;
             Depth = BlocksBroken = WorkbenchesUsed = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
             RunToolCount = 1; RescueUsed = false; RunUpgrades = new RunUpgrades(Economy.Profile);
             SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); Clock.Reset(); hud?.CancelGesture();
@@ -186,7 +198,7 @@ namespace PickaxeFall
             if (Input.GetKeyDown(KeyCode.Escape)) { if (!hud.CloseModal()) TogglePause(); }
             if (Phase == RunPhase.Mining && !Paused)
             {
-                if (dirty && Time.unscaledTime >= nextSave) SaveProgress();
+                if (Time.unscaledTime >= nextSave) SaveProgress();
             }
             hud.Tick();
         }
@@ -220,6 +232,7 @@ namespace PickaxeFall
         }
         public bool TryUseAbility(AbilityKind kind, Vector2 direction)
         {
+            if(!AbilityUnlocked(kind))return false;
             if (!ControlsAvailable || SelectedTool == null || !SelectedTool.IsAlive || SelectedTool.AbilityActive || !Energy.CanSpend(AbilityCost(kind))) return false;
             if (kind != AbilityKind.Dash && kind != AbilityKind.Plunge) return false;
             if (kind == AbilityKind.Dash)
@@ -256,10 +269,9 @@ namespace PickaxeFall
                 if (ResourceInventory.IsMaterial(block.Kind))
                 {
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
-                    if (!Economy.Collect(block.Kind, quantity)) throw new InvalidOperationException(Economy.LastError);
-                    Benefits.BonusOre += quantity - 1; OreCounts[(int)block.Kind] += quantity; dirty = true;
-                    if (!IsSimulation) hud?.ShowLoot(source!=null ? source.Body.position : (Vector2)block.transform.position,block.Kind,quantity,source!=null ? source.ToolIndex : -1);
+                    Benefits.BonusOre += quantity - 1;GiveResource(ResourceInventory.DropKind(block.Kind),quantity,source,block.transform.position);
                 }
+                else if(block.Kind==BlockKind.Chest)AwardChest(block.Column,block.Row,source);
                 Effects.Impact(block.transform.position, block.BaseColor, 7);
             }
             bool tnt = (origin == DamageOrigin.Physical || origin == DamageOrigin.Dash || origin == DamageOrigin.Plunge) && source != null && Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.TntFind);
@@ -326,18 +338,20 @@ namespace PickaxeFall
         public void TogglePause()
         {
             if (Phase != RunPhase.Mining) return;
-            hud.CancelGesture(); Paused = !Paused; Time.timeScale = Paused ? 0 : 1; Notify();
+            hud?.CancelGesture(); Paused = !Paused; Time.timeScale = Paused ? 0 : 1; Notify();
+            if(Paused)SaveProgress();
         }
         public bool SelectHubTab(HubTab tab) { if (!CanTrade) return false; hud.SelectTab(tab); return true; }
         void SaveProgress()
         {
-            if (IsSimulation) return;
-            try { Economy?.Save(); Settings?.Save(); dirty = false; nextSave = Time.unscaledTime + 5; }
+            if (IsSimulation || !initialized) return;
+            try { Economy.Profile.run=Phase==RunPhase.Mining?CaptureRun():null;Economy.Save(); Settings?.Save(); dirty = false; nextSave = Time.unscaledTime + 5; }
             catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС"); nextSave = Time.unscaledTime + 10; }
         }
-        void OnApplicationPause(bool pause) { if (IsSimulation) return; if (pause) SaveProgress(); if (pause && Phase == RunPhase.Mining && !Paused) TogglePause(); }
-        void OnApplicationQuit() => SaveProgress();
-        void OnDestroy() { if (initialized) SaveProgress(); Time.timeScale = 1; hud?.Dispose(); }
+        void OnApplicationPause(bool pause) { if(IsSimulation || !pause)return;if(Phase==RunPhase.Mining && !Paused)TogglePause();else SaveProgress(); }
+        void OnApplicationFocus(bool focus){if(!focus && initialized && !IsSimulation && TestMode.Length==0 && Phase==RunPhase.Mining && !Paused)TogglePause();}
+        void OnApplicationQuit(){SaveProgress();quitting=true;}
+        void OnDestroy() { if (initialized && !quitting) SaveProgress(); Time.timeScale = 1; hud?.Dispose();if(restoredBalance)Destroy(restoredBalance); }
         void Notify() => Changed?.Invoke();
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -360,7 +374,8 @@ namespace PickaxeFall
         public void BeginSimulation(int tier, int seed, int[] levels, int team, int rescue)
         {
             foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
-            Array.Clear(Economy.Profile.resources, 0, 8); Array.Copy(levels, Economy.Profile.upgrades, 25);
+            Array.Clear(Economy.Profile.resources, 0, ResourceInventory.SlotCount); Array.Copy(levels, Economy.Profile.upgrades, 25);
+            Economy.Profile.dashUnlocked=Economy.Profile.plungeUnlocked=true;
             Economy.Profile.Validate(); Seed = seed; Clock.Reset(); forcedTeam = team; forcedRescue = rescue;
             Depth = BlocksBroken = WorkbenchesUsed = 0; RescueUsed = false; Array.Clear(OreCounts, 0, OreCounts.Length); Benefits.Reset();
             World.ResetWorld(seed); selectedTier = tier; Phase = RunPhase.Equipped; StartDrop(0);

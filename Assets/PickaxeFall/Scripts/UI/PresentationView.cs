@@ -23,7 +23,7 @@ namespace PickaxeFall
         public void ShowLoot(Vector2 position,BlockKind kind,int quantity,int tool)
         {
             if(!game.Settings.LootMessages || quantity<=0)return;
-            int key=(tool+1)*8+(int)kind;
+            int key=(tool+1)*ResourceInventory.SlotCount+(int)kind;
             if(!pendingLoot.TryGetValue(key,out var value))pendingLoot[key]=value=new PendingLoot {kind=kind};
             value.position=position;value.count+=quantity;
         }
@@ -70,12 +70,12 @@ namespace PickaxeFall
             {
                 item=new LootFloat();item.element=Box(lootLayer,"loot-float");item.element.pickingMode=PickingMode.Ignore;
                 item.count=BoldText(item.element,"","loot-number");item.count.pickingMode=PickingMode.Ignore;
-                item.icon=Icon(item.element,PixelArt.Block(value.kind,0,value.kind==BlockKind.Deepstone),"loot-icon");item.icon.pickingMode=PickingMode.Ignore;
+                item.icon=Icon(item.element,PixelArt.ResourceIcon(value.kind),"loot-icon");item.icon.pickingMode=PickingMode.Ignore;
                 lootFloats.Add(item);
             }
             if(item==null){item=lootFloats[0];foreach(var candidate in lootFloats)if(candidate.started<item.started)item=candidate;}
             item.worldOrigin=value.position;item.side=(lootSequence&1)==0?1:-1;item.lane=(lootSequence++/2)%3;
-            item.count.text="+"+Short(value.count);item.icon.style.backgroundImage=Background.FromSprite(PixelArt.Block(value.kind,0,value.kind==BlockKind.Deepstone));
+            item.count.text="+"+Short(value.count);item.icon.style.backgroundImage=Background.FromSprite(PixelArt.ResourceIcon(value.kind));
             item.started=Time.unscaledTime;item.active=true;Display(item.element,true);
             PlaceLoot(item,0);
             item.element.BringToFront();

@@ -73,7 +73,8 @@ namespace PickaxeFall.BalanceLab
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     var row = JsonUtility.FromJson<LabResult>(line);
-                    if (string.IsNullOrEmpty(row.id) || row.resources == null || row.resources.Length != 8) throw new IOException("Повреждён журнал результатов: " + journal);
+                    if(row.resources!=null && row.resources.Length==8)Array.Resize(ref row.resources,ResourceInventory.SlotCount);
+                    if (string.IsNullOrEmpty(row.id) || row.resources == null || row.resources.Length != ResourceInventory.SlotCount) throw new IOException("Повреждён журнал результатов: " + journal);
                     if (string.IsNullOrEmpty(row.error))
                     {
                         if(session.Results.TryGetValue(row.id,out var old)){session.totalWall-=old.wallSeconds;session.branches-=old.branches;}

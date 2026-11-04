@@ -1,0 +1,38 @@
+{
+  "archive": "Cracks.rar",
+  "archiveSha256": "2cc964ce5cdcd099087280ed35e71365c3e0baadb45aa86f6980743aa520f5db",
+  "files": [
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_1.png",
+      "sha256": "86a7cb8e44c63f12ec1b3b00d51b9fa2c2888a18a4a6d781a10d9fff8659f079"
+    },
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_2.png",
+      "sha256": "031605b232c97bcfbea237c32958cc57a21057a5aa9a98a32d18e37dba03ad21"
+    },
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_3.png",
+      "sha256": "c9feace044bb3011b60f93ba337c0c2d3fdd9682a97e49bd686008f475230b5a"
+    },
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_4.png",
+      "sha256": "38cb28b93b72bf3fcd1c5e25489b1eb59c2385a20811a0786382d05f4a84218f"
+    },
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_5.png",
+      "sha256": "7646b2cae1996786e46a164fe6bf54489fabba25b4f55f9d8b5201bed91b8780"
+    },
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_6.png",
+      "sha256": "898e843abbd3f3dc22dbc9db73688c42f3c0a0b7bf235f56db7085974e46a0d4"
+    },
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_7.png",
+      "sha256": "5c66dedd01c8b8688392a9ca814edd114fc1276c63c28345d4272c07116cb680"
+    },
+    {
+      "asset": "Assets/PickaxeFall/Resources/Cracks/Cracks_8.png",
+      "sha256": "e2d17bd820597027160532d0f513324b23aade24850cd31725fcd88ad156984d"
+    }
+  ]
+}

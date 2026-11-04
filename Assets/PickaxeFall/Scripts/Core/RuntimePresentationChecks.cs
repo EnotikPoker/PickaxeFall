@@ -52,9 +52,9 @@ namespace PickaxeFall
             long[] resources=(long[])game.OreCounts.Clone();
             yield return new WaitForSecondsRealtime(1.4f);
             var grid=root.Q("run-resources");
-            for(int i=0;i<8;i++)check(grid.Q<Label>("count-"+(BlockKind)i).text==GameHud.Short(resources[i]),"animated resource count reaches exact total "+i);
+            foreach(var kind in ResourceInventory.Materials)check(grid.Q<Label>("count-"+kind).text==GameHud.Short(resources[(int)kind]),"animated resource count reaches exact total "+kind);
             check(game.OreCounts.SequenceEqual(resources),"results animation cannot award loot twice");
-            Array.Clear(game.Economy.Profile.upgrades,0,25);game.Economy.Profile.coins=0;Array.Clear(game.Economy.Profile.resources,0,8);
+            Array.Clear(game.Economy.Profile.upgrades,0,25);game.Economy.Profile.coins=0;Array.Clear(game.Economy.Profile.resources,0,game.Economy.Profile.resources.Length);
             game.SelectHubTab(HubTab.Shop);Press(root,"shop-category-0");Press(root,"shop-tier-0");
             var card=root.Q("upgrade-Damage-0");
             check(!card.Q<Button>("buy-Damage-0").enabledSelf && card.Q<Button>("buy-Damage-0").ClassListContains("buy-blocked"),"unaffordable upgrade is visibly red and disabled");
@@ -62,8 +62,15 @@ namespace PickaxeFall
             check(card.Q<Label>("required-"+(BlockKind)material).ClassListContains("cost-short") && card.Q(className:"recipe-icon")!=null,"missing material is red with icon");
             game.Economy.Profile.resources[material]=price.Resources[material];game.SelectHubTab(HubTab.Shop);
             check(card.Q<Label>("required-"+(BlockKind)material).ClassListContains("cost-enough"),"enough material becomes green independently of coins");
-            game.Economy.Profile.coins=100000;Array.Fill(game.Economy.Profile.resources,100000L);game.SelectHubTab(HubTab.Shop);
+            game.Economy.Profile.coins=100000;foreach(var resource in ResourceInventory.Materials)game.Economy.Profile.resources[(int)resource]=100000L;game.SelectHubTab(HubTab.Shop);
             check(card.Q<Button>("buy-Damage-0").enabledSelf && card.Q<Button>("buy-Damage-0").ClassListContains("buy-ready"),"affordable upgrade is green and enabled");
+            game.Economy.Profile.dashUnlocked=game.Economy.Profile.plungeUnlocked=false;Press(root,"shop-category-3");
+            long beforeUnlock=game.Wallet;Press(root,"unlock-Dash");
+            check(game.Economy.Profile.dashUnlocked && !game.Economy.Profile.plungeUnlocked && game.Wallet==beforeUnlock-Progression.AbilityCost(AbilityKind.Dash).Coins,"shop buys dash independently and debits once");
+            check(!root.Q<Button>("unlock-Dash").enabledSelf && root.Q<Button>("unlock-Dash").text=="ОТКРЫТО","bought ability has permanent opened state");
+            Press(root,"unlock-Plunge");var unlocked=new ProfileStore(game.ProfileDirectory).Load();
+            check(unlocked.dashUnlocked && unlocked.plungeUnlocked,"both paid actions survive profile reload");
+            game.Economy.Profile.coins=100000;game.SelectHubTab(HubTab.Shop);
             Press(root,"open-settings");Press(root,"settings-reset-progress");
             root.Q<TextField>("progress-reset-input").value="нет";check(!root.Q<Button>("progress-reset-confirm").enabledSelf,"reset requires exact confirmation");
             Press(root,"progress-reset-cancel");check(game.Wallet==100000,"cancel reset keeps all progress");
