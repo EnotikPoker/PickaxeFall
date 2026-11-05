@@ -173,3 +173,76 @@ Label { white-space: normal; flex-shrink: 0; }
 .construction-scene { height: 330px; position: relative; overflow: hidden; border-top-width: 5px; border-bottom-width: 5px; border-left-width: 5px; border-right-width: 5px; border-top-color: rgb(17, 23, 28); border-bottom-color: rgb(67, 73, 69); border-left-color: rgb(17, 23, 28); border-right-color: rgb(67, 73, 69); margin-bottom: 18px; flex-shrink: 0; }
 .construction-flight { position: absolute; flex-direction: row; background-color: rgba(20, 28, 30, 0.85); padding-left: 6px; padding-right: 6px; height: 40px; }
 .map-coming-soon { opacity: 0.65; -unity-text-align: middle-center; padding-top: 14px; padding-bottom: 14px; }
+
+/* 0.6.1: compact paper cards and full-card seals */
+.compact-skill { position: relative; padding: 20px; margin-top: 0; margin-bottom: 14px; border-width: 3px; background-color: rgb(206, 207, 183); border-top-color: rgb(241, 241, 212); border-left-color: rgb(235, 237, 204); border-right-color: rgb(91, 100, 70); border-bottom-color: rgb(77, 86, 57); }
+.skill-content { flex-shrink: 0; }
+.skill-heading { flex-direction: row; align-items: center; margin-right: 64px; margin-bottom: 8px; }
+.compact-skill .upgrade-title { flex-grow: 1; flex-shrink: 1; font-size: 36px; margin-bottom: 0; }
+.skill-info { width: 58px; height: 58px; min-width: 58px; padding: 0; margin: 0 0 0 10px; font-size: 32px; color: rgb(65, 76, 47); background-color: rgba(0, 0, 0, 0); border-width: 2px; border-color: rgb(124, 135, 100); border-radius: 0; }
+.skill-summary { font-size: 28px; color: rgb(81, 87, 62); margin-bottom: 6px; }
+.compact-skill .upgrade-effect { font-size: 31px; margin-top: 4px; margin-bottom: 12px; }
+.skill-price-row { flex-direction: row; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.compact-skill .upgrade-price { font-size: 30px; margin-right: 20px; margin-bottom: 0; }
+.compact-skill .recipe-resources { margin-bottom: 0; flex-grow: 1; }
+.compact-skill .recipe-item { margin-right: 14px; margin-bottom: 4px; padding: 0; }
+.compact-skill .recipe-icon { width: 34px; height: 34px; }
+.compact-skill .recipe-amount { font-size: 28px; }
+.compact-skill .upgrade-reason { font-size: 26px; margin-bottom: 8px; }
+.skill-buy { min-height: 86px; font-size: 34px; margin-top: 0; padding: 10px; }
+.paper-pin { position: absolute; right: 16px; top: 10px; width: 46px; height: 58px; rotate: -16deg; }
+.pin-needle { position: absolute; left: 23px; top: 25px; width: 5px; height: 31px; background-color: rgb(76, 83, 82); border-left-width: 2px; border-left-color: rgb(225, 233, 225); }
+.pin-neck { position: absolute; left: 17px; top: 15px; width: 16px; height: 19px; background-color: rgb(154, 41, 37); }
+.pin-head { position: absolute; left: 7px; top: 2px; width: 34px; height: 24px; border-radius: 10px; background-color: rgb(219, 55, 46); border-bottom-width: 5px; border-bottom-color: rgb(130, 35, 32); }
+.pin-glint { position: absolute; left: 14px; top: 5px; width: 13px; height: 5px; border-radius: 3px; background-color: rgb(255, 155, 125); }
+.locked-skill { height: 310px; min-height: 310px; max-height: 310px; overflow: hidden; }
+.locked-skill .skill-content { visibility: hidden; }
+.skill-lock-layer { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.skill-lock-cover { position: absolute; left: 0; right: 0; top: 0; bottom: 0; margin: 0; padding: 0; border-width: 0; border-radius: 0; background-color: rgb(31, 41, 45); }
+.skill-lock-cover:hover { background-color: rgb(37, 48, 51); }
+.skill-lock-cover:disabled { background-color: rgb(31, 39, 43); opacity: 1; }
+.chain-drawing { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+.locked-title { position: absolute; top: 16px; left: 20px; right: 20px; color: rgb(233, 234, 211); font-size: 36px; -unity-text-outline-width: 2px; -unity-text-outline-color: rgb(23, 29, 32); }
+.locked-note { position: absolute; left: 10px; right: 10px; bottom: 14px; -unity-text-align: middle-center; font-size: 28px; color: rgb(186, 197, 194); -unity-text-outline-width: 2px; -unity-text-outline-color: rgb(23, 29, 32); }
+.lock-ready .locked-note { color: rgb(255, 218, 118); }
+.compact-button { min-height: 88px; height: 88px; padding: 10px; margin-top: 12px; font-size: 34px; }
+.dialog-footer { flex-direction: row; margin-top: 6px; }
+.dialog-footer .compact-button { flex-grow: 1; flex-basis: 0; margin-right: 8px; }
+.profile-dialog .title { font-size: 40px; margin-bottom: 14px; }
+.profile-banner { flex-direction: row; align-items: center; margin-bottom: 18px; }
+.profile-rank { width: 106px; height: 106px; font-size: 76px; -unity-text-align: middle-center; color: rgb(244, 227, 159); background-color: rgb(70, 88, 46); border-bottom-width: 6px; border-bottom-color: rgb(39, 55, 29); margin-right: 22px; }
+.profile-heading { font-size: 40px; color: rgb(38, 53, 27); }
+.profile-progress-label { flex-direction: row; justify-content: space-between; }
+.profile-progress-label .section-label { font-size: 26px; margin-bottom: 4px; }
+.profile-progress-track { height: 12px; background-color: rgb(148, 157, 123); margin-bottom: 20px; }
+.profile-progress-fill { height: 12px; background-color: rgb(77, 120, 49); }
+.profile-section { font-size: 28px; color: rgb(86, 94, 66); margin-top: 10px; margin-bottom: 8px; }
+.profile-requirements { flex-direction: row; flex-wrap: wrap; }
+.profile-resource { width: 48%; flex-direction: row; align-items: center; margin-right: 2%; margin-bottom: 10px; padding: 10px; background-color: rgb(189, 195, 164); }
+.profile-resource-icon { width: 52px; height: 52px; margin-right: 12px; flex-shrink: 0; }
+.profile-resource-copy { flex-shrink: 1; }
+.profile-resource-name { font-size: 25px; color: rgb(79, 88, 58); }
+.profile-resource-count { font-size: 29px; }
+.profile-note { font-size: 24px; color: rgb(93, 100, 74); margin-top: 0; margin-bottom: 8px; }
+.profile-skill-row { min-height: 74px; flex-direction: row; justify-content: space-between; align-items: center; margin: 0 0 5px 0; padding: 8px 12px; background-color: rgb(191, 196, 166); border-width: 0; border-radius: 0; }
+.profile-skill-row:hover { background-color: rgb(204, 210, 175); }
+.profile-skill-name { font-size: 28px; flex-shrink: 1; color: rgb(48, 65, 33); }
+.profile-skill-count { font-size: 30px; margin-left: 10px; }
+.profile-coin-row { flex-direction: row; align-items: center; justify-content: space-between; margin-top: 8px; }
+.profile-unlocks { margin-top: 6px; margin-bottom: 6px; font-size: 27px; color: rgb(80, 90, 57); }
+.profile-unlock-chips { flex-direction: row; flex-wrap: wrap; }
+.profile-unlock-chip { font-size: 24px; background-color: rgb(186, 194, 158); color: rgb(66, 81, 41); padding: 7px; margin: 4px; }
+.map-card .title { font-size: 40px; margin-bottom: 14px; }
+.map-navigation { margin-bottom: 14px; flex-wrap: nowrap; }
+.map-tab { flex-grow: 1; flex-basis: 0; min-height: 82px; height: 82px; margin-right: 6px; padding: 8px; font-size: 30px; }
+.map-project { position: relative; }
+.map-project .paper-pin { top: 16px; right: 16px; background-color: rgb(216, 214, 184); }
+.construction-scene { height: 400px; margin-bottom: 14px; border-width: 3px; }
+.construction-board { position: absolute; width: 480px; height: 240px; left: 50%; top: 50%; margin-left: -240px; margin-top: -120px; }
+.map-title { font-size: 36px; color: rgb(43, 59, 29); margin-bottom: 8px; }
+.map-status { font-size: 27px; color: rgb(92, 102, 67); margin-top: 8px; margin-bottom: 8px; }
+.map-progress-row { flex-direction: row; justify-content: space-between; }
+.map-materials { flex-direction: row; flex-wrap: wrap; }
+.map-materials .recipe-item { margin-right: 20px; margin-bottom: 10px; }
+.map-materials .recipe-amount { font-size: 30px; }
+.map-card .compact-button { margin-top: 12px; }

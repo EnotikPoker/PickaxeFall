@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using UnityEngine;
 
 namespace PickaxeFall
 {
@@ -69,9 +70,26 @@ namespace PickaxeFall
         public int[] CaptureLevels() => (int[])levels.Clone();
         public int Level(UpgradeKind kind, int tier = 0) => levels[new UpgradeKey(kind, tier).Index];
         public double Chance(UpgradeKind kind) => Level(kind) * Progression.ChanceStep(kind,Config);
-        public float MaxEnergy => Config.energyCapacity + Config.capacityStep * Level(UpgradeKind.EnergyCapacity);
+        public float MaxEnergy
+        {
+            get
+            {
+                int level=Level(UpgradeKind.EnergyCapacity);
+                if(Config.energyChargeModel==0)return Config.energyCapacity+Config.capacityStep*level;
+                float original=Config.energyCapacity+Config.capacityStep*Math.Min(5,level);
+                // Preserve levels 0–5; new levels approach exactly three paid uses.
+                float target=3*EnergyCost(Math.Min(Config.dashCost,Config.plungeCost));
+                return level<=5?original:Mathf.Lerp(original,target,(level-5)/15f);
+            }
+        }
+        public float EnergyUseCost => EnergyCost(Math.Min(Config.dashCost,Config.plungeCost));
+        public float StoredUses => MaxEnergy/EnergyUseCost;
+        public float RechargeSeconds => EnergyUseCost/EnergyPerSecond;
         // EnergyCharge keeps its saved index; purchased levels now improve regeneration.
-        public float EnergyPerSecond => Config.energyRegen + Config.regenStep * Level(UpgradeKind.EnergyCharge);
+        public float EnergyPerSecond
+        {
+            get { int level=Level(UpgradeKind.EnergyCharge);return Config.energyRegen+Config.regenStep*(Config.energyChargeModel==0?level:Math.Min(level,20)+1.5f*Math.Max(0,level-20)); }
+        }
         public float EnergyCost(float baseCost) => baseCost * (1 - Config.efficiencyStep * Level(UpgradeKind.EnergyEfficiency));
         public float DashSpeed => Config.dashSpeed + Config.dashSpeedStep * Level(UpgradeKind.DashForce);
         public int PlungeBlocks => 1 + Level(UpgradeKind.PlungeDepth);
@@ -91,7 +109,9 @@ namespace PickaxeFall
         public static int MaxLevel(UpgradeKind kind) => kind switch
         {
             UpgradeKind.TeamSize or UpgradeKind.PlungeDepth => 3,
-            UpgradeKind.EnergyCapacity or UpgradeKind.DashForce => 5,
+            UpgradeKind.DashForce => 5,
+            UpgradeKind.EnergyCapacity => 20,
+            UpgradeKind.EnergyCharge => 40,
             UpgradeKind.EnergyEfficiency or UpgradeKind.ImpactPower or UpgradeKind.Shrapnel => 10,
             UpgradeKind.Fortune or UpgradeKind.DoubleBench or UpgradeKind.DoubleBlast => 25,
             UpgradeKind.LastChance or UpgradeKind.TntFind or UpgradeKind.Careful => 40,
@@ -133,8 +153,8 @@ namespace PickaxeFall
             UpgradeKind.DoubleBlast => "Взрыв охватывает вдвое большую площадь. +1 п.п. за уровень, до 25%.",
             UpgradeKind.Careful => "Шанс не потратить прочность при ударе. +0,5 п.п. за уровень, до 20%.",
             UpgradeKind.LastChance => "Один раз за забег последняя кирка может восстановить 50% прочности и энергию на пробой. +0,5 п.п. за уровень, до 20%.",
-            UpgradeKind.EnergyCapacity => "+8 к общему запасу. Спуск начинается с полной энергией. Максимум 100.",
-            UpgradeKind.EnergyCharge => "+"+Number((config??Default).regenStep)+" энергии/с за уровень. Восстановление: "+Number((config??Default).energyRegen)+" → "+Number((config??Default).energyRegen+20*(config??Default).regenStep)+"/с. Только во время спуска; удары не дают энергию.",
+            UpgradeKind.EnergyCapacity => "Запас на три применения. Первые 5 уровней дают прежние +8 энергии, следующие 15 постепенно доводят запас до трёх использований с учётом экономии.",
+            UpgradeKind.EnergyCharge => "Первые 20 уровней дают прежнюю прибавку к восстановлению, следующие 20 усиливают её. Вместе с полной экономией одно применение восстанавливается за 4,5 с.",
             UpgradeKind.EnergyEfficiency => "Рывок и пробой расходуют на 1% меньше энергии за уровень. Максимум −10%.",
             UpgradeKind.DashForce => "+0,6 м/с к начальному импульсу рывка. Пробивает один блок при любой прокачке.",
             UpgradeKind.PlungeDepth => "+1 пробиваемый блок к удару вниз за уровень. От одного до четырёх блоков.",

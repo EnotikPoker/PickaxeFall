@@ -32,7 +32,9 @@ namespace PickaxeFall
             check(game.Economy.Profile.revealed[10]&&root.Q("lock-10").resolvedStyle.display==DisplayStyle.None,"lock animation finishes and stays open; revealed="+game.Economy.Profile.revealed[10]+"; display="+root.Q("lock-10").resolvedStyle.display);
             check(new ProfileStore(game.ProfileDirectory).Load().revealed[10],"revealed skill persisted");
             foreach(var kind in ResourceInventory.Materials)game.Economy.Profile.resources[(int)kind]=100;
-            Press(root,"goal-upgrade-10");Press(root,"tab-inventory");
+            using(var click=ClickEvent.GetPooled()){var skill=root.Q("upgrade-Fortune-0");click.target=skill;skill.SendEvent(click);}
+            check(game.Economy.Profile.goalKind==GoalKind.Upgrade&&root.Q("goal-pin-10").resolvedStyle.display!=DisplayStyle.None,"card tap pins goal with red pushpin");
+            Press(root,"tab-inventory");
             check(game.Economy.Profile.goalKind==GoalKind.Upgrade&&root.Q<Button>("sell-surplus").enabledSelf,"goal persists and enables surplus sale");
             Press(root,"sell-surplus");Press(root,"confirm-sell-surplus");yield return new WaitForSeconds(.3f);
             var recipe=game.Economy.GoalCost();foreach(var kind in ResourceInventory.Materials)check(game.Inventory[kind]==recipe.Resources[(int)kind],"surplus retains exact material "+kind);

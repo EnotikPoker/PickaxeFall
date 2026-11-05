@@ -26,7 +26,24 @@ namespace PickaxeFall.Editor
             energy.Ensure(60); Check(energy.Value == 60, "rescue energy");
             foreach (var key in Progression.Keys) profile.upgrades[key.Index] = Progression.MaxLevel(key.Kind);
             run = new RunUpgrades(profile); energy.Reset(run);
-            Check(run.MaxEnergy == 100 && Math.Abs(run.EnergyPerSecond - 5.4f) < .001f && Math.Abs(run.EnergyCost(45) - 40.5f) < 0.001f && run.PlungeBlocks == 4 && run.DashSpeed == 13, "bounded maximum action upgrades");
+            Check(Math.Abs(run.MaxEnergy - 121.5f)<.001f && Math.Abs(run.EnergyPerSecond - 9f) < .001f && Math.Abs(run.EnergyCost(45) - 40.5f) < 0.001f && run.PlungeBlocks == 4 && run.DashSpeed == 13, "bounded maximum action upgrades");
+            float use=run.EnergyUseCost;
+            Check(energy.TrySpend(use)&&energy.TrySpend(use)&&energy.TrySpend(use)&&!energy.TrySpend(use)&&energy.Value<.001f,"exactly three stored uses at maximum");
+            for(int i=0;i<269;i++)energy.Regenerate(1f/60,run);
+            Check(!energy.CanSpend(use),"new maximum cannot recharge before 4.5 seconds");
+            energy.Regenerate(1f/60,run);Check(energy.CanSpend(use)&&Math.Abs(run.RechargeSeconds-4.5f)<.001f,"maximum replenishes one use in exactly 4.5 seconds");
+            var existing=new PlayerProfile();existing.upgrades[new UpgradeKey(UpgradeKind.EnergyCapacity).Index]=5;existing.upgrades[new UpgradeKey(UpgradeKind.EnergyCharge).Index]=20;existing.upgrades[new UpgradeKey(UpgradeKind.EnergyEfficiency).Index]=10;
+            var preserved=new RunUpgrades(existing);
+            Check(preserved.MaxEnergy==100&&Math.Abs(preserved.EnergyPerSecond-5.4f)<.001f,"original purchased capacity and regeneration preserved");
+            for(int efficiency=0;efficiency<=10;efficiency++)
+            {
+                var profile2=new PlayerProfile();profile2.upgrades[new UpgradeKey(UpgradeKind.EnergyEfficiency).Index]=efficiency;
+                float previous=0;
+                for(int level=0;level<=20;level++){
+                    profile2.upgrades[new UpgradeKey(UpgradeKind.EnergyCapacity).Index]=level;var next=new RunUpgrades(profile2);
+                    Check(next.MaxEnergy>previous&&next.StoredUses<=3.0001f,"each added capacity level useful for every efficiency level");previous=next.MaxEnergy;
+                }
+            }
             for (int tier = 1; tier < 5; tier++) Check(run.DurabilityBonus(tier) > run.DurabilityBonus(tier - 1), "different durability steps");
             profile.upgrades[new UpgradeKey(UpgradeKind.EnergyEfficiency).Index] = 1;
             Check(new RunUpgrades(profile).EnergyCost(40) < 40, "first efficiency level actually reduces cost");

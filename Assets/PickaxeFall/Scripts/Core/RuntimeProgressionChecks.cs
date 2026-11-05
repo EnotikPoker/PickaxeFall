@@ -50,7 +50,7 @@ namespace PickaxeFall
             check(tool.Tier==4 && tool.Durability==480,"legacy ordinary bench still upgrades and fully repairs");
             check(game.PreviewDurability(4)==game.ShopBalance.pickaxes[4].durability && game.PreviewDurability(4)!=tool.MaxDurability,"shop previews new balance while old run keeps its frozen stats");
             game.World.DebugSetCell(-10,11,BlockKind.Chest).DestroyBlock(tool);
-            check(game.CaptureRun().version==2 && game.CaptureRun().balanceJson.Contains("rulesVersion"),"resaving old run freezes legacy rules in new snapshot");
+            check(game.CaptureRun().version==3 && game.CaptureRun().balanceJson.Contains("rulesVersion"),"resaving old run freezes legacy rules in new snapshot");
             tool.Body.gravityScale=1;game.FinishRun();yield return new WaitForSeconds(1);game.NewRun();check(game.Balance.rulesVersion==2 && game.RunUpgrades.EnergyPerSecond==3,"next run returns to new rules");
         }
     }

@@ -109,9 +109,8 @@ namespace PickaxeFall
         }
         void BuildShop(VisualElement parent)
         {
-            BoldText(parent, "Лавка улучшений", "title");
-            Text(parent, "Первые уровни дешёвые. Каждый следующий требует больше монет и материалов.", "description");
-            var categories = Box(parent, "shop-categories"); string[] names = { "КИРКИ", "ДОБЫЧА", "УДАЧА", "ПРИЁМЫ", "СКОРО" };
+            BoldText(parent, "Улучшения", "title");
+            var categories = Box(parent, "shop-categories"); string[] names = { "КИРКИ", "ДОБЫЧА", "УДАЧА", "ПРИЁМЫ" };
             for (int i = 0; i < names.Length; i++)
             {
                 int index = i; var b = Button(categories, names[i], () => { shopCategory = index; RebuildShop(); }, "stone-button category"); b.name = "shop-category-" + i; categoryButtons.Add(b);
@@ -133,7 +132,7 @@ namespace PickaxeFall
         void RebuildShop()
         {
             shopCards.Clear(); upgradeCards.Clear();abilityCards.Clear();
-            Display(tierSelector, shopCategory == 0); Display(selectedToolName, shopCategory == 0); Display(toolHitCounts, shopCategory == 0); Display(soonPanel, shopCategory == 4);
+            Display(tierSelector, shopCategory == 0); Display(selectedToolName, shopCategory == 0); Display(toolHitCounts, false); Display(soonPanel, shopCategory == 4);
             if (shopCategory == 0) { AddCard(new(UpgradeKind.Damage, shopTier)); AddCard(new(UpgradeKind.Durability, shopTier)); }
             else if (shopCategory == 1) foreach (var kind in new[] { UpgradeKind.Fortune, UpgradeKind.TntFind, UpgradeKind.Careful, UpgradeKind.ImpactPower, UpgradeKind.Shrapnel }) AddCard(new(kind));
             else if (shopCategory == 2) foreach (var kind in new[] { UpgradeKind.TeamChance, UpgradeKind.TeamSize, UpgradeKind.DoubleBench, UpgradeKind.DoubleBlast, UpgradeKind.LastChance }) AddCard(new(kind));
@@ -180,6 +179,10 @@ namespace PickaxeFall
             }
             return text.ToString();
         }
+        RunUpgrades EnergyPreview(UpgradeKey key,int level)
+        {
+            var profile=game.Economy.Profile.Copy();profile.upgrades[key.Index]=level;return new RunUpgrades(profile,game.Economy.Config);
+        }
         string UpgradeEffect(UpgradeKey key, int level)
         {
             if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.ShopBalance.pickaxes[key.Tier].damage + level * Progression.DamageStepHalfUnits(key.Tier,game.Economy.Config) * 0.5) + " урона";
@@ -187,8 +190,8 @@ namespace PickaxeFall
             if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + " кирки";
             return key.Kind switch
             {
-                UpgradeKind.EnergyCapacity => (game.Economy.Config.energyCapacity + game.Economy.Config.capacityStep * level) + " энергии",
-                UpgradeKind.EnergyCharge => (game.Economy.Config.energyRegen + game.Economy.Config.regenStep * level).ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("ru-RU")) + " в секунду",
+                UpgradeKind.EnergyCapacity => Progression.Number(EnergyPreview(key,level).StoredUses)+" примен.",
+                UpgradeKind.EnergyCharge => Progression.Number(EnergyPreview(key,level).RechargeSeconds)+" с/примен.",
                 UpgradeKind.EnergyEfficiency => "−" + Progression.Number(level*game.Economy.Config.efficiencyStep*100) + "% расхода",
                 UpgradeKind.DashForce => Progression.Number(game.Economy.Config.dashSpeed + game.Economy.Config.dashSpeedStep * level) + " м/с",
                 UpgradeKind.PlungeDepth => (1 + level) + " блоков",
@@ -199,49 +202,48 @@ namespace PickaxeFall
         }
         sealed class UpgradeCard
         {
-            readonly GameHud hud; readonly UpgradeKey key;
-            readonly SkillLock skillLock;
-            readonly VisualElement box, resources; readonly Label heading, effect, cost, reason; readonly Button buy;
-            public UpgradeCard(GameHud owner, VisualElement parent, UpgradeKey upgrade)
+            readonly GameHud hud;readonly UpgradeKey key;readonly SkillLock skillLock;
+            readonly VisualElement box,resources,pin;readonly Label heading,effect,cost,reason;readonly Button buy;
+            public UpgradeCard(GameHud owner,VisualElement parent,UpgradeKey upgrade)
             {
-                hud = owner; key = upgrade; box = Box(parent, "upgrade-card inset"); box.name = "upgrade-" + key.Kind + "-" + key.Tier;
-                heading = hud.BoldText(box, "", "upgrade-title");
-                Text(box, Progression.Description(key.Kind,hud.game.Economy.Config), "description"); effect = hud.BoldText(box, "", "upgrade-effect");
-                cost = Text(box, "", "upgrade-price"); resources = Box(box, "recipe-resources"); reason = Text(box, "", "upgrade-reason");
-                buy = hud.Button(box, "УЛУЧШИТЬ", () =>
-                {
-                    if (Time.unscaledTime < hud.nextTrade) return;
-                    hud.nextTrade = Time.unscaledTime + 0.25f; hud.game.Buy(key);
-                }, "stone-button secondary"); buy.name = "buy-" + key.Kind + "-" + key.Tier;
-                hud.Button(box,"ВЫБРАТЬ ЦЕЛЬЮ",()=>hud.PinGoal(GoalKind.Upgrade,key.Index),"stone-button secondary goal-button").name="goal-upgrade-"+key.Index;
+                hud=owner;key=upgrade;box=Box(parent,"upgrade-card compact-skill");box.name="upgrade-"+key.Kind+"-"+key.Tier;
+                var content=Box(box,"skill-content");var row=Box(content,"skill-heading");
+                heading=hud.BoldText(row,"","upgrade-title");
+                hud.Button(row,"?",()=>hud.ShowSkillDetails(Progression.Title(key.Kind),Progression.Description(key.Kind,hud.game.Economy.Config)+(key.Kind==UpgradeKind.Damage?"\n\n"+hud.toolHitCounts.text:"")),"skill-info").name="info-"+key.Index;
+                Text(content,SkillSummary(key.Kind),"skill-summary");
+                effect=hud.BoldText(content,"","upgrade-effect");
+                var priceRow=Box(content,"skill-price-row");cost=hud.BoldText(priceRow,"","upgrade-price");resources=Box(priceRow,"recipe-resources");
+                reason=Text(content,"","upgrade-reason");
+                buy=hud.Button(content,"УЛУЧШИТЬ",()=>{
+                    if(Time.unscaledTime<hud.nextTrade)return;hud.nextTrade=Time.unscaledTime+.25f;hud.game.Buy(key);
+                },"stone-button skill-buy");buy.name="buy-"+key.Kind+"-"+key.Tier;
+                pin=PaperPin(box);pin.name="goal-pin-"+key.Index;
                 skillLock=new SkillLock(hud,box,key.Index);
+                CardClick(box,()=>{if(!skillLock.IsOpen)skillLock.Activate();else if(hud.game.Economy.Profile.Level(key)<Progression.MaxLevel(key.Kind))hud.ToggleCardGoal(GoalKind.Upgrade,key.Index);});
             }
             public void Refresh()
             {
-                int level = hud.game.Economy.Profile.Level(key), max = Progression.MaxLevel(key.Kind);
-                heading.text = Progression.Title(key.Kind) + $" · {level}/{max}";
-                effect.text = hud.UpgradeEffect(key, level) + (level < max ? " → " + hud.UpgradeEffect(key, level + 1) : " · МАКСИМУМ");
-                box.EnableInClassList("pinned", hud.game.Economy.Profile.goalKind==GoalKind.Upgrade && hud.pinned.Index == key.Index);
+                int level=hud.game.Economy.Profile.Level(key),max=Progression.MaxLevel(key.Kind);
+                heading.text=Progression.Title(key.Kind)+"  "+level+"/"+max;
+                effect.text=hud.UpgradeEffect(key,level)+(level<max?" → "+hud.UpgradeEffect(key,level+1):" · МАКС.");
+                Display(pin,skillLock.IsOpen&&hud.game.Economy.Profile.goalKind==GoalKind.Upgrade&&hud.game.Economy.Profile.goalIndex==key.Index);
                 skillLock.Refresh();
-                Display(buy,ProfileRules.Revealed(hud.game.Economy.Profile,key.Index));
-                bool available = hud.game.Economy.CanBuy(key, out string why) && hud.game.CanTrade;
-                buy.SetEnabled(available); buy.text = level>=max ? "ПРОКАЧАНО" : available ? "УЛУЧШИТЬ" : "НЕДОСТУПНО";
-                buy.EnableInClassList("buy-ready",available);buy.EnableInClassList("buy-blocked",!available && level<max);
-                resources.Clear();
-                if (level >= max) { cost.text = ""; reason.text = "Максимальный уровень"; return; }
-                var price = Progression.Cost(key, level + 1,hud.game.Economy.Config);
-                cost.text = $"Цена: {Exact(price.Coins)} монет · есть {Short(hud.game.Wallet)}";
+                bool available=hud.game.Economy.CanBuy(key,out string why)&&hud.game.CanTrade;
+                buy.SetEnabled(available);buy.text=level>=max?"ПРОКАЧАНО":"УЛУЧШИТЬ";
+                buy.EnableInClassList("buy-ready",available);buy.EnableInClassList("buy-blocked",!available&&level<max);
+                resources.Clear();Display(buy,skillLock.IsOpen&&level<max);
+                if(level>=max){cost.text="";reason.text="";Display(reason,false);return;}
+                var price=Progression.Cost(key,level+1,hud.game.Economy.Config);
+                cost.text=Exact(price.Coins)+" мон.";
                 cost.EnableInClassList("cost-enough",hud.game.Wallet>=price.Coins);cost.EnableInClassList("cost-short",hud.game.Wallet<price.Coins);
                 for(int i=0;i<ResourceInventory.SlotCount;i++)
                 {
-                    if(price.Resources[i]==0)continue;
-                    var kind=(BlockKind)i;bool enough=hud.game.Inventory[kind]>=price.Resources[i];
+                    if(price.Resources[i]==0)continue;var kind=(BlockKind)i;bool enough=hud.game.Inventory[kind]>=price.Resources[i];
                     var item=Box(resources,"recipe-item");item.tooltip=GameBalance.BlockName(kind);
                     Icon(item,PixelArt.ResourceIcon(kind),"recipe-icon");
-                    var amount=hud.BoldText(item,$"{Short(hud.game.Inventory[kind])} / {Exact(price.Resources[i])}",enough?"recipe-amount cost-enough":"recipe-amount cost-short");amount.name="required-"+kind;
+                    hud.BoldText(item,Short(hud.game.Inventory[kind])+"/"+Short(price.Resources[i]),enough?"recipe-amount cost-enough":"recipe-amount cost-short").name="required-"+kind;
                 }
-                reason.text = available ? "Нажми на карточку, чтобы оставить её целью в рюкзаке." : why;
-                reason.EnableInClassList("missing", !available);
+                reason.text=why??"";Display(reason,!available&&skillLock.IsOpen);
             }
         }
     }

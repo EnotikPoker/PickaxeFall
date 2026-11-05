@@ -16,7 +16,14 @@ namespace PickaxeFall
             var game = GetComponent<GameController>(); var root = GetComponent<UIDocument>().rootVisualElement;
             game.Economy.Profile.coins = 250;
             for (int i = 0; i < 8; i++) game.Economy.Profile.resources[i] = (8 - i) * 7;
-            if(game.TestMode=="profile")
+            if(game.TestMode=="mapmine")Submit(root.Q<Button>("open-maps"));
+            else if(game.TestMode=="pinned")
+            {
+                game.Economy.Profile.profileLevel=3;System.Array.Fill(game.Economy.Profile.revealed,true);
+                game.Economy.TrySetGoal(GoalKind.Upgrade,new UpgradeKey(UpgradeKind.Fortune).Index);
+                game.SelectHubTab(HubTab.Shop);Submit(root.Q<Button>("shop-category-1"));
+            }
+            else if(game.TestMode=="profile")
             {
                 game.Economy.Profile.profileLevel=3;game.Economy.Profile.lifetimeMined[1]=2800;game.Economy.Profile.lifetimeMined[3]=220;game.Economy.Profile.lifetimeMined[4]=75;game.Economy.Profile.lifetimeMined[5]=10;
                 Submit(root.Q<Button>("open-profile"));
