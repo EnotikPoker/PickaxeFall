@@ -56,6 +56,7 @@ namespace PickaxeFall
         {
             saved.Validate();StopAllCoroutines();foreach(var tool in tools)tool.Stop();Effects.Clear();UseOriginalBalance();
             restoredBalance=Instantiate(originalBalance);JsonUtility.FromJsonOverwrite(saved.balanceJson,restoredBalance);if(saved.version==1){restoredBalance.rulesVersion=1;restoredBalance.progression=ProgressionBalance.Legacy();}
+            if(saved.version<3)restoredBalance.progression.energyChargeModel=0;
             restoredBalance.progression.Validate();balance=restoredBalance;World.SetBalance(balance);Physics2D.gravity=new Vector2(0,balance.gravity);
             RunUpgrades=new RunUpgrades(new PlayerProfile {upgrades=(int[])saved.levels.Clone(),dashUnlocked=saved.dashUnlocked,plungeUnlocked=saved.plungeUnlocked},balance.progression);
             BenchVisits.Clear();if(saved.benchVisits!=null)BenchVisits.AddRange(saved.benchVisits);

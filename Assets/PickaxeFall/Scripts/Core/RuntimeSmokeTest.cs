@@ -17,6 +17,7 @@ namespace PickaxeFall
         {
             yield return null;
             var game = GetComponent<GameController>();var root = GetComponent<UIDocument>().rootVisualElement;
+            yield return RuntimeProfileChecks.Run(game,root,Check);
             game.BeginProbeRun(0,8127,1);float lockedEnergy=game.Energy.Value;
             Check(!game.AbilityUnlocked(AbilityKind.Dash) && !game.AbilityUnlocked(AbilityKind.Plunge) && !game.TryUseAbility(AbilityKind.Dash,Vector2.right) && !game.TryUseAbility(AbilityKind.Plunge,Vector2.down) && game.Energy.Value==lockedEnergy,"unbought gestures cannot act or spend energy during mining");
             game.FinishRun();yield return new WaitForSeconds(1);game.NewRun();
@@ -26,7 +27,7 @@ namespace PickaxeFall
             Check(root.Q<Button>("main-action").resolvedStyle.fontSize >= 48, "large primary label");
             Check(game.SelectHubTab(HubTab.Shop) && root.Q("upgrade-Damage-0") != null, "shop opens with per-tier upgrades");
             Check(game.SelectHubTab(HubTab.Inventory) && root.Q<Button>("sell-bag") != null, "bag exposes sales");
-            game.SelectHubTab(HubTab.Mine);
+            game.SelectHubTab(HubTab.Mine);yield return null;
             Check(root.Q("mine-page").GetFirstAncestorOfType<ScrollView>() == null, "mine screen has no list or scroll view");
             Check(root.Q("mine-page").worldBound.yMax <= root.worldBound.yMax, "mine panel fits portrait screen");
             (root.Q<Button>("open-settings").userData as Action)();

@@ -12,16 +12,19 @@ namespace PickaxeFall.BalanceLab
 {
     [Serializable] public sealed class LabManifest
     {
-        public int schema = 4;
-        public string version, unity, fingerprint, project, builtUtc, policy = "reachable-energy-v2";
+        public int schema = 5;
+        public string version, unity, fingerprint, project, builtUtc, policy = "profile-gates-v1";
         public string balance;
         public double[] roulette;
         public long[] sellPrices;
         public double[] chanceSteps;
         public LabPrice[] prices;
+        public long[] profileLevelCoins,profileMiningRequirements;
+        public int[] requiredProfileLevels;
         public LabManifest CaptureEconomy()
         {
             var c=string.IsNullOrEmpty(balance)?Progression.Default:JsonUtility.FromJson<BalanceEnvelope>(balance).progression;
+            profileLevelCoins=(long[])ProfileRules.LevelCoins.Clone();profileMiningRequirements=ProfileRules.MiningRequirements.SelectMany(x=>x).ToArray();requiredProfileLevels=Enumerable.Range(0,27).Select(ProfileRules.RequiredLevel).ToArray();
             c??=Progression.Default;c.Validate();sellPrices=(long[])c.sellPrices.Clone();
             chanceSteps=Enumerable.Range(0,17).Select(i=>Progression.ChanceStep((UpgradeKind)i,c)).ToArray();
             var snapshot=new List<LabPrice>();
@@ -48,12 +51,12 @@ namespace PickaxeFall.BalanceLab
         public bool passive = true, active = true, isolated = true, background = true, diagnostic;
         public bool[] tiers = { true, true, true, true, true };
         public int[] customLevels = new int[25];
-        public int limit => mode == 0 || mode==4 ? 600 : 1800;
+        public int limit => mode==5?10800:mode == 0 || mode==4 ? 600 : 1800;
         public void Validate(bool checkLevels = true)
         {
-            if (mode < 0 || mode > 4 || samples < 1 || samples > 100000 || workers < 1 || workers > 32 || seconds < 0 || seconds > 604800 || seed < 1)
+            if (mode < 0 || mode > 5 || samples < 1 || samples > 100000 || workers < 1 || workers > 32 || seconds < 0 || seconds > 604800 || seed < 1)
                 throw new ArgumentException("Недопустимые параметры запуска.");
-            if(mode==4 && (seconds<=0 || seconds>7200))throw new ArgumentException("Аудит прогрессии ограничен двумя часами; выбери 1–120 минут.");
+            if((mode==4||mode==5) && (seconds<=0 || seconds>7200))throw new ArgumentException("Аудит прогрессии ограничен двумя часами; выбери 1–120 минут.");
             if (!passive && !active || !isolated && !background || tiers == null || tiers.Length != 5 || !tiers.Any(x => x)) throw new ArgumentException("Выбери кирку, управление и способ сравнения.");
             if (customLevels == null || customLevels.Length != 25) throw new ArgumentException("Нужно 25 уровней.");
             if(checkLevels) new PlayerProfile { upgrades = customLevels }.Validate();
@@ -75,6 +78,7 @@ namespace PickaxeFall.BalanceLab
             get
             {
                 if(cohort=="full-max")return "Вся прокачка · максимум";
+                if(cohort=="profile")return "Профиль · 3 часа · "+new[]{"Кирки","Приёмы","Добыча"}[strategy]+" · "+new[]{"Без строительства","Мост","Портал"}[regime];
                 if(hourly)return "Час развития · "+new[] {"Кирки","Приёмы","Добыча"}[strategy];
                 string prefix=cohort=="r0"?"Обычная генерация · ":regime==1?"Без верстаков · ":regime==2?"Только ремонт · ":holdout?"Независимые карты · ":"";
                 var names = Progression.Keys.Where(k => (mask & (1 << k.Index)) != 0).Select(k => Progression.Title(k.Kind)+(k.Kind<=UpgradeKind.Durability?" · "+ToolTitles[k.Tier]:""));
@@ -103,6 +107,11 @@ namespace PickaxeFall.BalanceLab
         public PurchaseEvent[] purchases;
         public double firstPurchase,runCount,dashOpenedAt,plungeOpenedAt;
         public int[] finalLevels;
+        public double[] profileLevelTimes,profileCoinsBlocked,profileMiningBlocked,profileSkillsBlocked;
+        public long[] lifetimeMined;
+        public int finalProfileLevel,bridgeStone,bridgeIron,portalObsidian;
+        public double bridgeCompletedAt=-1,portalCompletedAt=-1;
+        public long profileCoinsSpent,requiredSkillCoinsSpent;
 
     }
     [Serializable] public sealed class ScenarioList { public List<LabScenario> scenarios = new(); }

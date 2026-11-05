@@ -16,7 +16,32 @@ namespace PickaxeFall
             var game = GetComponent<GameController>(); var root = GetComponent<UIDocument>().rootVisualElement;
             game.Economy.Profile.coins = 250;
             for (int i = 0; i < 8; i++) game.Economy.Profile.resources[i] = (8 - i) * 7;
-            if (game.TestMode == "team")
+            if(game.TestMode=="mapmine")Submit(root.Q<Button>("open-maps"));
+            else if(game.TestMode=="pinned")
+            {
+                game.Economy.Profile.profileLevel=3;System.Array.Fill(game.Economy.Profile.revealed,true);
+                game.Economy.TrySetGoal(GoalKind.Upgrade,new UpgradeKey(UpgradeKind.Fortune).Index);
+                game.SelectHubTab(HubTab.Shop);Submit(root.Q<Button>("shop-category-1"));
+            }
+            else if(game.TestMode=="profile")
+            {
+                game.Economy.Profile.profileLevel=3;game.Economy.Profile.lifetimeMined[1]=2800;game.Economy.Profile.lifetimeMined[3]=220;game.Economy.Profile.lifetimeMined[4]=75;game.Economy.Profile.lifetimeMined[5]=10;
+                Submit(root.Q<Button>("open-profile"));
+            }
+            else if(game.TestMode=="bridge"||game.TestMode=="portal")
+            {
+                game.Economy.Profile.bridgeStone=650;game.Economy.Profile.bridgeIron=30;game.Economy.Profile.portalObsidian=10;
+                Submit(root.Q<Button>("open-maps"));Submit(root.Q<Button>(game.TestMode=="bridge"?"map-page-1":"map-page-2"));
+            }
+            else if(game.TestMode=="locks")
+            {
+                game.Economy.Profile.profileLevel=2;game.SelectHubTab(HubTab.Shop);Submit(root.Q<Button>("shop-category-1"));
+            }
+            else if(game.TestMode=="surplus")
+            {
+                game.Economy.TrySetGoal(GoalKind.Bridge);game.Economy.Profile.resources[1]=1200;game.Economy.Profile.resources[4]=70;game.SelectHubTab(HubTab.Inventory);Submit(root.Q<Button>("sell-surplus"));
+            }
+            else if (game.TestMode == "team")
             {
                 foreach (var key in Progression.Keys) game.Economy.Profile.upgrades[key.Index] = Progression.MaxLevel(key.Kind);
                 game.BeginProbeRun(0, 8127, 5);

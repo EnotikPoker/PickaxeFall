@@ -18,7 +18,14 @@ namespace PickaxeFall.BalanceLab
         public static int Level(UpgradeKind kind, int point) => point == 0 ? 1 : point == 1 ? (Progression.MaxLevel(kind) + 1) / 2 : Progression.MaxLevel(kind);
         public static List<LabScenario> Scenarios(LabPlan plan)
         {
-            plan.Validate();if(plan.mode==4)return ProgressionAudit.Scenarios(plan); var result = new List<LabScenario>();
+            plan.Validate();
+            if(plan.mode==5){
+                var campaigns=new List<LabScenario>();
+                for(int construction=0;construction<3;construction++)for(int strategy=0;strategy<3;strategy++)
+                    campaigns.Add(new LabScenario {id="profile-"+strategy+"-build-"+construction,tier=0,point=0,active=true,hourly=true,strategy=strategy,regime=construction,cohort="profile",levels=new int[25]});
+                return campaigns;
+            }
+            if(plan.mode==4)return ProgressionAudit.Scenarios(plan); var result = new List<LabScenario>();
             for (int tier = 0; tier < 5; tier++)
             {
                 if (!plan.tiers[tier]) continue;

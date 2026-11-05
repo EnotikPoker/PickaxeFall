@@ -2,8 +2,8 @@ namespace PickaxeFall
 {
     public static class GameVersion
     {
-        public const string Name = "0.5.0";
+        public const string Name = "0.6.1";
         // Increase for every distributed Android update, including patch versions.
-        public const int AndroidVersionCode = 6;
+        public const int AndroidVersionCode = 8;
     }
 }

@@ -31,7 +31,7 @@ namespace PickaxeFall.BalanceLab
                 double reached=list.Where(b=>b.nextReached).Sum(b=>b.weight);
                 html.Append("<tr><td>"+group.Key+" / "+depths[band]+"–"+(depths[band+1]==int.MaxValue?"∞":depths[band+1].ToString())+"</td><td>"+LabFiles.Number(weight)+"</td><td>"+LabFiles.Number(100*reached/weight)+"%</td><td>"+LabFiles.Number(list.Sum(b=>b.weight*b.durabilityBefore)/weight)+"</td><td>"+LabFiles.Number(list.Sum(b=>b.weight*b.restored)/weight)+"</td><td>"+(reached>0?LabFiles.Number(list.Where(b=>b.nextReached).Sum(b=>b.weight*b.nextDistance)/reached):"—")+"</td></tr>");
             }
-            html.Append("</table><h2>Покупки за час</h2><p>Последний незавершённый спуск измеряется на отметке часа; он не продаётся и не даёт покупки после отсечки. Его censored=1 обозначает границу наблюдения, а не зависание.</p>");
+            html.Append("</table><h2>История покупок</h2><p>Последний незавершённый спуск измеряется на границе выбранного периода; он не продаётся и не даёт покупки после отсечки. Его censored=1 обозначает границу наблюдения, а не зависание.</p>");
             var purchases=new StringBuilder("scenario,seed,seconds,key,level,title,coins,interval\n");
             foreach(var row in results.Where(r=>r.purchases!=null))
             {

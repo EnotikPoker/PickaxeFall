@@ -44,11 +44,11 @@ namespace PickaxeFall.Editor
             Check(balance.pickaxes[4].damage>=balance.pickaxes[3].damage*2 && balance.pickaxes[4].durability>=balance.pickaxes[3].durability*1.5f,"distinct diamond tier");
             Check(balance.OreChance(BlockKind.Emerald,100)<balance.OreChance(BlockKind.Diamond,100),"emerald rarer than diamond");
             foreach(var kind in new[] {BlockKind.Emerald,BlockKind.Lapis,BlockKind.Redstone})Check(balance.OreChance(kind,balance.Block(BlockKind.Deepstone).minimumDepth-1)==0,"deep-only ore");
-            var profile=new PlayerProfile {coins=10000};foreach(var kind in ResourceInventory.Materials)profile.resources[(int)kind]=1000;
+            var profile=new PlayerProfile {coins=10000,profileLevel=5,revealed=ProfileV6Checks.OpenLocks()};foreach(var kind in ResourceInventory.Materials)profile.resources[(int)kind]=1000;
             var economy=new EconomyService(profile);Check(!economy.AbilityUnlocked(AbilityKind.Dash) && !economy.AbilityUnlocked(AbilityKind.Plunge),"new game actions locked");
             var cost=Progression.AbilityCost(AbilityKind.Dash);Check(economy.TryUnlock(AbilityKind.Dash) && economy.AbilityUnlocked(AbilityKind.Dash) && !economy.AbilityUnlocked(AbilityKind.Plunge) && economy.Profile.coins==10000-cost.Coins,"independent paid unlock");
             long coins=economy.Profile.coins;Check(!economy.TryUnlock(AbilityKind.Dash) && economy.Profile.coins==coins,"no duplicate unlock debit");
-            var failing=new EconomyService(new PlayerProfile {coins=10000},_=>throw new System.IO.IOException("test"));foreach(var kind in ResourceInventory.Materials)failing.Profile.resources[(int)kind]=1000;
+            var failing=new EconomyService(new PlayerProfile {coins=10000,profileLevel=5,revealed=ProfileV6Checks.OpenLocks()},_=>throw new System.IO.IOException("test"));foreach(var kind in ResourceInventory.Materials)failing.Profile.resources[(int)kind]=1000;
             Check(!failing.TryUnlock(AbilityKind.Plunge) && !failing.Profile.plungeUnlocked && failing.Profile.coins==10000,"failed unlock is atomic");
             Debug.Log($"PICKAXEFALL_WORLD_FEATURES_OK: 4096 bands; rooms={rooms}, geodes={geodes}, left/right={left}/{right}; room geometry, geodes, resources, diamond advantage and paid unlocks.");
         }

@@ -84,7 +84,7 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned" }, TestMode) < 0) TestMode = "";
             bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
             if (probe) TestMode = "probe";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
@@ -108,6 +108,7 @@ namespace PickaxeFall
                 var message = new Label("Сохранение недоступно.\n" + e.Message) { name = "save-error" };
                 message.AddToClassList("fatal-error"); errorDocument.rootVisualElement.Add(message); return;
             }
+            if(Economy.Profile.resetNotice){Settings.SetTutorialSeen(false);Settings.Save();}
             Inventory = new ResourceInventory(Economy); RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
             rouletteRandom = new System.Random(Guid.NewGuid().GetHashCode());
             InitializeWorldAndTools();
@@ -274,6 +275,7 @@ namespace PickaxeFall
                 if (origin == DamageOrigin.Shrapnel) Benefits.ShrapnelBlocks++;
                 if (ResourceInventory.IsMaterial(block.Kind))
                 {
+                    Economy.RecordMined(block.Kind);
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
                     Benefits.BonusOre += quantity - 1;GiveResource(ResourceInventory.DropKind(block.Kind),quantity,source,block.transform.position);
                 }

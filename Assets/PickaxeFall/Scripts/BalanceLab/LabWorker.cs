@@ -28,8 +28,8 @@ namespace PickaxeFall.BalanceLab
             {
                 if(!string.IsNullOrEmpty(job.balanceJson))JsonUtility.FromJsonOverwrite(job.balanceJson,config);
                 config.progression.Validate();
-                if(job.scenario.regime==1)config.workbenchChance=0;
-                if(job.scenario.regime==2)config.upgradeWorkbenchFraction=0;
+                if(job.scenario.cohort!="profile"&&job.scenario.regime==1)config.workbenchChance=0;
+                if(job.scenario.cohort!="profile"&&job.scenario.regime==2)config.upgradeWorkbenchFraction=0;
                 return job.scenario.hourly?ProgressionReplay.Execute(config,job,cancelled):ExecutePhysical(config,job,cancelled);
             }
             finally{UnityEngine.Object.DestroyImmediate(config);}

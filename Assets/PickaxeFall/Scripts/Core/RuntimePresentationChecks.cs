@@ -65,6 +65,7 @@ namespace PickaxeFall
             game.Economy.Profile.coins=100000;foreach(var resource in ResourceInventory.Materials)game.Economy.Profile.resources[(int)resource]=100000L;game.SelectHubTab(HubTab.Shop);
             check(card.Q<Button>("buy-Damage-0").enabledSelf && card.Q<Button>("buy-Damage-0").ClassListContains("buy-ready"),"affordable upgrade is green and enabled");
             game.Economy.Profile.dashUnlocked=game.Economy.Profile.plungeUnlocked=false;Press(root,"shop-category-3");
+            game.Economy.Profile.profileLevel=5;Array.Fill(game.Economy.Profile.revealed,true);game.SelectHubTab(HubTab.Shop);
             long beforeUnlock=game.Wallet;Press(root,"unlock-Dash");
             check(game.Economy.Profile.dashUnlocked && !game.Economy.Profile.plungeUnlocked && game.Wallet==beforeUnlock-Progression.AbilityCost(AbilityKind.Dash).Coins,"shop buys dash independently and debits once");
             check(!root.Q<Button>("unlock-Dash").enabledSelf && root.Q<Button>("unlock-Dash").text=="ОТКРЫТО","bought ability has permanent opened state");

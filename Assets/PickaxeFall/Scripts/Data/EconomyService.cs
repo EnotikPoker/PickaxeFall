@@ -2,7 +2,7 @@ using System;
 
 namespace PickaxeFall
 {
-    public sealed class EconomyService
+    public sealed partial class EconomyService
     {
         readonly Action<PlayerProfile> persist, resetPersist;
         public PlayerProfile Profile { get; private set; }
@@ -13,7 +13,7 @@ namespace PickaxeFall
         bool Commit(PlayerProfile next)
         {
             try { next.Validate(); persist?.Invoke(next); Profile = next; LastError = null; return true; }
-            catch (Exception) { LastError = "Не удалось сохранить. Покупка или продажа отменена."; return false; }
+            catch (Exception) { LastError = "Не удалось сохранить. Операция отменена, ресурсы и монеты сохранены."; return false; }
         }
         public bool TryResetProgress()
         {
@@ -33,6 +33,7 @@ namespace PickaxeFall
         {
             reason = null;
             if (!key.IsValid) { reason = "Неизвестное улучшение"; return false; }
+            if(!SkillAvailable(key.Index,out reason))return false;
             int level = Profile.Level(key);
             if (level >= Progression.MaxLevel(key.Kind)) { reason = "Максимальный уровень"; return false; }
             if(key.Kind==UpgradeKind.DashForce && !Profile.dashUnlocked || key.Kind==UpgradeKind.PlungeDepth && !Profile.plungeUnlocked ||
@@ -50,6 +51,7 @@ namespace PickaxeFall
         {
             reason=null;
             if(kind!=AbilityKind.Dash && kind!=AbilityKind.Plunge){reason="Неизвестная способность";return false;}
+            if(!SkillAvailable(kind==AbilityKind.Dash?25:26,out reason))return false;
             if(AbilityUnlocked(kind)){reason="Способность уже открыта";return false;}
             var cost=Progression.AbilityCost(kind,Config);
             if(Profile.coins<cost.Coins){reason="Не хватает монет";return false;}
@@ -62,6 +64,7 @@ namespace PickaxeFall
             var next=Profile.Copy();var cost=Progression.AbilityCost(kind,Config);next.coins-=cost.Coins;
             foreach(var material in ResourceInventory.Materials)next.resources[(int)material]-=cost.Resources[(int)material];
             if(kind==AbilityKind.Dash)next.dashUnlocked=true;else next.plungeUnlocked=true;
+            AdvanceGoal(next);
             return Commit(next);
         }
         public bool TryBuy(UpgradeKey key)
@@ -71,6 +74,7 @@ namespace PickaxeFall
             next.coins -= cost.Coins;
             for (int i = 0; i < ResourceInventory.SlotCount; i++) next.resources[i] -= cost.Resources[i];
             next.upgrades[key.Index]++;
+            AdvanceGoal(next);
             return Commit(next);
         }
         public bool TrySell(BlockKind kind, long quantity)

@@ -22,18 +22,11 @@ namespace PickaxeFall
                 // A migration write failure must never fall back to an older, poorer profile.
                 if (migrated)
                 {
-                    // Preserve both historical v2->v3 backup semantics and the exact
-                    // original file before expanding resources to v4. Failures here
-                    // abort migration, never fall back to an older poorer backup.
-                    if(JsonUtility.FromJson<PlayerProfile>(json).version==2)
-                    {
-                        string v3=path+".pre-v3.bak";
-                        if(!File.Exists(v3))File.WriteAllText(v3,json);
-                    }
-                    string snapshot = path + ".pre-v4.bak";
-                    if (JsonUtility.FromJson<PlayerProfile>(json).version<4 && !File.Exists(snapshot)) File.WriteAllText(snapshot, json);
-                    string v5=path+".pre-v5.bak";if(!File.Exists(v5))File.WriteAllText(v5,json);
+                    string snapshot=path+".pre-v6.bak";
+                    if(!File.Exists(snapshot))File.WriteAllText(snapshot,json);
                     Save(result);
+                    // Recovery after the intentional season reset must use the new profile.
+                    try{File.Copy(path,path+".bak",true);}catch(Exception e){Debug.LogWarning("Reset backup: "+e.Message);}
                 }
                 return result;
             }
@@ -45,36 +38,24 @@ namespace PickaxeFall
         }
         static PlayerProfile ReadLegacy()
         {
-            var profile = new PlayerProfile { coins = Math.Max(0, PlayerPrefs.GetInt("wallet", 0)), bestDepth = Math.Max(0, PlayerPrefs.GetInt("bestDepth", 0)) };
-            foreach (var kind in ResourceInventory.Materials) profile.resources[(int)kind] = Math.Max(0, PlayerPrefs.GetInt("inventory.v1." + kind, 0));
-            return profile;
+            return new PlayerProfile {resetNotice=PlayerPrefs.HasKey("wallet") || PlayerPrefs.HasKey("bestDepth")};
         }
         static PlayerProfile ReadProfile(string json) => ReadProfile(json, out _);
         static PlayerProfile ReadProfile(string json, out bool migrated)
         {
             migrated = false;
             // Missing JSON fields must not inherit the defaults of a new, empty player.
-            var profile = new PlayerProfile { version = 0, coins = -1, bestDepth = -1, resources = null, upgrades = null };
+            var profile = new PlayerProfile { version = 0, coins = -1, bestDepth = -1, resources = null, upgrades = null, profileLevel=0,lifetimeMined=null,revealed=null };
             JsonUtility.FromJsonOverwrite(json, profile);
-            if (profile.version == 2)
+            if(profile.version>=2 && profile.version<=5)
             {
-                if (profile.upgrades == null || profile.upgrades.Length != 18) throw new InvalidOperationException("Invalid v2 upgrades.");
-                var expanded = new int[Progression.Keys.Length]; Array.Copy(profile.upgrades, expanded, 18);
-                profile.upgrades = expanded; profile.version = 3; migrated = true;
-            }
-            if(profile.version==3)
-            {
-                if(profile.resources==null || profile.resources.Length!=8 || profile.upgrades==null || profile.upgrades.Length!=25)
-                    throw new InvalidOperationException("Invalid v3 profile.");
-                var expanded=new long[14];
-                Array.Copy(profile.resources,expanded,8);
-                profile.resources=expanded;profile.version=4;migrated=true;
-                profile.run=null;profile.activeRunJson=null;profile.dashUnlocked=profile.plungeUnlocked=false;
-            }
-            if(profile.version==4)
-            {
-                if(profile.resources==null || profile.resources.Length!=14)throw new InvalidOperationException("Invalid v4 profile.");
-                Array.Resize(ref profile.resources,ResourceInventory.SlotCount);profile.version=5;migrated=true;
+                int slots=profile.version==2||profile.version==3?8:profile.version==4?14:ResourceInventory.SlotCount;
+                int upgrades=profile.version==2?18:25;
+                if(profile.coins<0 || profile.bestDepth<0 || profile.resources?.Length!=slots || profile.upgrades?.Length!=upgrades)
+                    throw new InvalidOperationException("Invalid legacy profile.");
+                foreach(long amount in profile.resources)if(amount<0)throw new InvalidOperationException("Invalid legacy resources.");
+                foreach(int level in profile.upgrades)if(level<0||level>40)throw new InvalidOperationException("Invalid legacy upgrades.");
+                migrated=true;return new PlayerProfile {resetNotice=true};
             }
             if(!string.IsNullOrEmpty(profile.activeRunJson)){
                 profile.run=JsonUtility.FromJson<RunSnapshot>(profile.activeRunJson);
