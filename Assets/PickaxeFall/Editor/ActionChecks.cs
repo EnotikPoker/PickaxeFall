@@ -11,7 +11,7 @@ namespace PickaxeFall.Editor
         public static void Validate()
         {
             checks = 0;
-            var profile = new PlayerProfile(); Check(profile.version == 5 && profile.upgrades.Length == 25, "schema v5");
+            var profile = new PlayerProfile(); Check(profile.version == 6 && profile.upgrades.Length == 25, "schema v6");
             for (int i = 0; i < Progression.Keys.Length; i++) Check(Progression.Keys[i].Index == i && Progression.Keys[i].IsValid, "stable upgrade index " + i);
             var run = new RunUpgrades(profile); var energy = new RunEnergy(); energy.Reset(run);
             Check(energy.Maximum == 60 && energy.Value == 60, "initial energy allows one action");
@@ -46,25 +46,7 @@ namespace PickaxeFall.Editor
             Check(!gate.TryHit(a, 2, 4, 1.2f, Vector2.up, Vector2.zero), "continuous contact is not a strike");
             gate.Exit(a); Check(gate.TryHit(a, 3, 4, 1.2f, Vector2.up, Vector2.zero), "new episode hits immediately");
             gate.Exit(a); Check(!gate.TryHit(a, 4, 0.1f, 1.2f, Vector2.up, Vector2.zero), "weak contact");
-            string directory = Path.Combine(Application.temporaryCachePath, "action-migration-" + Guid.NewGuid().ToString("N"));
-            try
-            {
-                Directory.CreateDirectory(directory); string file = Path.Combine(directory, "profile-v2.json");
-                var old = new PlayerProfile { version = 2, coins = 900719925474099L, bestDepth = 123, upgrades = new int[18], resources=new long[8] };
-                old.upgrades[0] = 7; old.upgrades[10] = 25; old.resources[6] = 3000000000L;
-                string original = JsonUtility.ToJson(old); File.WriteAllText(file, original);
-                var store = new ProfileStore(directory); var migrated = store.Load();
-                Check(migrated.version == 5 && migrated.upgrades.Length == 25 && migrated.coins == old.coins && migrated.resources[6] == old.resources[6] && migrated.bestDepth == 123, "v2 data preserved");
-                Check(migrated.upgrades[0] == 7 && migrated.upgrades[10] == 25 && migrated.upgrades[24] == 0, "old levels kept, new zero");
-                Check(File.ReadAllText(file + ".pre-v3.bak") == original, "original migration backup");
-                Check(store.Load().coins == old.coins, "migration is idempotent");
-                // Valid primary + blocked migration: never substitute the older backup.
-                File.WriteAllText(file, original); File.WriteAllText(file + ".bak", JsonUtility.ToJson(new PlayerProfile { coins = 1 }));
-                File.Delete(file + ".pre-v3.bak"); Directory.CreateDirectory(file + ".pre-v3.bak");
-                bool failed = false; try { store.Load(); } catch (IOException) { failed = true; } catch (UnauthorizedAccessException) { failed = true; }
-                Check(failed && File.ReadAllText(file) == original, "failed migration cannot roll progress back");
-            }
-            finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+            ProfileV6Checks.LegacyReset(2);
             Debug.Log("PICKAXEFALL_ACTION_CHECKS_OK: " + checks + " checks; gestures, impact episodes, energy and v2 migration.");
         }
     }

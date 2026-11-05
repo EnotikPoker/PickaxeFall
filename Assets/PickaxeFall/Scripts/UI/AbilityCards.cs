@@ -6,7 +6,7 @@ namespace PickaxeFall
     {
         sealed class AbilityCard
         {
-            readonly GameHud hud;readonly AbilityKind kind;readonly Label state,price,reason;readonly VisualElement materials;readonly Button buy;
+            readonly SkillLock skillLock;readonly GameHud hud;readonly AbilityKind kind;readonly Label state,price,reason;readonly VisualElement materials;readonly Button buy;
             public AbilityCard(GameHud owner,VisualElement parent,AbilityKind ability)
             {
                 hud=owner;kind=ability;var card=Box(parent,"upgrade-card inset");card.name="ability-"+kind;
@@ -14,9 +14,12 @@ namespace PickaxeFall
                 Text(card,kind==AbilityKind.Dash?"Толкает выбранную кирку по одной из четырёх осей и пробивает первый блок. Базовая цена — "+Progression.Number(hud.game.Economy.Config.dashCost)+" энергии.":"Направляет выбранную кирку вниз и пробивает блок. Глубина увеличивается отдельной прокачкой. Базовая цена — "+Progression.Number(hud.game.Economy.Config.plungeCost)+" энергии.","description");
                 state=hud.BoldText(card,"","upgrade-effect");price=Text(card,"","upgrade-price");materials=Box(card,"recipe-resources");reason=Text(card,"","upgrade-reason");
                 buy=hud.Button(card,"ОТКРЫТЬ",()=>hud.game.BuyAbility(kind),"stone-button secondary");buy.name="unlock-"+kind;
+                hud.Button(card,"ВЫБРАТЬ ЦЕЛЬЮ",()=>hud.PinGoal(GoalKind.Ability,(int)kind),"stone-button secondary goal-button").name="goal-ability-"+kind;
+                skillLock=new SkillLock(hud,card,kind==AbilityKind.Dash?25:26);
             }
             public void Refresh()
             {
+                skillLock.Refresh();Display(buy,ProfileRules.Revealed(hud.game.Economy.Profile,kind==AbilityKind.Dash?25:26));
                 bool unlocked=hud.game.Economy.AbilityUnlocked(kind),can=hud.game.Economy.CanUnlock(kind,out string why)&&hud.game.CanTrade;
                 state.text=unlocked?"Открыто навсегда":"Нужно открыть один раз";materials.Clear();
                 buy.text=unlocked?"ОТКРЫТО":"ОТКРЫТЬ";buy.SetEnabled(can);buy.EnableInClassList("buy-ready",can);buy.EnableInClassList("buy-blocked",!can&&!unlocked);

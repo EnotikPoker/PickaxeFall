@@ -21,7 +21,7 @@ namespace PickaxeFall
             yield return null;var game=GetComponent<GameController>();string file=Path.Combine(game.ProfileDirectory,"expected.json");
             if(game.TestMode=="savewrite")
             {
-                var p=game.Economy.Profile;p.dashUnlocked=true;p.plungeUnlocked=false;p.coins=4321;
+                var p=game.Economy.Profile;p.dashUnlocked=true;p.plungeUnlocked=false;p.coins=4321;p.profileLevel=3;p.revealed[25]=true;p.bridgeStone=123;p.bridgeIron=4;p.portalObsidian=6;p.goalKind=GoalKind.Portal;
                 p.upgrades[new UpgradeKey(UpgradeKind.Damage,4).Index]=4;p.upgrades[new UpgradeKey(UpgradeKind.Durability,4).Index]=3;
                 p.upgrades[new UpgradeKey(UpgradeKind.Damage,3).Index]=2;p.upgrades[new UpgradeKey(UpgradeKind.Durability,3).Index]=2;
                 game.BeginProbeRun(0,712319,2);game.SimulateMiningStep();
@@ -63,6 +63,7 @@ namespace PickaxeFall
             var data=JsonUtility.FromJson<Expected>(File.ReadAllText(file));var s=data.run;
             Check(game.Phase==RunPhase.Mining && game.Paused && game.Clock.Ticks==s.ticks,"cold startup restores paused timeline");
             Check(game.Wallet==data.profile.coins && game.Economy.Profile.resources.SequenceEqual(data.profile.resources) && game.OreCounts.SequenceEqual(s.loot),"bank and run loot restore exactly, no double awards");
+            Check(game.Economy.Profile.profileLevel==3&&game.Economy.Profile.revealed[25]&&game.Economy.Profile.bridgeStone==123&&game.Economy.Profile.bridgeIron==4&&game.Economy.Profile.portalObsidian==6&&game.Economy.Profile.goalKind==GoalKind.Portal&&game.Economy.Profile.lifetimeMined.SequenceEqual(data.profile.lifetimeMined),"profile level, mining history, locks, construction and goal restore exactly");
             Check(game.World.LayoutFingerprint()==data.layout,"mined and partially damaged cells restore exactly");
             Check(game.World.CellAt(-10,100)==null && game.World.CellAt(7,105).DamageStage>0,"chest stays looted, stone retains cracks");
             Check(game.World.Liquids.Amount(15,104)==5,"finite liquid volume restores exactly");

@@ -44,6 +44,7 @@ namespace PickaxeFall
             var header = Box(safe, "header"); var brand = Box(header, "brand-row");
             BoldText(brand, "PICKAXE FALL", "brand");
             var buttons = Box(brand, "header-buttons");
+            profileButton=Button(buttons,"УР. 1",OpenProfile,"stone-button small-button profile-button");profileButton.name="open-profile";
             sound = Button(buttons, "НАСТРОЙКИ", OpenSettings, "stone-button small-button settings-button"); sound.name = "open-settings";
             pause = Button(buttons, "", game.TogglePause, "stone-button small-button"); pause.tooltip = "Пауза";
             var pauseGlyph = Box(pause, "pause-glyph"); pauseGlyph.pickingMode = PickingMode.Ignore;
@@ -66,6 +67,7 @@ namespace PickaxeFall
             resultArea = Box(mineView, "result-area"); result = Text(resultArea, "", "result");
             runGrid = new ResourceGrid(resultArea, "run-resources", true);
             action = Button(mineView, "КРУТИТЬ РУЛЕТКУ", MainAction, "stone-button primary"); action.name = "main-action";
+            Button(mineView,"КАРТЫ",()=>OpenMaps(0),"stone-button secondary").name="open-maps";
             Text(mineView, "Приёмы — в магазине. Верстак чинит, улучшающий повышает тип.", "footnote");
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
             shopView = Page(window, "shop-page"); BuildShop(shopView);
@@ -89,7 +91,7 @@ namespace PickaxeFall
         public void SelectTab(HubTab tab) { CloseModal(); CurrentTab = tab; Refresh(); }
         public void Tick()
         {
-            TickCombat(); TickPresentation(); TickTutorial();
+            TickCombat(); TickPresentation(); TickProfile(); TickTutorial();
             SetText(depth, game.Depth + " м"); SetText(wallet, Short(game.Wallet)); SetText(best, game.BestDepth + " м");
             string nextOre = "";
             foreach (var kind in MilestoneOres)

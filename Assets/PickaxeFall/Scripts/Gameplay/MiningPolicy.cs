@@ -6,6 +6,7 @@ namespace PickaxeFall
     // A repeatable heuristic, not an optimal player. Only loaded/visible terrain is known.
     public class MiningPolicy
     {
+        public BlockKind? PriorityOre;
         float next=2;
         public void Tick(GameController game)
         {
@@ -26,7 +27,7 @@ namespace PickaxeFall
                     else if(missing>.15f)score=40+100*missing;
                 }
                 else if(block.Kind==BlockKind.Chest)score=65;
-                else if(Progression.IsOre(block.Kind))score=8+Mathf.Sqrt(game.RunUpgrades.Config.sellPrices[(int)ResourceInventory.DropKind(block.Kind)]);
+                else if(Progression.IsOre(block.Kind))score=block.Kind==PriorityOre?110:8+Mathf.Sqrt(game.RunUpgrades.Config.sellPrices[(int)ResourceInventory.DropKind(block.Kind)]);
                 if(score<=0)continue;
                 int firstX=cx,firstRow=cr;bool reached=true;int walls=0;
                 for(float distance=.25f;distance<delta.magnitude;distance+=.25f)

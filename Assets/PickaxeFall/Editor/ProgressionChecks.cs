@@ -13,6 +13,7 @@ namespace PickaxeFall.Editor
             assertions = 0;
             ActionChecks.Validate();
             ProfileV4Checks.Validate();
+            ProfileV6Checks.Validate();
             var p = new PlayerProfile(); var economy = new EconomyService(p);
             foreach (var key in Progression.Keys)
             {

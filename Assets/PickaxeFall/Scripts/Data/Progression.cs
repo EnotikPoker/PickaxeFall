@@ -17,7 +17,14 @@ namespace PickaxeFall
     [Serializable]
     public sealed class PlayerProfile
     {
-        public int version = 5;
+        public int version = 6;
+        public int profileLevel = 1;
+        public long[] lifetimeMined = new long[ResourceInventory.SlotCount];
+        public bool[] revealed = new bool[27];
+        public int bridgeStone, bridgeIron, portalObsidian;
+        public GoalKind goalKind;
+        public int goalIndex;
+        public bool resetNotice;
         public long coins;
         public int bestDepth;
         public long[] resources = new long[ResourceInventory.SlotCount];
@@ -28,12 +35,17 @@ namespace PickaxeFall
         [NonSerialized] public RunSnapshot run;
         public string activeRunJson;
         public PlayerProfile Copy() => new() { version = version, coins = coins, bestDepth = bestDepth,
+            profileLevel=profileLevel, lifetimeMined=(long[])lifetimeMined.Clone(), revealed=(bool[])revealed.Clone(),
+            bridgeStone=bridgeStone,bridgeIron=bridgeIron,portalObsidian=portalObsidian,goalKind=goalKind,goalIndex=goalIndex,resetNotice=resetNotice,
             resources = (long[])resources.Clone(), upgrades = (int[])upgrades.Clone(), dashUnlocked=dashUnlocked,plungeUnlocked=plungeUnlocked,run=run,activeRunJson=activeRunJson };
         public int Level(UpgradeKey key) => key.IsValid ? upgrades[key.Index] : 0;
         public void Validate()
         {
-            if (version != 5 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
+            if (version != 6 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
                 throw new InvalidOperationException("Invalid player profile.");
+            if(profileLevel<1 || profileLevel>5 || lifetimeMined?.Length!=ResourceInventory.SlotCount || revealed?.Length!=27 || bridgeStone<0 || bridgeStone>1000 || bridgeIron<0 || bridgeIron>50 || portalObsidian<0 || portalObsidian>10 || !ProfileRules.ValidGoal(goalKind,goalIndex))throw new InvalidOperationException("Invalid profile progression.");
+            foreach(long count in lifetimeMined)if(count<0)throw new InvalidOperationException("Negative lifetime mining.");
+            for(int i=0;i<lifetimeMined.Length;i++)if(!ResourceInventory.IsResource((BlockKind)i) && lifetimeMined[i]!=0)throw new InvalidOperationException("Invalid mining slot.");
             foreach (long count in resources) if (count < 0) throw new InvalidOperationException("Negative resource count.");
             for(int i=0;i<resources.Length;i++)if(!ResourceInventory.IsResource((BlockKind)i) && resources[i]!=0)throw new InvalidOperationException("Invalid reserved resource slots.");
             foreach (var key in Progression.Keys)

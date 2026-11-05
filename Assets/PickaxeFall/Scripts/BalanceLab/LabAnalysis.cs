@@ -241,7 +241,7 @@ namespace PickaxeFall.BalanceLab
             var html = new StringBuilder("<!doctype html><html lang='ru'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>PickaxeFall Balance Lab</title><style>body{font:15px system-ui;background:#172128;color:#eee;margin:24px}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #53616a;text-align:right}td:first-child{text-align:left}input{padding:10px;width:400px}summary{cursor:pointer}small{color:#bbb}</style><h1>PickaxeFall Balance Lab</h1>");
             html.Append("<p>Версия "+WebUtility.HtmlEncode(session.Manifest.version)+" · Unity "+WebUtility.HtmlEncode(session.Manifest.unity)+" · "+session.Results.Count+" / "+session.Total+" физических сценариев-карт. Отпечаток: "+session.Manifest.fingerprint+"</p><p>Неопределённость и редкие эффекты указаны в деталях. Доход/мин включает 8 секунд меню. Цена материалов — их упущенная продажная стоимость. Взвешенные строки требуют всех пяти типов.</p><input placeholder='Фильтр по названию' oninput='document.querySelectorAll(\"tbody tr\").forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(this.value.toLowerCase()))'><table><thead><tr><th>Набор</th><th>Кирка/стадия/фон/бот</th><th>n</th><th>Глубина</th><th>Стоимость</th><th>Монет/мин</th><th>Δ</th><th>95% Δ</th></tr></thead><tbody>");
             var exportItems = session.Scenarios.Select(Get).ToList();
-            if (session.Plan.mode!=4 && session.Plan.tiers.All(x=>x))
+            if (session.Plan.mode<4 && session.Plan.tiers.All(x=>x))
                 foreach (var group in session.Scenarios.GroupBy(s => new { s.point,s.background,s.active })) exportItems.AddRange(View(-1,group.Key.point,group.Key.background,group.Key.active));
             foreach (var item in exportItems)
             {
@@ -257,6 +257,7 @@ namespace PickaxeFall.BalanceLab
             }
             html.Append("</tbody></table>");
             if(session.Manifest.schema>=4)AuditReport.Append(session,html,directory,resultSnapshot);
+            if(session.Plan.mode==5)ProfileAuditReport.Append(html,directory,resultSnapshot);
             html.Append("</html>");
             LabFiles.Atomic(Path.Combine(directory,"summary.csv"),csv.ToString()); LabFiles.Atomic(Path.Combine(directory,"report.html"),html.ToString());
         }
