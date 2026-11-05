@@ -31,7 +31,8 @@ namespace PickaxeFall
                         if(!File.Exists(v3))File.WriteAllText(v3,json);
                     }
                     string snapshot = path + ".pre-v4.bak";
-                    if (!File.Exists(snapshot)) File.WriteAllText(snapshot, json);
+                    if (JsonUtility.FromJson<PlayerProfile>(json).version<4 && !File.Exists(snapshot)) File.WriteAllText(snapshot, json);
+                    string v5=path+".pre-v5.bak";if(!File.Exists(v5))File.WriteAllText(v5,json);
                     Save(result);
                 }
                 return result;
@@ -65,12 +66,20 @@ namespace PickaxeFall
             {
                 if(profile.resources==null || profile.resources.Length!=8 || profile.upgrades==null || profile.upgrades.Length!=25)
                     throw new InvalidOperationException("Invalid v3 profile.");
-                var expanded=new long[ResourceInventory.SlotCount];
+                var expanded=new long[14];
                 Array.Copy(profile.resources,expanded,8);
                 profile.resources=expanded;profile.version=4;migrated=true;
                 profile.run=null;profile.activeRunJson=null;profile.dashUnlocked=profile.plungeUnlocked=false;
             }
-            if(!string.IsNullOrEmpty(profile.activeRunJson))profile.run=JsonUtility.FromJson<RunSnapshot>(profile.activeRunJson);
+            if(profile.version==4)
+            {
+                if(profile.resources==null || profile.resources.Length!=14)throw new InvalidOperationException("Invalid v4 profile.");
+                Array.Resize(ref profile.resources,ResourceInventory.SlotCount);profile.version=5;migrated=true;
+            }
+            if(!string.IsNullOrEmpty(profile.activeRunJson)){
+                profile.run=JsonUtility.FromJson<RunSnapshot>(profile.activeRunJson);
+                if(profile.run.version==1 && profile.run.loot?.Length==14)Array.Resize(ref profile.run.loot,ResourceInventory.SlotCount);
+            }
             profile.Validate(); return profile;
         }
         public void Reset(PlayerProfile empty)

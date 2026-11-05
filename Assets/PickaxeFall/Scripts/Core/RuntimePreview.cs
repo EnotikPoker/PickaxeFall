@@ -36,6 +36,21 @@ namespace PickaxeFall
                 game.BeginProbeRun(4,seed,1);game.Pickaxe.DebugPlace(new Vector2(found.x,-found.row+1),Vector2.zero);game.Pickaxe.Body.gravityScale=0;game.Pickaxe.Body.simulated=false;
                 game.StepMiningWorld();Camera.main.GetComponent<MineCamera>().SnapToTools();
             }
+            else if(game.TestMode=="liquids" || game.TestMode=="benches")
+            {
+                game.BeginProbeRun(4,8127,1);game.Pickaxe.DebugPlace(new Vector2(0,-43),Vector2.zero);game.Pickaxe.Body.gravityScale=0;game.Pickaxe.Body.simulated=false;game.StepMiningWorld();
+                if(game.TestMode=="benches")
+                {game.World.DebugSetCell(-2,45,BlockKind.Workbench);game.World.DebugSetCell(2,45,BlockKind.UpgradeWorkbench);}
+                else
+                {
+                    for(int row=42;row<=47;row++)for(int x=-4;x<=4;x++)game.World.DebugSetCell(x,row,BlockKind.Stone).DestroyBlock(null);
+                    for(int row=43;row<=47;row++){game.World.DebugSetCell(-4,row,BlockKind.Stone);game.World.DebugSetCell(4,row,BlockKind.Stone);}
+                    for(int x=-4;x<=4;x++)game.World.DebugSetCell(x,47,BlockKind.Stone);
+                    for(int x=-3;x<=3;x++)game.World.Liquids.DebugSet(x,46,x<0?BlockKind.Water:BlockKind.Lava);
+                    game.World.Liquids.DebugSet(-1,44,BlockKind.Water);game.World.Liquids.DebugSet(-1,45,BlockKind.Water);
+                }
+                Camera.main.GetComponent<MineCamera>().SnapToTools();
+            }
             else if(game.TestMode=="ores")
             {
                 game.BeginProbeRun(4,8127,1);game.Pickaxe.DebugPlace(new Vector2(0,-92),Vector2.zero);game.Pickaxe.Body.gravityScale=0;game.Pickaxe.Body.simulated=false;game.StepMiningWorld();

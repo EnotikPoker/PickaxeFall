@@ -10,26 +10,7 @@ using UnityEngine;
 
 namespace PickaxeFall.BalanceLab
 {
-    public sealed class LabPolicy
-    {
-        float next = 2;
-        public void Tick(GameController game)
-        {
-            if (game.Clock.Now < next || game.SelectedTool == null || !game.SelectedTool.IsAlive) return;
-            Vector2 position = game.SelectedTool.Body.position, direction = Vector2.down;
-            int centerX = Mathf.RoundToInt(position.x), centerRow = Mathf.FloorToInt(-position.y), best = 0;
-            for (int row = centerRow - 3; row <= centerRow + 3; row++) for (int x = centerX - 3; x <= centerX + 3; x++)
-            {
-                var cell = game.World.CellAt(x, row); if (!cell) continue;
-                Vector2 delta = (Vector2)cell.transform.position - position;
-                if (delta.magnitude < .5f || delta.magnitude > 3.2f || Mathf.Abs(delta.x) <= Mathf.Abs(delta.y)) continue;
-                int score = cell.Kind == BlockKind.Workbench ? 100 : Progression.IsOre(cell.Kind) ? 10 + (int)cell.Kind * 4 : 0;
-                if (score > best) { best = score; direction = new Vector2(Mathf.Sign(delta.x), 0); }
-            }
-            bool used = game.TryUseAbility(best > 0 ? AbilityKind.Dash : AbilityKind.Plunge, direction);
-            next = game.Clock.Now + (used ? 10 : .2f);
-        }
-    }
+    public sealed class LabPolicy:MiningPolicy { }
     public static class LabWorker
     {
         static readonly List<AsyncOperation> unloading = new();
@@ -40,14 +21,28 @@ namespace PickaxeFall.BalanceLab
             while(unloading.Any(op=>!op.isDone)) yield return null;
             unloading.Clear();
         }
-        public static LabResult Execute(GameBalance balance, LabJob job, Func<bool> cancelled = null)
+        public static LabResult Execute(GameBalance balance,LabJob job,Func<bool> cancelled=null)
+        {
+            var config=UnityEngine.Object.Instantiate(balance);
+            try
+            {
+                if(!string.IsNullOrEmpty(job.balanceJson))JsonUtility.FromJsonOverwrite(job.balanceJson,config);
+                config.progression.Validate();
+                if(job.scenario.regime==1)config.workbenchChance=0;
+                if(job.scenario.regime==2)config.upgradeWorkbenchFraction=0;
+                return job.scenario.hourly?ProgressionReplay.Execute(config,job,cancelled):ExecutePhysical(config,job,cancelled);
+            }
+            finally{UnityEngine.Object.DestroyImmediate(config);}
+        }
+        static LabResult ExecutePhysical(GameBalance balance, LabJob job, Func<bool> cancelled)
         {
             var watch = Stopwatch.StartNew();
-            var result = new LabResult { id = job.Id, scenario = job.scenario.id, seed = job.seed };
+            var result = new LabResult { id = job.Id, scenario = job.scenario.id, seed = job.seed,limit=job.limit };
             var profile = new PlayerProfile { upgrades = (int[])job.scenario.levels.Clone() }; profile.Validate();
-            var upgrades = new RunUpgrades(profile);
+            var upgrades = new RunUpgrades(profile,balance.progression);
             double teamChance = upgrades.Chance(UpgradeKind.TeamChance), rescueChance = upgrades.Chance(UpgradeKind.LastChance);
             if (job.diagnostic) { teamChance = teamChance > 0 ? 1 : 0; rescueChance = rescueChance > 0 ? 1 : 0; }
+            var visits=new List<BenchVisit>();var outcomes=new List<LabOutcome>();
             for (int team = 0; team <= (teamChance > 0 ? 1 : 0); team++)
             for (int rescue = 0; rescue <= (rescueChance > 0 ? 1 : 0); rescue++)
             {
@@ -67,10 +62,13 @@ namespace PickaxeFall.BalanceLab
                         if (game.Clock.Ticks % 120 == 0 && cancelled?.Invoke() == true) throw new OperationCanceledException();
                         Step(game, job.scenario.active ? policy : null);
                     }
+                    outcomes.Add(new LabOutcome {weight=weight,depth=game.Depth,seconds=game.Clock.Now});
                     result.branches++; result.seconds += weight * game.Clock.Now; result.depth += weight * game.Depth;
                     result.value += weight * game.PotentialSaleValue; result.blocks += weight * game.BlocksBroken;
                     result.benches += weight * game.WorkbenchesUsed; result.tools += weight * game.RunToolCount;
                     result.abilities += weight * game.Benefits.Abilities;
+                    result.upgradeBenches+=weight*game.Benefits.UpgradeBenches;result.restoredWear+=weight*game.Benefits.RestoredDurability;result.lavaWear+=weight*game.Benefits.LavaWear;result.energySpent+=weight*game.Benefits.EnergySpent;
+                    foreach(var visit in game.BenchVisits){visit.weight=(float)weight;visit.terminalCensored=!visit.nextReached && game.Phase==RunPhase.Mining && game.Pickaxes[visit.tool].IsAlive;visits.Add(visit);}
                     if (game.Phase == RunPhase.Mining) result.censored += weight;
                     foreach (var tool in game.Pickaxes) result.strikes += weight * tool.TotalStrikes;
                     for (int i = 0; i < ResourceInventory.SlotCount; i++) result.resources[i] += weight * game.OreCounts[i];
@@ -78,7 +76,7 @@ namespace PickaxeFall.BalanceLab
                 }
                 finally { UnityEngine.Object.DestroyImmediate(root); Unload(scene); }
             }
-            result.wallSeconds = watch.Elapsed.TotalSeconds;
+            result.outcomes=outcomes.ToArray();result.benchVisits=visits.ToArray();result.wallSeconds = watch.Elapsed.TotalSeconds;
             return result;
         }
         public static void Step(GameController game, LabPolicy policy = null)

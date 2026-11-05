@@ -14,7 +14,7 @@ namespace PickaxeFall.BalanceLab
         static void Check(bool condition, string message) { count++; if (!condition) throw new Exception("Balance Lab: "+message); }
         public static void Validate()
         {
-            count = 0; var quick = new LabPlan(); var scenarios = LabPlanner.Scenarios(quick);
+            count = 0;AuditContractChecks.Validate(); var quick = new LabPlan(); var scenarios = LabPlanner.Scenarios(quick);
             Check(scenarios.Count == 480,"quick matrix with all future reachable tool upgrades");
             Check(scenarios.Select(s=>s.id).Distinct().Count()==scenarios.Count,"unique scenario ids");
             Check(scenarios.All(s=>s.point==0 && s.background==0 && s.order<=2),"quick scope");

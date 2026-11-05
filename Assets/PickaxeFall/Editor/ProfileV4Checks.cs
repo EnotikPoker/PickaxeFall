@@ -21,7 +21,7 @@ namespace PickaxeFall.Editor
                 string path=Path.Combine(dir,"profile-v2.json");var old=new OldProfile();old.upgrades[0]=7;old.upgrades[24]=4;
                 string json=JsonUtility.ToJson(old);File.WriteAllText(path,json);
                 var store=new ProfileStore(dir);var loaded=store.Load();
-                if(loaded.version!=4 || loaded.coins!=old.coins || loaded.bestDepth!=old.bestDepth || loaded.upgrades[0]!=7 || loaded.upgrades[24]!=4)throw new Exception("v4 migration lost progression");
+                if(loaded.version!=5 || loaded.coins!=old.coins || loaded.bestDepth!=old.bestDepth || loaded.upgrades[0]!=7 || loaded.upgrades[24]!=4)throw new Exception("v4 migration lost progression");
                 for(int i=0;i<8;i++)if(loaded.resources[i]!=old.resources[i])throw new Exception("v4 migration lost old resource "+i);
                 for(int i=8;i<loaded.resources.Length;i++)if(loaded.resources[i]!=0)throw new Exception("v4 new resource slots not empty");
                 if(File.ReadAllText(path+".pre-v4.bak")!=json || store.Load().coins!=old.coins)throw new Exception("v4 backup/idempotence");

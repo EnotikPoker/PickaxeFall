@@ -20,6 +20,7 @@ namespace PickaxeFall
         GameController game;
         GameBalance balance;
         MineGenerator generator;
+        public LiquidSimulation Liquids { get; private set; }
         public int ActiveBlocks { get; private set; }
         public int LoadedRows => rows.Count;
         public GameBalance Balance => balance;
@@ -30,17 +31,17 @@ namespace PickaxeFall
 
         public void Initialize(GameController owner, GameBalance config)
         {
-            game = owner; balance = config;
+            game = owner; balance = config;Liquids=new LiquidSimulation(this,game);
             for (int i = 0; i < 2; i++)
             {
                 walls[i] = new GameObject("Boundary " + i).AddComponent<BoxCollider2D>(); walls[i].transform.SetParent(transform);
                 walls[i].transform.position = new Vector3((i == 0 ? -1 : 1) * (balance.worldWidth / 2 + 1), 0, 0);
             }
         }
-        public void ResetWorld(int runSeed,CellSnapshot[] saved=null)
+        public void ResetWorld(int runSeed,CellSnapshot[] saved=null,LiquidCellSnapshot[] liquids=null)
         {
             foreach (var row in rows.Values) foreach (var block in row) Return(block);
-            rows.Clear(); changes.Clear(); explosions.Clear(); ActiveBlocks = 0;
+            Liquids.Reset(liquids);rows.Clear(); changes.Clear(); explosions.Clear(); ActiveBlocks = 0;
             if(saved!=null)foreach(var cell in saved)changes[new Vector2Int(cell.x,cell.row)]=new CellState {kind=cell.kind,health=cell.health,broken=cell.broken,litUntil=cell.litUntil};
             generator = new MineGenerator(balance, runSeed); Stream(0);
         }
@@ -95,6 +96,8 @@ namespace PickaxeFall
                 int x = column - balance.worldWidth / 2; var key = new Vector2Int(x, row); var cell = generator.Sample(x, row);
                 bool modified = changes.TryGetValue(key, out var state);
                 if (modified && state.broken || !modified && !cell.exists) continue;
+                if(!modified && (cell.kind==BlockKind.Water || cell.kind==BlockKind.Lava))
+                {Liquids.Register(x,row,cell.kind);continue;}
                 MineBlock block;
                 if (pool.Count > 0) block = pool.Pop();
                 else { var obj = new GameObject("Mine block"); obj.transform.SetParent(transform); block = obj.AddComponent<MineBlock>(); }
@@ -104,6 +107,22 @@ namespace PickaxeFall
             }
             rows.Add(row, blocks);
         }
+        public bool IsRowLoaded(int row)=>rows.ContainsKey(row);
+        public bool CanLiquidOccupy(int x,int row)
+        {
+            if(Mathf.Abs(x)>balance.worldWidth/2 || row< -2 || !rows.ContainsKey(row))return false;
+            if(changes.TryGetValue(new Vector2Int(x,row),out var state))return state.broken;
+            var cell=generator.Sample(x,row);return !cell.exists || cell.kind==BlockKind.Water || cell.kind==BlockKind.Lava;
+        }
+        public bool PlaceObsidian(int x,int row)
+        {
+            if(!CanLiquidOccupy(x,row))return false;
+            MineBlock block;
+            if(pool.Count>0)block=pool.Pop();else {var obj=new GameObject("Cooled obsidian");obj.transform.SetParent(transform);block=obj.AddComponent<MineBlock>();}
+            block.Setup(this,BlockKind.Obsidian,x,row,0,row>=balance.Block(BlockKind.Deepstone).minimumDepth);
+            rows[row].Add(block);ActiveBlocks++;Remember(block);return true;
+        }
+
         public void Remember(MineBlock block) => changes[new Vector2Int(block.Column, block.Row)] = new CellState
             { kind = block.Kind, health = block.HealthHalfUnits, broken = block.IsBroken,litUntil=block.LitUntil };
         public CellSnapshot[] CaptureChanges()
@@ -115,7 +134,7 @@ namespace PickaxeFall
         public bool BlocksLight(int x,int row)
         {
             if(changes.TryGetValue(new Vector2Int(x,row),out var state))return !state.broken && state.kind!=BlockKind.AmethystCluster;
-            var cell=generator.Sample(x,row);return cell.exists && cell.kind!=BlockKind.AmethystCluster;
+            var cell=generator.Sample(x,row);return cell.exists && cell.kind!=BlockKind.AmethystCluster && cell.kind!=BlockKind.Water && cell.kind!=BlockKind.Lava;
         }
         MineBlock EnsureCell(int x,int row)
         {

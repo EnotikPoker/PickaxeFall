@@ -13,7 +13,7 @@ namespace PickaxeFall.Editor
         {
             Require(balance.RollChance(2) > balance.RollChance(3), "Gold must be more common than iron.");
             foreach (BlockKind kind in Enum.GetValues(typeof(BlockKind)))
-                if(kind!=BlockKind.AmethystCluster && kind!=BlockKind.Chest)
+                if(kind!=BlockKind.AmethystCluster && kind!=BlockKind.Chest && kind!=BlockKind.Water)
                 foreach (bool deep in new[] { false, true })
                     foreach (Color32 pixel in PixelArt.Block(kind, 0, deep).texture.GetPixels32())
                         Require(pixel.a == 255, "Block texture must remain fully opaque: " + kind);
@@ -48,7 +48,7 @@ namespace PickaxeFall.Editor
                     if (!cell.exists) continue;
                     var same = generator.Sample(x, row);
                     Require(cell.kind == same.kind && cell.variant == same.variant, "Cell sampling must be repeatable.");
-                    if (cell.kind == BlockKind.Workbench)
+                    if (GameBalance.IsWorkbench(cell.kind))
                     {
                         Require(row >= balance.workbenchMinimumDepth, "Workbench appeared above its depth gate.");
                         foreach (var old in benchPositions)

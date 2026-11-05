@@ -15,6 +15,18 @@ namespace PickaxeFall.BalanceLab
         public int Count => rows.Count;
         public double Mean(Func<LabResult,double> get) => rows.Count == 0 ? double.NaN : rows.Average(get);
         public double Rate => LabAnalysis.Rate(rows);
+        public double Percentile(double p,bool time=false)
+        {
+            var values=new List<(double value,double weight)>();
+            foreach(var row in rows)
+            {
+                if(row.outcomes!=null && row.outcomes.Length>0)foreach(var outcome in row.outcomes)values.Add((time?outcome.seconds:outcome.depth,outcome.weight));
+                else values.Add((time?row.seconds:row.depth,1));
+            }
+            if(values.Count==0)return double.NaN;values.Sort((a,b)=>a.value.CompareTo(b.value));
+            double target=Math.Max(0,Math.Min(1,p))*values.Sum(v=>v.weight),sum=0;
+            foreach(var v in values){sum+=v.weight;if(sum>=target)return v.value;}return values[values.Count-1].value;
+        }
         public double Median(Func<LabResult,double> get) { var a = rows.Select(get).OrderBy(x => x).ToArray(); return a.Length == 0 ? double.NaN : (a[(a.Length-1)/2]+a[a.Length/2])/2; }
         public double Min(Func<LabResult,double> get) => rows.Count == 0 ? double.NaN : rows.Min(get);
         public double Max(Func<LabResult,double> get) => rows.Count == 0 ? double.NaN : rows.Max(get);
@@ -22,6 +34,7 @@ namespace PickaxeFall.BalanceLab
     public sealed class LabAnalysis
     {
         readonly LabSession session;
+        readonly LabResult[] resultSnapshot;
         readonly int[,] pointLevels = new int[3,25];
         readonly Dictionary<(int,int),LabPrice> prices;
         readonly Dictionary<string,LabScenario> scenarios;
@@ -29,9 +42,9 @@ namespace PickaxeFall.BalanceLab
         readonly Dictionary<string,LabSummary> summaries = new();
         public LabAnalysis(LabSession source)
         {
-            session = source;
+            session = source;resultSnapshot=source.Results.Values.ToArray();
             prices=(source.Manifest.prices ?? Array.Empty<LabPrice>()).ToDictionary(p=>(p.key,p.level));
-            foreach(var scenario in source.Scenarios) for(int i=0;i<25;i++) pointLevels[scenario.point,i]=Math.Max(pointLevels[scenario.point,i],scenario.levels[i]);
+            foreach(var scenario in source.Scenarios.Where(s=>s.cohort!="size-base")) for(int i=0;i<25;i++) pointLevels[scenario.point,i]=Math.Max(pointLevels[scenario.point,i],scenario.levels[i]);
             scenarios = source.Scenarios.ToDictionary(s => s.id);
             grouped = source.Results.Values.Where(r => string.IsNullOrEmpty(r.error)).GroupBy(r => r.scenario).ToDictionary(g => g.Key,g => g.OrderBy(r => r.seed).ToList());
         }
@@ -102,6 +115,7 @@ namespace PickaxeFall.BalanceLab
         }
         public double Delta(LabSummary item)
         {
+            if(item.scenario.hourly)return double.NaN;
             var baseline = Related(item,0); if (baseline == null) return double.NaN;
             var (a,b) = Paired(item,baseline); double delta = Rate(a)-Rate(b);
             return item.scenario.background == 1 ? -delta : delta;
@@ -113,6 +127,7 @@ namespace PickaxeFall.BalanceLab
         }
         public (double low,double high,int count) Interval(LabSummary item)
         {
+            if(item.scenario.hourly)return (double.NaN,double.NaN,0);
             var baseline = Related(item,0); if (baseline == null) return (double.NaN,double.NaN,0);
             var (a,b) = Paired(item,baseline); if (a.Count < 8) return (double.NaN,double.NaN,a.Count);
             double[] values = new double[1000]; var random = new Random(8127);
@@ -168,9 +183,9 @@ namespace PickaxeFall.BalanceLab
         public (long coins,long[] materials,double total) Cost(LabSummary item)
         {
             long coins = 0; long[] materials = new long[ResourceInventory.SlotCount];
-            foreach (var key in Progression.Keys.Where(k => (item.scenario.mask & (1 << k.Index)) != 0))
+            foreach (var key in Progression.Keys.Where(k => item.scenario.cohort=="full-max" || (item.scenario.mask & (1 << k.Index)) != 0))
             {
-                int level = pointLevels[item.scenario.point,key.Index];
+                int level = item.scenario.background==0?item.scenario.levels[key.Index]:(Related(item,0)?.scenario.levels[key.Index]??pointLevels[item.scenario.point,key.Index]);
                 if(level==0)continue;
                 if(!prices.TryGetValue((key.Index,level),out var price) || session.Manifest.sellPrices==null) return (-1,materials,double.NaN);
                 coins+=price.coins;for(int i=0;i<Math.Min(ResourceInventory.SlotCount,price.materials.Length);i++)materials[i]+=price.materials[i];
@@ -192,7 +207,7 @@ namespace PickaxeFall.BalanceLab
                 int index = new UpgradeKey(kind).Index;
                 if ((item.scenario.mask & (1 << index)) == 0) continue;
                 var reference = item.scenario.background == 1 ? Related(item,0) : item;
-                double expected = reference.rows.Sum(r => r.attempts[(int)kind]) * pointLevels[item.scenario.point,index] * (session.Manifest.chanceSteps==null ? 0 : session.Manifest.chanceSteps[(int)kind]);
+                double expected = reference.rows.Sum(r => r.attempts[(int)kind]) * reference.scenario.levels[index] * (session.Manifest.chanceSteps==null ? 0 : session.Manifest.chanceSteps[(int)kind]);
                 double observed = reference.rows.Sum(r => r.successes[(int)kind]);
                 if (expected < 20 || observed < 10) notes.Add(Progression.Title(kind)+": мало срабатываний");
             }
@@ -202,9 +217,13 @@ namespace PickaxeFall.BalanceLab
         {
             var ci = Interval(item); var cost = Cost(item); double delta = Delta(item);
             var text = new StringBuilder(item.scenario.Title+"\n");
+            text.AppendLine("Лимит сценария, с: "+string.Join(", ",item.rows.Select(r=>r.limit>0?r.limit:session.Plan.limit).Distinct()));
             text.AppendLine($"Карт: {item.Count}; Δ монет/мин: {LabFiles.Number(delta)}; 95% интервал: [{LabFiles.Number(ci.low)}; {LabFiles.Number(ci.high)}], пар: {ci.count}");
             text.AppendLine($"Глубина: среднее {LabFiles.Number(item.Mean(r => r.depth))}, медиана {LabFiles.Number(item.Median(r => r.depth))}, диапазон {LabFiles.Number(item.Min(r => r.depth))}–{LabFiles.Number(item.Max(r => r.depth))} м");
             text.AppendLine($"Время: среднее {LabFiles.Number(item.Mean(r => r.seconds))}, медиана {LabFiles.Number(item.Median(r => r.seconds))}, диапазон {LabFiles.Number(item.Min(r => r.seconds))}–{LabFiles.Number(item.Max(r => r.seconds))} с; ограничено {LabFiles.Number(100*item.Mean(r => r.censored))}%");
+            text.AppendLine($"Глубина P10/P50/P90/P95: {LabFiles.Number(item.Percentile(.1))} / {LabFiles.Number(item.Percentile(.5))} / {LabFiles.Number(item.Percentile(.9))} / {LabFiles.Number(item.Percentile(.95))}; время P50/P95: {LabFiles.Number(item.Percentile(.5,true))} / {LabFiles.Number(item.Percentile(.95,true))} с");
+            text.AppendLine($"Улучшающие верстаки: {LabFiles.Number(item.Mean(r=>r.upgradeBenches))}; ремонт: {LabFiles.Number(item.Mean(r=>r.restoredWear))}; потери от лавы: {LabFiles.Number(item.Mean(r=>r.lavaWear))}; энергия потрачена: {LabFiles.Number(item.Mean(r=>r.energySpent))}");
+            if(item.scenario.hourly)text.AppendLine($"Первая покупка: {LabFiles.Number(item.Mean(r=>r.firstPurchase))} с; забегов: {LabFiles.Number(item.Mean(r=>r.runCount))}; покупок: {LabFiles.Number(item.Mean(r=>r.purchases?.Length??0))}");
             foreach(var kind in ResourceInventory.Materials){int index=(int)kind;text.AppendLine(GameBalance.BlockName(kind)+": "+LabFiles.Number(item.Mean(r=>r.resources[index])));}
             text.AppendLine($"Блоки {LabFiles.Number(item.Mean(r => r.blocks))}; удары {LabFiles.Number(item.Mean(r => r.strikes))}; кирки {LabFiles.Number(item.Mean(r => r.tools))}; верстаки {LabFiles.Number(item.Mean(r => r.benches))}; действия {LabFiles.Number(item.Mean(r => r.abilities))}");
             text.AppendLine("Цена: "+(cost.coins<0 ? "нет снимка цен в старом отчёте" : cost.coins.ToString())+" монет; материалы: "+string.Join(", ",cost.materials.Select((x,i) => x>0 ? GameBalance.BlockName((BlockKind)i)+" "+x : "").Where(x => x.Length>0)));
@@ -218,11 +237,11 @@ namespace PickaxeFall.BalanceLab
         }
         public void Export(string directory)
         {
-            var csv = new StringBuilder("scenario,tier,point,background,active,mask,samples,depthMean,depthMedian,depthMin,depthMax,secondsMean,secondsMedian,valueMean,coinsPerMinute,deltaRate,ciLow,ciHigh,blocks,tools,benches,abilities,censored,costCoins,costEquivalent,paybackMinutes,interaction,tripleGain,dirt,stone,coal,copper,iron,gold,diamond,deepstone,emerald,lapis,redstone,amethyst,notes\n");
+            var csv = new StringBuilder("scenario,tier,point,background,active,mask,samples,depthMean,depthMedian,depthMin,depthMax,secondsMean,secondsMedian,valueMean,coinsPerMinute,deltaRate,ciLow,ciHigh,blocks,tools,benches,abilities,censored,costCoins,costEquivalent,paybackMinutes,interaction,tripleGain,dirt,stone,coal,copper,iron,gold,diamond,deepstone,emerald,lapis,redstone,amethyst,obsidian,depthP10,depthP50,depthP90,depthP95,secondsP50,secondsP95,upgradeBenches,restoredWear,lavaWear,energySpent,firstPurchase,purchases,runs,notes\n");
             var html = new StringBuilder("<!doctype html><html lang='ru'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>PickaxeFall Balance Lab</title><style>body{font:15px system-ui;background:#172128;color:#eee;margin:24px}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #53616a;text-align:right}td:first-child{text-align:left}input{padding:10px;width:400px}summary{cursor:pointer}small{color:#bbb}</style><h1>PickaxeFall Balance Lab</h1>");
             html.Append("<p>Версия "+WebUtility.HtmlEncode(session.Manifest.version)+" · Unity "+WebUtility.HtmlEncode(session.Manifest.unity)+" · "+session.Results.Count+" / "+session.Total+" физических сценариев-карт. Отпечаток: "+session.Manifest.fingerprint+"</p><p>Неопределённость и редкие эффекты указаны в деталях. Доход/мин включает 8 секунд меню. Цена материалов — их упущенная продажная стоимость. Взвешенные строки требуют всех пяти типов.</p><input placeholder='Фильтр по названию' oninput='document.querySelectorAll(\"tbody tr\").forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(this.value.toLowerCase()))'><table><thead><tr><th>Набор</th><th>Кирка/стадия/фон/бот</th><th>n</th><th>Глубина</th><th>Стоимость</th><th>Монет/мин</th><th>Δ</th><th>95% Δ</th></tr></thead><tbody>");
             var exportItems = session.Scenarios.Select(Get).ToList();
-            if (session.Plan.tiers.All(x=>x))
+            if (session.Plan.mode!=4 && session.Plan.tiers.All(x=>x))
                 foreach (var group in session.Scenarios.GroupBy(s => new { s.point,s.background,s.active })) exportItems.AddRange(View(-1,group.Key.point,group.Key.background,group.Key.active));
             foreach (var item in exportItems)
             {
@@ -231,11 +250,14 @@ namespace PickaxeFall.BalanceLab
                 var fields = new List<string> { scenario.id,scenario.tier.ToString(),scenario.point.ToString(),scenario.background.ToString(),scenario.active?"1":"0",scenario.mask.ToString(),item.Count.ToString(),
                     LabFiles.Number(item.Mean(r=>r.depth)),LabFiles.Number(item.Median(r=>r.depth)),LabFiles.Number(item.Min(r=>r.depth)),LabFiles.Number(item.Max(r=>r.depth)),LabFiles.Number(item.Mean(r=>r.seconds)),LabFiles.Number(item.Median(r=>r.seconds)),LabFiles.Number(item.Mean(r=>r.value)),LabFiles.Number(item.Rate),LabFiles.Number(delta),LabFiles.Number(ci.low),LabFiles.Number(ci.high),
                     LabFiles.Number(item.Mean(r=>r.blocks)),LabFiles.Number(item.Mean(r=>r.tools)),LabFiles.Number(item.Mean(r=>r.benches)),LabFiles.Number(item.Mean(r=>r.abilities)),LabFiles.Number(item.Mean(r=>r.censored)),cost.coins<0?"":cost.coins.ToString(),LabFiles.Number(cost.total),!session.Plan.diagnostic && ci.low>0 && delta>0?LabFiles.Number(cost.total/delta):"",LabFiles.Number(Interaction(item)),LabFiles.Number(TripleGain(item)) };
-                foreach(var kind in ResourceInventory.Materials){int index=(int)kind;fields.Add(LabFiles.Number(item.Mean(r=>r.resources[index])));}fields.Add(Reliability(item));
+                foreach(var kind in ResourceInventory.Materials){int index=(int)kind;fields.Add(LabFiles.Number(item.Mean(r=>r.resources[index])));}
+                fields.AddRange(new[] {LabFiles.Number(item.Percentile(.1)),LabFiles.Number(item.Percentile(.5)),LabFiles.Number(item.Percentile(.9)),LabFiles.Number(item.Percentile(.95)),LabFiles.Number(item.Percentile(.5,true)),LabFiles.Number(item.Percentile(.95,true)),LabFiles.Number(item.Mean(r=>r.upgradeBenches)),LabFiles.Number(item.Mean(r=>r.restoredWear)),LabFiles.Number(item.Mean(r=>r.lavaWear)),LabFiles.Number(item.Mean(r=>r.energySpent)),scenario.hourly?LabFiles.Number(item.Mean(r=>r.firstPurchase)):"",scenario.hourly?LabFiles.Number(item.Mean(r=>r.purchases?.Length??0)):"",scenario.hourly?LabFiles.Number(item.Mean(r=>r.runCount)):""});fields.Add(Reliability(item));
                 csv.AppendLine(string.Join(",",fields.Select(QuoteCsv)));
                 html.Append("<tr><td><details><summary>"+WebUtility.HtmlEncode(scenario.Title)+"</summary><pre>"+WebUtility.HtmlEncode(Detail(item))+"</pre></details></td><td>"+scenario.tier+" / "+scenario.point+" / "+scenario.background+" / "+scenario.active+"</td><td>"+item.Count+"</td><td>"+fields[7]+"</td><td>"+fields[13]+"</td><td>"+fields[14]+"</td><td>"+fields[15]+"</td><td>"+fields[16]+" … "+fields[17]+"</td></tr>");
             }
-            html.Append("</tbody></table></html>");
+            html.Append("</tbody></table>");
+            if(session.Manifest.schema>=4)AuditReport.Append(session,html,directory,resultSnapshot);
+            html.Append("</html>");
             LabFiles.Atomic(Path.Combine(directory,"summary.csv"),csv.ToString()); LabFiles.Atomic(Path.Combine(directory,"report.html"),html.ToString());
         }
         static string QuoteCsv(string s) => "\""+s.Replace("\"","\"\"")+"\"";

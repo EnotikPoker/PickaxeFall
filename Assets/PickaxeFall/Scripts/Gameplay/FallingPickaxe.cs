@@ -17,6 +17,12 @@ namespace PickaxeFall
         Vector2 incomingVelocity;
         float incomingAngular, lastReboundTime, abilityUntil, momentumUntil, spawnX, nextTrail;
         int step, remaining;
+        float lavaWear;
+        public bool InWater { get; private set; }
+        public Bounds HitBounds=>hitbox.bounds;
+        public Vector2 ClosestPoint(Vector2 point)=>hitbox.ClosestPoint(point);
+        public int RawDamageHalfUnits=>Stats.damage*2+game.RunUpgrades.DamageBonusHalfUnits(Tier);
+        int WetDamage(int value)=>value<=0?0:Mathf.Max(1,Mathf.RoundToInt(value*(InWater?game.Balance.waterDamageMultiplier:1)));
         AbilityKind ability;
         System.Random physicsRandom;
         public int TotalStrikes { get; private set; }
@@ -28,7 +34,7 @@ namespace PickaxeFall
         public int ToolIndex { get; private set; }
         public bool IsAlive => gameObject.activeSelf && Durability > 0 && visual.enabled;
         public bool AbilityActive => remaining > 0 && game.Clock.Now < abilityUntil;
-        public int DamageHalfUnits => Stats.damage * 2 + game.RunUpgrades.DamageBonusHalfUnits(Tier);
+        public int DamageHalfUnits => WetDamage(RawDamageHalfUnits);
         public int Durability { get; private set; }
         public int MaxDurability => Stats.durability + game.RunUpgrades.DurabilityBonus(Tier);
         public PickaxeStats Stats => game.Balance.pickaxes[Tier];
@@ -64,7 +70,7 @@ namespace PickaxeFall
         public void Equip(int tier, int toolIndex = 0, float x = 0)
         {
             Tier = OriginalTier = Mathf.Clamp(tier, 0, game.Balance.pickaxes.Length - 1); ToolIndex = toolIndex; spawnX = x;
-            Durability = MaxDurability; SetArt(); visual.color = Color.white; visual.enabled = true;
+            Durability = MaxDurability;lavaWear=0;InWater=false; SetArt(); visual.color = Color.white; visual.enabled = true;
             TotalStrikes = NaturalStrikes = HopCount = 0; physicsRandom = new System.Random(unchecked(game.Seed ^ tier * 73856093 ^ (toolIndex + 1) * 19349663));
             body.mass = Stats.mass; ResetPose();
         }
@@ -95,6 +101,13 @@ namespace PickaxeFall
         public void PhysicsTick()
         {
             if (game.Phase != RunPhase.Mining || game.Paused || !IsAlive) return;
+            InWater=game.World.Liquids.Touches(this,BlockKind.Water);
+            if(game.World.Liquids.Touches(this,BlockKind.Lava))
+            {
+                lavaWear+=game.Balance.lavaWearPerSecond*game.Clock.Delta;
+                int loss=Mathf.FloorToInt(lavaWear+0.00001f);lavaWear=Mathf.Max(0,lavaWear-loss);
+                if(loss>0){int lost=Mathf.Min(loss,Durability);Durability-=lost;game.Benefits.LavaWear+=lost;if(Durability<=0){CancelAbility();game.OnPickaxeExhausted(this);return;}}
+            }
             step++;
             var velocity = body.linearVelocity; float horizontalLimit = game.Clock.Now < momentumUntil ? 18 : 9;
             velocity.x = Mathf.Clamp(velocity.x, -horizontalLimit, horizontalLimit); velocity.y = Mathf.Max(velocity.y, -game.Balance.maxFallSpeed);
@@ -179,10 +192,10 @@ namespace PickaxeFall
             if (!ResourceInventory.IsMaterial(block.Kind)) { block.DestroyBlock(this); return; }
             int x = block.Column, row = block.Row; Color color = block.BaseColor;
             bool strong = approach >= game.Balance.strongImpactSpeed;
-            int damage = DamageHalfUnits + (strong ? game.RunUpgrades.StrongBonusHalfUnits : 0);
+            int damage = WetDamage(RawDamageHalfUnits + (strong ? game.RunUpgrades.StrongBonusHalfUnits : 0));
             block.HitHalfUnits(damage, this, DamageOrigin.Physical);
             NaturalStrikes++; game.OnPhysicalHit(this, strong);
-            if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageShrapnelNeighbour(x, row, game.RunUpgrades.ShrapnelHalfUnits, this, NaturalStrikes);
+            if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageShrapnelNeighbour(x, row, WetDamage(game.RunUpgrades.ShrapnelHalfUnits), this, NaturalStrikes);
             game.Effects.Impact(point, color, 3); SpendWear();
         }
         void SpendWear()
@@ -211,13 +224,13 @@ namespace PickaxeFall
         public void Stop() { CancelAbility(); body.linearVelocity = Vector2.zero; body.angularVelocity = 0; body.simulated = false; SetSelected(false); }
         public ToolSnapshot Capture()=>new ToolSnapshot
         {
-            tier=Tier,originalTier=OriginalTier,index=ToolIndex,alive=IsAlive,durability=Durability,strikes=TotalStrikes,naturalStrikes=NaturalStrikes,hops=HopCount,step=step,
+            lavaWear=lavaWear,tier=Tier,originalTier=OriginalTier,index=ToolIndex,alive=IsAlive,durability=Durability,strikes=TotalStrikes,naturalStrikes=NaturalStrikes,hops=HopCount,step=step,
             position=body.position,velocity=body.linearVelocity,rotation=body.rotation,angularVelocity=body.angularVelocity,incomingVelocity=incomingVelocity,incomingAngular=incomingAngular,
             lastRebound=lastReboundTime,remaining=remaining,ability=(int)ability,abilityUntil=abilityUntil,momentumUntil=momentumUntil,nextTrail=nextTrail,contacts=impacts.Capture()
         };
         public void Restore(ToolSnapshot s)
         {
-            Equip(s.tier,s.index);OriginalTier=s.originalTier;Durability=Mathf.Clamp(s.durability,0,MaxDurability);
+            Equip(s.tier,s.index);lavaWear=s.lavaWear;OriginalTier=s.originalTier;Durability=Mathf.Clamp(s.durability,0,MaxDurability);
             TotalStrikes=s.strikes;NaturalStrikes=s.naturalStrikes;HopCount=s.hops;step=s.step;
             transform.SetPositionAndRotation(s.position,Quaternion.Euler(0,0,s.rotation));body.position=s.position;body.rotation=s.rotation;
             body.linearVelocity=s.velocity;body.angularVelocity=s.angularVelocity;incomingVelocity=s.incomingVelocity;incomingAngular=s.incomingAngular;

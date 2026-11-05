@@ -28,12 +28,13 @@ namespace PickaxeFall.BalanceLab
         int branches;
         public bool Running { get; private set; }
         public string Status { get; private set; } = "Готово к запуску";
-        public long Total => (long)Scenarios.Count * Plan.samples;
+        public long Total => Plan.mode==4?Scenarios.Sum(s=>(long)s.sampleCount):(long)Scenarios.Count*Plan.samples;
         public double Elapsed => timer?.Elapsed.TotalSeconds ?? 0;
         public int Busy => workers.Count(w => w.busy);
         public int CompletedBranches => branches;
         public static LabSession Create(string path, LabPlan plan, LabManifest manifest)
         {
+            if(!string.IsNullOrEmpty(plan.balanceJson)){manifest=JsonUtility.FromJson<LabManifest>(JsonUtility.ToJson(manifest));manifest.balance=plan.balanceJson;manifest.CaptureEconomy();}
             var session = new LabSession { DirectoryPath = Path.GetFullPath(path), Plan = plan, Manifest = manifest, Scenarios = LabPlanner.Scenarios(plan) };
             if (session.Scenarios.Count == 0) throw new ArgumentException("Не выбраны сценарии.");
             if (Directory.Exists(path)) throw new IOException("Каталог отчёта уже существует.");
@@ -73,7 +74,7 @@ namespace PickaxeFall.BalanceLab
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     var row = JsonUtility.FromJson<LabResult>(line);
-                    if(row.resources!=null && row.resources.Length==8)Array.Resize(ref row.resources,ResourceInventory.SlotCount);
+                    if(row.resources!=null && (row.resources.Length==8 || row.resources.Length==14))Array.Resize(ref row.resources,ResourceInventory.SlotCount);
                     if (string.IsNullOrEmpty(row.id) || row.resources == null || row.resources.Length != ResourceInventory.SlotCount) throw new IOException("Повреждён журнал результатов: " + journal);
                     if (string.IsNullOrEmpty(row.error))
                     {
@@ -116,6 +117,11 @@ namespace PickaxeFall.BalanceLab
             if (Running) throw new InvalidOperationException("Останови анализ перед изменением продолжения.");
             var next = JsonUtility.FromJson<LabPlan>(JsonUtility.ToJson(Plan));
             next.samples = Math.Max(Plan.samples,samples); next.workers = workers; next.seconds = seconds; next.Validate();
+            if(next.mode==4)
+            {
+                foreach(var s in Scenarios)s.sampleCount=s.hourly?Math.Min(16,next.samples):next.samples;
+                LabFiles.Write(Path.Combine(DirectoryPath,"scenarios.json"),new ScenarioList {scenarios=Scenarios});
+            }
             LabFiles.Write(Path.Combine(DirectoryPath,"plan.json"),next); Plan = next;
         }
         static string Quote(string text) => "\"" + text.Replace("\\","\\\\").Replace("\"","\\\"") + "\"";

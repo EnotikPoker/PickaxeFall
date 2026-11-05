@@ -49,6 +49,7 @@ namespace PickaxeFall
                 else if(block.Kind==BlockKind.AmethystCluster)Light(block.transform.position,4,new Color(.82f,.55f,1));
                 else if(block.Kind==BlockKind.Spawner)Light(block.transform.position,2.5f,new Color(.48f,.78f,.94f));
             }
+            for(int y=0;y<height;y++)for(int x=0;x<width;x++)if(game.World.Liquids.KindAt(x0+x*step,row0+y*step)==BlockKind.Lava)Light(new Vector2(x0+x*step,-row0-y*step-.5f),3,new Color(1,.46f,.1f));
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)pixels[(height-1-y)*width+x]=field[y*width+x];
             texture.SetPixels32(pixels);texture.Apply(false,false);
         }

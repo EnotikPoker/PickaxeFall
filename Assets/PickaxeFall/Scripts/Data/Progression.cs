@@ -17,7 +17,7 @@ namespace PickaxeFall
     [Serializable]
     public sealed class PlayerProfile
     {
-        public int version = 4;
+        public int version = 5;
         public long coins;
         public int bestDepth;
         public long[] resources = new long[ResourceInventory.SlotCount];
@@ -32,10 +32,10 @@ namespace PickaxeFall
         public int Level(UpgradeKey key) => key.IsValid ? upgrades[key.Index] : 0;
         public void Validate()
         {
-            if (version != 4 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
+            if (version != 5 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
                 throw new InvalidOperationException("Invalid player profile.");
             foreach (long count in resources) if (count < 0) throw new InvalidOperationException("Negative resource count.");
-            if(resources[8]!=0 || resources[9]!=0)throw new InvalidOperationException("Invalid reserved resource slots.");
+            for(int i=0;i<resources.Length;i++)if(!ResourceInventory.IsResource((BlockKind)i) && resources[i]!=0)throw new InvalidOperationException("Invalid reserved resource slots.");
             foreach (var key in Progression.Keys)
                 if (Level(key) < 0 || Level(key) > Progression.MaxLevel(key.Kind)) throw new InvalidOperationException("Invalid upgrade level.");
             run?.Validate();
@@ -52,32 +52,30 @@ namespace PickaxeFall
     {
         readonly int[] levels;
         public readonly bool DashUnlocked,PlungeUnlocked;
-        public RunUpgrades(PlayerProfile profile) { levels = (int[])profile.upgrades.Clone();DashUnlocked=profile.dashUnlocked;PlungeUnlocked=profile.plungeUnlocked; }
+        public readonly ProgressionBalance Config;
+        public RunUpgrades(PlayerProfile profile, ProgressionBalance config = null) { Config=config??Progression.Default; levels = (int[])profile.upgrades.Clone();DashUnlocked=profile.dashUnlocked;PlungeUnlocked=profile.plungeUnlocked; }
         public int[] CaptureLevels() => (int[])levels.Clone();
         public int Level(UpgradeKind kind, int tier = 0) => levels[new UpgradeKey(kind, tier).Index];
-        public double Chance(UpgradeKind kind) => Level(kind) * Progression.ChanceStep(kind);
-        public float MaxEnergy => 60 + 8 * Level(UpgradeKind.EnergyCapacity);
+        public double Chance(UpgradeKind kind) => Level(kind) * Progression.ChanceStep(kind,Config);
+        public float MaxEnergy => Config.energyCapacity + Config.capacityStep * Level(UpgradeKind.EnergyCapacity);
         // EnergyCharge keeps its saved index; purchased levels now improve regeneration.
-        public float EnergyPerSecond => 2 + 0.04f * Level(UpgradeKind.EnergyCharge);
-        public float EnergyCost(float baseCost) => baseCost * (1 - 0.01f * Level(UpgradeKind.EnergyEfficiency));
-        public float DashSpeed => 10 + 0.6f * Level(UpgradeKind.DashForce);
+        public float EnergyPerSecond => Config.energyRegen + Config.regenStep * Level(UpgradeKind.EnergyCharge);
+        public float EnergyCost(float baseCost) => baseCost * (1 - Config.efficiencyStep * Level(UpgradeKind.EnergyEfficiency));
+        public float DashSpeed => Config.dashSpeed + Config.dashSpeedStep * Level(UpgradeKind.DashForce);
         public int PlungeBlocks => 1 + Level(UpgradeKind.PlungeDepth);
-        public int StrongBonusHalfUnits => Level(UpgradeKind.ImpactPower);
-        public int ShrapnelHalfUnits => Level(UpgradeKind.Shrapnel);
+        public int StrongBonusHalfUnits => Config.impactStep * Level(UpgradeKind.ImpactPower);
+        public int ShrapnelHalfUnits => Config.shrapnelStep * Level(UpgradeKind.Shrapnel);
         public int TeamSize => 2 + Level(UpgradeKind.TeamSize);
-        public int DamageBonusHalfUnits(int originalTier) => Level(UpgradeKind.Damage, originalTier) * Progression.DamageStepHalfUnits(originalTier);
-        public int DurabilityBonus(int originalTier) => Progression.DurabilityStep(originalTier) * Level(UpgradeKind.Durability, originalTier);
+        public int DamageBonusHalfUnits(int originalTier) => Level(UpgradeKind.Damage, originalTier) * Progression.DamageStepHalfUnits(originalTier,Config);
+        public int DurabilityBonus(int originalTier) => Progression.DurabilityStep(originalTier,Config) * Level(UpgradeKind.Durability, originalTier);
     }
 
     public static class Progression
     {
         public static readonly UpgradeKey[] Keys = CreateKeys();
-        public static readonly long[] SellPrices = { 1, 2, 5, 10, 22, 45, 120, 3, 0, 0, 240, 16, 12, 30 };
-        static readonly double[] TierPrices = { 1, 1.4, 2.3, 3.4, 5 };
-        static readonly int[] BasePrices = { 30, 25, 10, 10, 250, 8, 12, 12, 6, 12, 40, 25, 30, 60, 250, 60, 55 };
-        static readonly int[] DamageSteps = { 1, 2, 3, 4, 8 }, DurabilitySteps = { 3, 6, 9, 14, 32 };
-        static readonly double[] Growth = { 1.28, 1.26, 1.3, 1.35, 1, 1.19, 1.32, 1.32, 1.18, 1.18, 2.2, 1.22, 1.5, 2.5, 1, 1.55, 1.45 };
-        public static string Number(double value) => value.ToString("0.#", CultureInfo.GetCultureInfo("ru-RU"));
+        public static readonly ProgressionBalance Default = new();
+        public static long[] SellPrices => Default.sellPrices;
+        public static string Number(double value) => value.ToString("0.##", CultureInfo.GetCultureInfo("ru-RU"));
         public static int MaxLevel(UpgradeKind kind) => kind switch
         {
             UpgradeKind.TeamSize or UpgradeKind.PlungeDepth => 3,
@@ -87,23 +85,18 @@ namespace PickaxeFall
             UpgradeKind.LastChance or UpgradeKind.TntFind or UpgradeKind.Careful => 40,
             _ => 20
         };
-        public static double ChanceStep(UpgradeKind kind) => kind switch
-        {
-            UpgradeKind.Fortune => 0.02,
-            UpgradeKind.DoubleBench or UpgradeKind.DoubleBlast => 0.01,
-            UpgradeKind.TeamChance or UpgradeKind.TntFind or UpgradeKind.Careful or UpgradeKind.LastChance => 0.005,
-            _ => 0
-        };
-        public static int DamageStepHalfUnits(int tier) => DamageSteps[tier];
-        public static int DurabilityStep(int tier) => DurabilitySteps[tier];
+        public static double ChanceStep(UpgradeKind kind, ProgressionBalance config=null) => (config??Default).chanceSteps[(int)kind];
+        public static int DamageStepHalfUnits(int tier, ProgressionBalance config=null) => (config??Default).damageSteps[tier];
+        public static int DurabilityStep(int tier, ProgressionBalance config=null) => (config??Default).durabilitySteps[tier];
         public static bool IsOre(BlockKind kind) => kind >= BlockKind.Coal && kind <= BlockKind.Diamond || kind >= BlockKind.Emerald && kind <= BlockKind.AmethystCluster;
         public static readonly BlockKind[] VeinOres={BlockKind.Coal,BlockKind.Copper,BlockKind.Iron,BlockKind.Gold,BlockKind.Diamond,BlockKind.Emerald,BlockKind.Lapis,BlockKind.Redstone};
-        public static UpgradeCost AbilityCost(AbilityKind kind)
+        public static UpgradeCost AbilityCost(AbilityKind kind, ProgressionBalance config=null)
         {
-            var cost=new UpgradeCost { Coins=kind==AbilityKind.Dash?200:350 };
-            cost.Resources[(int)BlockKind.Stone]=kind==AbilityKind.Dash?20:30;
-            cost.Resources[(int)(kind==AbilityKind.Dash?BlockKind.Coal:BlockKind.Copper)]=kind==AbilityKind.Dash?10:6;
-            return cost;
+            var c=config??Default;int index=kind==AbilityKind.Dash?0:1;
+            var cost=new UpgradeCost { Coins=c.unlockCoins[index] };
+            cost.Resources[(int)BlockKind.Stone]=c.unlockStone[index];
+            cost.Resources[(int)(kind==AbilityKind.Dash?BlockKind.Coal:BlockKind.Copper)]=c.unlockOre[index];
+            return Scale(cost,c.recipeScale);
         }
         public static string Title(UpgradeKind kind) => kind switch
         {
@@ -116,7 +109,7 @@ namespace PickaxeFall
             UpgradeKind.EnergyEfficiency => "Экономия энергии", UpgradeKind.DashForce => "Сила рывка",
             UpgradeKind.PlungeDepth => "Глубокий пробой", UpgradeKind.ImpactPower => "Мощный удар", _ => "Осколочный удар"
         };
-        public static string Description(UpgradeKind kind) => kind switch
+        public static string Description(UpgradeKind kind, ProgressionBalance config=null) => kind switch
         {
             UpgradeKind.Damage => "Повышает урон выбранного типа. Редкие кирки получают более сильную прибавку.",
             UpgradeKind.Durability => "Увеличивает запас выбранного типа. Редкие кирки получают больше прочности.",
@@ -124,12 +117,12 @@ namespace PickaxeFall
             UpgradeKind.TeamChance => "Один бросок шанса даёт весь отряд одинаковых кирок. +0,5 п.п. за уровень.",
             UpgradeKind.TeamSize => "Увеличивает отряд при удаче. Не повышает шанс его выпадения.",
             UpgradeKind.TntFind => "После прямой добычи руда иногда взрывается малым взрывом радиусом 1,5 м. Ресурс остаётся в рюкзаке. Максимум 20%.",
-            UpgradeKind.DoubleBench => "Верстак полностью чинит кирку, повышает тип на две ступени и заполняет общую энергию. +1 п.п. за уровень, до 25%.",
+            UpgradeKind.DoubleBench => "Шанс усилить верстак: обычный повышает тип, улучшающий — на две ступени. При достижении алмазной заполняет энергию. +1 п.п. за уровень, до 25%.",
             UpgradeKind.DoubleBlast => "Взрыв охватывает вдвое большую площадь. +1 п.п. за уровень, до 25%.",
             UpgradeKind.Careful => "Шанс не потратить прочность при ударе. +0,5 п.п. за уровень, до 20%.",
             UpgradeKind.LastChance => "Один раз за забег последняя кирка может восстановить 50% прочности и энергию на пробой. +0,5 п.п. за уровень, до 20%.",
             UpgradeKind.EnergyCapacity => "+8 к общему запасу. Спуск начинается с полной энергией. Максимум 100.",
-            UpgradeKind.EnergyCharge => "+0,04 энергии в секунду за уровень: от 2 до 2,8. Восстановление идёт только во время спуска и не зависит от ударов и числа кирок.",
+            UpgradeKind.EnergyCharge => "+"+Number((config??Default).regenStep)+" энергии/с за уровень. Восстановление: "+Number((config??Default).energyRegen)+" → "+Number((config??Default).energyRegen+20*(config??Default).regenStep)+"/с. Только во время спуска; удары не дают энергию.",
             UpgradeKind.EnergyEfficiency => "Рывок и пробой расходуют на 1% меньше энергии за уровень. Максимум −10%.",
             UpgradeKind.DashForce => "+0,6 м/с к начальному импульсу рывка. Пробивает один блок при любой прокачке.",
             UpgradeKind.PlungeDepth => "+1 пробиваемый блок к удару вниз за уровень. От одного до четырёх блоков.",
@@ -137,41 +130,44 @@ namespace PickaxeFall
             _ => "Сильный обычный удар повреждает один соседний материал: +0,5 урона за уровень. Направления чередуются. Без дополнительного износа."
         };
 
-        public static UpgradeCost Cost(UpgradeKey key, int nextLevel)
+        public static UpgradeCost Cost(UpgradeKey key, int nextLevel, ProgressionBalance config=null)
         {
             if (!key.IsValid || nextLevel < 1 || nextLevel > MaxLevel(key.Kind)) throw new ArgumentOutOfRangeException(nameof(nextLevel));
+            var c=config??Default;
             var cost = new UpgradeCost();
             if (key.Kind == UpgradeKind.TeamSize)
             {
-                cost.Coins = new long[] { 250, 1000, 4000 }[nextLevel - 1];
-                if (nextLevel == 1) { cost.Resources[1] = 8; cost.Resources[2] = 8; }
-                if (nextLevel == 2) { cost.Resources[1] = 20; cost.Resources[2] = 10; cost.Resources[3] = 8; }
-                if (nextLevel == 3) { cost.Resources[3] = 20; cost.Resources[4] = 10; cost.Resources[5] = 4; cost.Resources[6] = 1; }
-                return cost;
+                cost.Coins = c.teamCoins[nextLevel-1];
+                for(int i=0;i<ResourceInventory.SlotCount;i++)cost.Resources[i]=c.teamMaterials[(nextLevel-1)*ResourceInventory.SlotCount+i];
+                return Scale(cost,c.recipeScale*c.recipeMultipliers[(int)key.Kind]);
             }
             if (key.Kind == UpgradeKind.PlungeDepth)
             {
-                cost.Coins = new long[] { 250, 1200, 5000 }[nextLevel - 1];
-                if (nextLevel == 1) { cost.Resources[1] = 12; cost.Resources[2] = 6; cost.Resources[3] = 2; }
-                if (nextLevel == 2) { cost.Resources[1] = 30; cost.Resources[2] = 12; cost.Resources[3] = 8; cost.Resources[4] = 4; }
-                if (nextLevel == 3) { cost.Resources[3] = 20; cost.Resources[4] = 10; cost.Resources[5] = 4; cost.Resources[6] = 1; }
-                return cost;
+                cost.Coins = c.plungeCoins[nextLevel-1];
+                for(int i=0;i<ResourceInventory.SlotCount;i++)cost.Resources[i]=c.plungeMaterials[(nextLevel-1)*ResourceInventory.SlotCount+i];
+                return Scale(cost,c.recipeScale*c.recipeMultipliers[(int)key.Kind]);
             }
             int recipeLevel = key.Kind >= UpgradeKind.EnergyCapacity ? 1 + 19 * (nextLevel - 1) / (MaxLevel(key.Kind) - 1) : nextLevel;
-            double tierMultiplier = key.Kind <= UpgradeKind.Durability ? TierPrices[key.Tier] : 1;
-            cost.Coins = (long)Math.Ceiling(BasePrices[(int)key.Kind] * tierMultiplier * Math.Pow(Growth[(int)key.Kind], nextLevel - 1));
-            cost.Resources[0] = recipeLevel <= 5 ? (long)Math.Ceiling((key.Kind == UpgradeKind.Damage ? 8 : 6) * Math.Pow(1.12, recipeLevel - 1)) : 0;
-            cost.Resources[1] = (long)Math.Ceiling((key.Kind == UpgradeKind.Damage ? 4 : 3) * Math.Pow(1.18, recipeLevel - 1));
+            double tierMultiplier = key.Kind <= UpgradeKind.Durability ? c.tierPrices[key.Tier] : 1;
+            cost.Coins = (long)Math.Ceiling(c.basePrices[(int)key.Kind] * tierMultiplier * Math.Pow(c.growth[(int)key.Kind], nextLevel - 1));
+            cost.Resources[0] = recipeLevel <= 5 ? (long)Math.Ceiling((key.Kind == UpgradeKind.Damage ? c.dirtDamage : c.dirtOther) * Math.Pow(c.dirtGrowth, recipeLevel - 1)) : 0;
+            cost.Resources[1] = (long)Math.Ceiling((key.Kind == UpgradeKind.Damage ? c.stoneDamage : c.stoneOther) * Math.Pow(c.stoneGrowth, recipeLevel - 1));
             for (int stage = 0; stage < 4; stage++)
             {
-                int start = 6 + stage * 5;
-                if (recipeLevel >= start) cost.Resources[stage + 2] += (long)Math.Ceiling(2 * Math.Pow(1.15, recipeLevel - start));
+                int start = c.oreGates[stage];
+                if (recipeLevel >= start) cost.Resources[stage + 2] += (long)Math.Ceiling(c.stageOre * Math.Pow(c.oreGrowth, recipeLevel - start));
             }
             if (key.Kind <= UpgradeKind.Durability && key.Tier >= 2 && recipeLevel >= 11)
             {
                 int resource = key.Tier == 2 ? 5 : key.Tier == 3 ? 4 : 6;
-                cost.Resources[resource] += (long)Math.Ceiling(Math.Pow(1.2, recipeLevel - 11));
+                cost.Resources[resource] += (long)Math.Ceiling(c.tierOre*Math.Pow(c.tierOreGrowth, recipeLevel - 11));
             }
+            return Scale(cost,c.recipeScale*c.recipeMultipliers[(int)key.Kind]);
+        }
+
+        static UpgradeCost Scale(UpgradeCost cost,float scale)
+        {
+            for(int i=0;i<cost.Resources.Length;i++)cost.Resources[i]=(long)Math.Ceiling(cost.Resources[i]*(double)scale);
             return cost;
         }
 

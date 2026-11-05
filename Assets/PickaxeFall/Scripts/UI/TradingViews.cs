@@ -33,7 +33,7 @@ namespace PickaxeFall
                 Icon(card, PixelArt.ResourceIcon(kind), "bag-icon");
                 BoldText(card, kind == BlockKind.Deepstone ? "Глубинный сланец" : GameBalance.BlockName(kind), "bag-name");
                 bagCounts[i] = BoldText(card, "0", "bag-count"); bagCounts[i].name = "count-" + kind;
-                Text(card, Progression.SellPrices[i] + " мон. за шт.", "bag-price");
+                Text(card, game.Economy.Config.sellPrices[i] + " мон. за шт.", "bag-price");
             }
             sellBag = Button(parent, "ПРОДАТЬ ВЕСЬ РЮКЗАК", OpenSellAll, "stone-button primary"); sellBag.name = "sell-bag";
             Text(parent, "Нажми на ресурс, чтобы продать выбранное количество или весь запас этого вида.", "footnote");
@@ -48,8 +48,8 @@ namespace PickaxeFall
             if (next > Progression.MaxLevel(pinned.Kind)) bagGoal.text = "Выбранное улучшение прокачано полностью.";
             else
             {
-                var cost = Progression.Cost(pinned, next);
-                string tool = pinned.Kind <= UpgradeKind.Durability ? " · " + game.Balance.pickaxes[pinned.Tier].title : "";
+                var cost = Progression.Cost(pinned, next,game.Economy.Config);
+                string tool = pinned.Kind <= UpgradeKind.Durability ? " · " + game.ShopBalance.pickaxes[pinned.Tier].title : "";
                 bagGoal.text = $"Цель: {Progression.Title(pinned.Kind)}{tool}\nОставь для уровня {next}: {ResourceRecipe(cost)}";
             }
         }
@@ -67,7 +67,7 @@ namespace PickaxeFall
         {
             if (!game.CanTrade) return;
             long available = game.Inventory[kind]; var card = OpenModal(GameBalance.BlockName(kind));
-            Text(card, $"В рюкзаке: {Exact(available)}\nЦена: {Progression.SellPrices[(int)kind]} монет за шт.", "description");
+            Text(card, $"В рюкзаке: {Exact(available)}\nЦена: {game.Economy.Config.sellPrices[(int)kind]} монет за шт.", "description");
             Text(card, "Сколько продать?", "section-label");
             var input = new TextField { value = available > 0 ? "1" : "0", maxLength = 19, keyboardType = TouchScreenKeyboardType.NumberPad, name = "sale-quantity" };
             input.AddToClassList("quantity-input"); card.Add(input);
@@ -81,7 +81,7 @@ namespace PickaxeFall
             {
                 bool valid = TrySaleQuantity(input.value, game.Inventory[kind], out long count);
                 long money = 0;
-                if (valid) { try { money = checked(count * Progression.SellPrices[(int)kind]); checked { _ = money + game.Wallet; } } catch (OverflowException) { valid = false; } }
+                if (valid) { try { money = checked(count * game.Economy.Config.sellPrices[(int)kind]); checked { _ = money + game.Wallet; } } catch (OverflowException) { valid = false; } }
                 quote.text = valid ? $"Ты получишь {Exact(money)} монет" : "Укажи доступное целое количество."; confirm.SetEnabled(valid);
             }
             input.RegisterValueChangedCallback(_ => UpdateQuote()); UpdateQuote();
@@ -113,7 +113,7 @@ namespace PickaxeFall
             for (int i = 0; i < 5; i++)
             {
                 int tier = i;
-                var b = Button(tierSelector, "", () => { shopTier = tier; RebuildShop(); }, "stone-button tier-button"); b.tooltip = game.Balance.pickaxes[i].title; b.name = "shop-tier-" + i;
+                var b = Button(tierSelector, "", () => { shopTier = tier; RebuildShop(); }, "stone-button tier-button"); b.tooltip = game.ShopBalance.pickaxes[i].title; b.name = "shop-tier-" + i;
                 Icon(b, PixelArt.Pickaxe(i), "tier-icon"); tierButtons.Add(b);
             }
             selectedToolName = BoldText(parent, "", "selected-tool");
@@ -142,12 +142,12 @@ namespace PickaxeFall
         {
             for (int i = 0; i < categoryButtons.Count; i++) categoryButtons[i].EnableInClassList("active", i == shopCategory);
             for (int i = 0; i < tierButtons.Count; i++) tierButtons[i].EnableInClassList("active", i == shopTier);
-            selectedToolName.text = game.Balance.pickaxes[shopTier].title;
+            selectedToolName.text = game.ShopBalance.pickaxes[shopTier].title;
             if (shopCategory == 0)
             {
                 int damage = game.PreviewDamageHalfUnits(shopTier);
                 bool canUpgrade = game.Economy.Profile.Level(new(UpgradeKind.Damage, shopTier)) < Progression.MaxLevel(UpgradeKind.Damage);
-                int nextDamage = canUpgrade ? damage + Progression.DamageStepHalfUnits(shopTier) : damage;
+                int nextDamage = canUpgrade ? damage + Progression.DamageStepHalfUnits(shopTier,game.Economy.Config) : damage;
                 toolHitCounts.text = "Ударов на глубине появления" + (canUpgrade ? " сейчас → после +урона:" : ":") + "\nКамень " + HitComparison(BlockKind.Stone, damage, nextDamage) + " · Медь " + HitComparison(BlockKind.Copper, damage, nextDamage) + " · Железо " + HitComparison(BlockKind.Iron, damage, nextDamage) + " · Алмаз " + HitComparison(BlockKind.Diamond, damage, nextDamage);
             }
             foreach (var card in upgradeCards) card.Refresh();
@@ -157,7 +157,7 @@ namespace PickaxeFall
         string HitComparison(BlockKind kind, int damage, int nextDamage) => Hits(kind, damage) + (damage == nextDamage ? "" : "→" + Hits(kind, nextDamage));
         int Hits(BlockKind kind, int damage)
         {
-            int hp = game.Balance.BlockHealthHalfUnits(kind, game.Balance.Block(kind).minimumDepth);
+            int hp = game.ShopBalance.BlockHealthHalfUnits(kind, game.ShopBalance.Block(kind).minimumDepth);
             return (hp + damage - 1) / damage;
         }
         string ResourceRecipe(UpgradeCost cost, bool owned = false)
@@ -175,19 +175,19 @@ namespace PickaxeFall
         }
         string UpgradeEffect(UpgradeKey key, int level)
         {
-            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.Balance.pickaxes[key.Tier].damage + level * Progression.DamageStepHalfUnits(key.Tier) * 0.5) + " урона";
-            if (key.Kind == UpgradeKind.Durability) return (game.Balance.pickaxes[key.Tier].durability + level * Progression.DurabilityStep(key.Tier)) + " прочности";
+            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.ShopBalance.pickaxes[key.Tier].damage + level * Progression.DamageStepHalfUnits(key.Tier,game.Economy.Config) * 0.5) + " урона";
+            if (key.Kind == UpgradeKind.Durability) return (game.ShopBalance.pickaxes[key.Tier].durability + level * Progression.DurabilityStep(key.Tier,game.Economy.Config)) + " прочности";
             if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + " кирки";
             return key.Kind switch
             {
-                UpgradeKind.EnergyCapacity => (60 + 8 * level) + " энергии",
-                UpgradeKind.EnergyCharge => (2 + 0.04 * level).ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("ru-RU")) + " в секунду",
-                UpgradeKind.EnergyEfficiency => "−" + level + "% расхода",
-                UpgradeKind.DashForce => Progression.Number(10 + 0.6 * level) + " м/с",
+                UpgradeKind.EnergyCapacity => (game.Economy.Config.energyCapacity + game.Economy.Config.capacityStep * level) + " энергии",
+                UpgradeKind.EnergyCharge => (game.Economy.Config.energyRegen + game.Economy.Config.regenStep * level).ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("ru-RU")) + " в секунду",
+                UpgradeKind.EnergyEfficiency => "−" + Progression.Number(level*game.Economy.Config.efficiencyStep*100) + "% расхода",
+                UpgradeKind.DashForce => Progression.Number(game.Economy.Config.dashSpeed + game.Economy.Config.dashSpeedStep * level) + " м/с",
                 UpgradeKind.PlungeDepth => (1 + level) + " блоков",
-                UpgradeKind.ImpactPower => "+" + Progression.Number(level * 0.5) + " урона сильного удара",
-                UpgradeKind.Shrapnel => Progression.Number(level * 0.5) + " соседям",
-                _ => Progression.Number(level * Progression.ChanceStep(key.Kind) * 100) + "%"
+                UpgradeKind.ImpactPower => "+" + Progression.Number(level * game.Economy.Config.impactStep * 0.5) + " урона сильного удара",
+                UpgradeKind.Shrapnel => Progression.Number(level * game.Economy.Config.shrapnelStep * 0.5) + " соседу",
+                _ => Progression.Number(level * Progression.ChanceStep(key.Kind,game.Economy.Config) * 100) + "%"
             };
         }
         sealed class UpgradeCard
@@ -198,7 +198,7 @@ namespace PickaxeFall
             {
                 hud = owner; key = upgrade; box = Box(parent, "upgrade-card inset"); box.name = "upgrade-" + key.Kind + "-" + key.Tier;
                 heading = hud.BoldText(box, "", "upgrade-title");
-                Text(box, Progression.Description(key.Kind), "description"); effect = hud.BoldText(box, "", "upgrade-effect");
+                Text(box, Progression.Description(key.Kind,hud.game.Economy.Config), "description"); effect = hud.BoldText(box, "", "upgrade-effect");
                 cost = Text(box, "", "upgrade-price"); resources = Box(box, "recipe-resources"); reason = Text(box, "", "upgrade-reason");
                 buy = hud.Button(box, "УЛУЧШИТЬ", () =>
                 {
@@ -218,7 +218,7 @@ namespace PickaxeFall
                 buy.EnableInClassList("buy-ready",available);buy.EnableInClassList("buy-blocked",!available && level<max);
                 resources.Clear();
                 if (level >= max) { cost.text = ""; reason.text = "Максимальный уровень"; return; }
-                var price = Progression.Cost(key, level + 1);
+                var price = Progression.Cost(key, level + 1,hud.game.Economy.Config);
                 cost.text = $"Цена: {Exact(price.Coins)} монет · есть {Short(hud.game.Wallet)}";
                 cost.EnableInClassList("cost-enough",hud.game.Wallet>=price.Coins);cost.EnableInClassList("cost-short",hud.game.Wallet<price.Coins);
                 for(int i=0;i<ResourceInventory.SlotCount;i++)

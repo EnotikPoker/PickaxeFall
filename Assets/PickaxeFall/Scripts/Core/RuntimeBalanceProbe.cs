@@ -15,24 +15,9 @@ namespace PickaxeFall
         void OnLog(string message, string stack, LogType type) { if (type == LogType.Exception || type == LogType.Error) Application.Quit(1); }
         bool active;
         string outputDirectory = "/tmp";
-        float nextAction;
-        void BeginPolicy() { nextAction = Time.time + 2; }
-        void ActivePolicy(GameController game)
-        {
-            if (!active || Time.time < nextAction || !game.SelectedTool.IsAlive) return;
-            Vector2 position = game.SelectedTool.Body.position, direction = Vector2.down; int best = 0;
-            int centerX = Mathf.RoundToInt(position.x), centerRow = Mathf.FloorToInt(-position.y);
-            for (int row = centerRow - 3; row <= centerRow + 3; row++) for (int x = centerX - 3; x <= centerX + 3; x++)
-            {
-                var cell = game.World.CellAt(x, row); if (!cell) continue;
-                Vector2 delta = (Vector2)cell.transform.position - position;
-                if (delta.magnitude < 0.5f || delta.magnitude > 3.2f) continue;
-                int score = cell.Kind == BlockKind.Workbench ? 100 : Progression.IsOre(cell.Kind) ? 10 + (int)cell.Kind * 4 : 0;
-                if (score > best && Mathf.Abs(delta.x) > Mathf.Abs(delta.y)) { best = score; direction = new Vector2(Mathf.Sign(delta.x), 0); }
-            }
-            bool used = game.TryUseAbility(best > 0 ? AbilityKind.Dash : AbilityKind.Plunge, direction);
-            nextAction = Time.time + (used ? 10 : 0.2f);
-        }
+        MiningPolicy policy;
+        void BeginPolicy(){policy=new MiningPolicy();}
+        void ActivePolicy(GameController game){if(active)policy.Tick(game);}
         IEnumerator Start()
         {
             Application.targetFrameRate = -1;
@@ -42,7 +27,7 @@ namespace PickaxeFall
             active = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--active-controls");
             if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--economy-probe")) { yield return EconomyTrace(); yield break; }
             var game = GetComponent<GameController>();game.Economy.Profile.dashUnlocked=game.Economy.Profile.plungeUnlocked=active;
-            var csv = new List<string> { "profile,tier,seed,tools,seconds,depth,potentialSaleValue,blocks,strikes,benches,dirt,stone,coal,copper,iron,gold,diamond,deepstone,emerald,lapis,redstone,amethyst" };
+            var csv = new List<string> { "profile,tier,seed,tools,seconds,depth,potentialSaleValue,blocks,strikes,benches,dirt,stone,coal,copper,iron,gold,diamond,deepstone,emerald,lapis,redstone,amethyst,obsidian" };
             int[] seeds = { 8127, 19073, 40211, 73417, 120011, 88191, 55513, 90913 };
             string seedArgument = Array.Find(Environment.GetCommandLineArgs(), a => a.StartsWith("--balance-seed="));
             int singleSeed = 0;
@@ -92,13 +77,13 @@ namespace PickaxeFall
                 Array.Clear(reserve, 0, ResourceInventory.SlotCount); long coins = 0, available = game.Wallet; bool materials = true;
                 for (int k = 0; k < n; k++)
                 {
-                    var cost = Progression.Cost(keys[k], game.Economy.Profile.Level(keys[k]) + 1); coins += cost.Coins;
+                    var cost = Progression.Cost(keys[k], game.Economy.Profile.Level(keys[k]) + 1,game.Economy.Config); coins += cost.Coins;
                     for (int i = 0; i < ResourceInventory.SlotCount; i++) reserve[i] += cost.Resources[i];
                 }
                 for (int i = 0; i < ResourceInventory.SlotCount; i++)
                 {
                     long surplus = game.Inventory[(BlockKind)i] - reserve[i];
-                    if (surplus < 0) materials = false; else available += surplus * Progression.SellPrices[i];
+                    if (surplus < 0) materials = false; else available += surplus * game.Economy.Config.sellPrices[i];
                 }
                 if (materials && available >= coins || n == 1) { count = n; break; }
             }
@@ -122,7 +107,7 @@ namespace PickaxeFall
             foreach(var ability in new[] {AbilityKind.Dash,AbilityKind.Plunge})
             {
                 if(opened>=maximum || game.Economy.AbilityUnlocked(ability))continue;
-                var price=Progression.AbilityCost(ability);long available=game.Wallet;bool materials=true;
+                var price=Progression.AbilityCost(ability,game.Economy.Config);long available=game.Wallet;bool materials=true;
                 foreach(var kind in ResourceInventory.Materials){long surplus=game.Inventory[kind]-price.Resources[(int)kind];if(surplus<0)materials=false;else available+=surplus*Progression.SellPrices[(int)kind];}
                 if(!materials || available<price.Coins)continue;
                 foreach(var kind in ResourceInventory.Materials){long surplus=game.Inventory[kind]-price.Resources[(int)kind];if(surplus>0 && !game.Economy.TrySell(kind,surplus))throw new Exception(game.Economy.LastError);}

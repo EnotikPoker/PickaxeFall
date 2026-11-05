@@ -7,7 +7,8 @@ namespace PickaxeFall
         readonly Action<PlayerProfile> persist, resetPersist;
         public PlayerProfile Profile { get; private set; }
         public string LastError { get; private set; }
-        public EconomyService(PlayerProfile profile, Action<PlayerProfile> save = null, Action<PlayerProfile> reset = null) { profile.Validate(); Profile = profile; persist = save;resetPersist=reset??save; }
+        public ProgressionBalance Config { get; }
+        public EconomyService(PlayerProfile profile, Action<PlayerProfile> save = null, Action<PlayerProfile> reset = null, ProgressionBalance config=null) { Config=config??Progression.Default;Config.Validate(); profile.Validate(); Profile = profile; persist = save;resetPersist=reset??save; }
 
         bool Commit(PlayerProfile next)
         {
@@ -39,7 +40,7 @@ namespace PickaxeFall
             {reason="Сначала открой нужный приём в разделе «Приёмы»";return false;}
             if (key.Kind == UpgradeKind.TeamSize && Profile.Level(new(UpgradeKind.TeamChance)) == 0)
             { reason = "Сначала открой «Отряд шахтёров»"; return false; }
-            var cost = Progression.Cost(key, level + 1);
+            var cost = Progression.Cost(key, level + 1,Config);
             if (Profile.coins < cost.Coins) { reason = "Не хватает монет"; return false; }
             for (int i = 0; i < ResourceInventory.SlotCount; i++) if (Profile.resources[i] < cost.Resources[i]) { reason = "Не хватает ресурсов"; return false; }
             return true;
@@ -50,7 +51,7 @@ namespace PickaxeFall
             reason=null;
             if(kind!=AbilityKind.Dash && kind!=AbilityKind.Plunge){reason="Неизвестная способность";return false;}
             if(AbilityUnlocked(kind)){reason="Способность уже открыта";return false;}
-            var cost=Progression.AbilityCost(kind);
+            var cost=Progression.AbilityCost(kind,Config);
             if(Profile.coins<cost.Coins){reason="Не хватает монет";return false;}
             foreach(var material in ResourceInventory.Materials)if(Profile.resources[(int)material]<cost.Resources[(int)material]){reason="Не хватает ресурсов";return false;}
             return true;
@@ -58,7 +59,7 @@ namespace PickaxeFall
         public bool TryUnlock(AbilityKind kind)
         {
             if(!CanUnlock(kind,out string reason)){LastError=reason;return false;}
-            var next=Profile.Copy();var cost=Progression.AbilityCost(kind);next.coins-=cost.Coins;
+            var next=Profile.Copy();var cost=Progression.AbilityCost(kind,Config);next.coins-=cost.Coins;
             foreach(var material in ResourceInventory.Materials)next.resources[(int)material]-=cost.Resources[(int)material];
             if(kind==AbilityKind.Dash)next.dashUnlocked=true;else next.plungeUnlocked=true;
             return Commit(next);
@@ -66,7 +67,7 @@ namespace PickaxeFall
         public bool TryBuy(UpgradeKey key)
         {
             if (!CanBuy(key, out string reason)) { LastError = reason; return false; }
-            var next = Profile.Copy(); var cost = Progression.Cost(key, next.Level(key) + 1);
+            var next = Profile.Copy(); var cost = Progression.Cost(key, next.Level(key) + 1,Config);
             next.coins -= cost.Coins;
             for (int i = 0; i < ResourceInventory.SlotCount; i++) next.resources[i] -= cost.Resources[i];
             next.upgrades[key.Index]++;
@@ -77,14 +78,14 @@ namespace PickaxeFall
             if (!ResourceInventory.IsResource(kind) || quantity < 1 || quantity > Profile.resources[(int)kind])
             { LastError = "Укажи целое количество от 1 до имеющегося."; return false; }
             var next = Profile.Copy();
-            try { next.coins = checked(next.coins + checked(quantity * Progression.SellPrices[(int)kind])); }
+            try { next.coins = checked(next.coins + checked(quantity * Config.sellPrices[(int)kind])); }
             catch (OverflowException) { LastError = "Слишком большая сумма."; return false; }
             next.resources[(int)kind] -= quantity; return Commit(next);
         }
         public long InventoryValue()
         {
             long sum = 0;
-            checked { for (int i = 0; i < ResourceInventory.SlotCount; i++) sum += Profile.resources[i] * Progression.SellPrices[i]; }
+            checked { for (int i = 0; i < ResourceInventory.SlotCount; i++) sum += Profile.resources[i] * Config.sellPrices[i]; }
             return sum;
         }
         public bool TryInventoryValue(out long value)

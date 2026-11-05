@@ -58,8 +58,14 @@ namespace PickaxeFall
                 if (TerrainExists(x, row))
                 {
                     kind = (byte)(row < SurfaceRow(x) + 3 ? BlockKind.Dirt : row >= balance.Block(BlockKind.Deepstone).minimumDepth ? BlockKind.Deepstone : BlockKind.Stone);
-                    if (IsWorkbench(x, row)) kind = (byte)BlockKind.Workbench;
+                    if (IsWorkbench(x, row)) kind = (byte)(balance.rulesVersion>=2 && UnitHash(x,row,0x74db8a31)<balance.upgradeWorkbenchFraction?BlockKind.UpgradeWorkbench:BlockKind.Workbench);
                     else if (IsIsolated(x, row, TntSalt, balance.tntMinimumDepth, balance.tntChance, balance.tntSpacing) && !NearWorkbench(x, row)) kind = (byte)BlockKind.Tnt;
+                }
+                if(balance.rulesVersion>=2)
+                {
+                    if(TryLakeCell(x,row,out byte liquid))kind=liquid;
+                    else if(kind==(byte)BlockKind.Stone || kind==(byte)BlockKind.Deepstone)
+                        if(row>=balance.lavaMinimumDepth && UnitHash(x,row,0x18b3a5c)<balance.lavaPocketChance)kind=(byte)BlockKind.Lava;
                 }
                 if(TryStructureCell(x,row,out byte structure))kind=structure;
                 cells[x + half] = kind;
@@ -158,10 +164,10 @@ namespace PickaxeFall
         }
 
         bool Candidate(int x, int row, uint salt, int minimumDepth, float chance)
-            => row >= minimumDepth && chance > 0 && UnitHash(x, row, salt) < chance && TerrainExists(x, row);
+            => row >= minimumDepth && chance > 0 && UnitHash(x, row, salt) < (salt==BenchSalt?balance.WorkbenchChanceAt(row):chance) && TerrainExists(x, row);
 
         bool IsWorkbench(int x, int row)
-            => IsIsolated(x, row, BenchSalt, balance.workbenchMinimumDepth, balance.workbenchChance, balance.workbenchSpacing);
+            => IsIsolated(x, row, BenchSalt, balance.workbenchMinimumDepth, balance.WorkbenchChanceAt(row), balance.workbenchSpacing);
 
         bool IsIsolated(int x, int row, uint salt, int minimumDepth, float chance, int spacing)
         {
@@ -185,6 +191,24 @@ namespace PickaxeFall
             for (int dy = -2; dy <= 2; dy++) for (int dx = -2; dx <= 2; dx++)
                 if (dx * dx + dy * dy <= 4 && IsWorkbench(x + dx, row + dy)) return true;
             return false;
+        }
+
+        public bool TryLakeCell(int x,int row,out byte kind)
+        {
+            kind=Air;if(row<balance.waterMinimumDepth-3)return false;
+            int band=Mathf.Max(0,row/32),center=band*32+10+(int)(Hash(0,band,0x27ca912)%12);
+            double roll=UnitHash(0,band,0x17bce19);
+            bool water=roll<balance.waterLakeChance,mixed=roll>=balance.waterLakeChance+balance.lavaLakeChance;
+            if(roll>=balance.waterLakeChance+balance.lavaLakeChance+balance.mixedLakeChance)return false;
+            if(!water && center<balance.lavaMinimumDepth)return false;
+            int half=balance.worldWidth/2,margin=Mathf.Max(0,half-6),cx=(int)(Hash(0,band,0x31c8ab2)%(uint)(margin*2+1))-margin;
+            int radius=2+(int)(Hash(0,band,0x15a12d3)%3),dx=x-cx,dy=row-center;
+            if(Mathf.Abs(dx)>radius+1 || dy< -3 || dy>1)return false;
+            // Closed stone basin, finite volume, air above a flat liquid surface.
+            if(dy==1 || Mathf.Abs(dx)==radius+1){kind=(byte)(row>=balance.Block(BlockKind.Deepstone).minimumDepth?BlockKind.Deepstone:BlockKind.Stone);return true;}
+            if(dy>=-1)kind=(byte)(water?BlockKind.Water:BlockKind.Lava);
+            else if(mixed && dy==-3 && Mathf.Abs(dx)<=1)kind=(byte)BlockKind.Water;
+            return true;
         }
 
         public readonly struct Structure
