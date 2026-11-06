@@ -145,7 +145,7 @@ namespace PickaxeFall
         {
             if (!AbilityActive || block.IsBroken) return;
             var kind = block.Kind;
-            if (!ResourceInventory.IsMaterial(kind)) { CancelAbility(); block.DestroyBlock(this); return; }
+            if (!ResourceInventory.IsMaterial(kind)) {var specialOrigin=ability==AbilityKind.Dash?DamageOrigin.Dash:DamageOrigin.Plunge;CancelAbility();block.DestroyBlock(this,specialOrigin);if(kind==BlockKind.Spawner)SpendWear();return; }
             var origin = ability == AbilityKind.Dash ? DamageOrigin.Dash : DamageOrigin.Plunge;
             remaining--; block.DestroyBlock(this, origin);
             game.Effects.Impact(point, new Color32(94, 225, 238, 255), 6);
@@ -189,11 +189,12 @@ namespace PickaxeFall
         }
         void PhysicalHit(MineBlock block, float approach, Vector2 point)
         {
+            if(block.Kind==BlockKind.Spawner && game.Balance.rulesVersion>=3){block.HitHalfUnits(1,this);NaturalStrikes++;SpendWear();return;}
             if (!ResourceInventory.IsMaterial(block.Kind)) { block.DestroyBlock(this); return; }
             int x = block.Column, row = block.Row; Color color = block.BaseColor;
             bool strong = approach >= game.Balance.strongImpactSpeed;
             int damage = WetDamage(RawDamageHalfUnits + (strong ? game.RunUpgrades.StrongBonusHalfUnits : 0));
-            block.HitHalfUnits(damage, this, DamageOrigin.Physical);
+            game.Audio?.MaterialHit(block.Kind);block.HitHalfUnits(damage, this, DamageOrigin.Physical);
             NaturalStrikes++; game.OnPhysicalHit(this, strong);
             if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageShrapnelNeighbour(x, row, WetDamage(game.RunUpgrades.ShrapnelHalfUnits), this, NaturalStrikes);
             game.Effects.Impact(point, color, 3); SpendWear();

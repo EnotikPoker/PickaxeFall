@@ -6,7 +6,9 @@ namespace PickaxeFall
     // Replaced as a whole at save time; never mutate an already published snapshot.
     [Serializable] public sealed class RunSnapshot
     {
-        public int version=3,seed,ticks,depth,blocks,benches,toolCount,selectedTool,selectedTier;
+        public int version=4,seed,ticks,depth,blocks,benches,toolCount,selectedTool,selectedTier;
+        public MapId map;
+        public SpawnerState[] spawners;
         public string balanceJson;
         public BenchVisit[] benchVisits;
         public LiquidCellSnapshot[] liquids;
@@ -19,11 +21,13 @@ namespace PickaxeFall
         public CellSnapshot[] cells;
         public void Validate()
         {
-            if((version<1 || version>3) || ticks<0 || depth<0 || toolCount<1 || toolCount>5 || selectedTool<0 || selectedTool>=5 || selectedTier<0 || selectedTier>4 ||
+            if((version<1 || version>4) || ticks<0 || depth<0 || toolCount<1 || toolCount>5 || selectedTool<0 || selectedTool>=5 || selectedTier<0 || selectedTier>4 ||
                 string.IsNullOrEmpty(balanceJson) || levels==null || levels.Length!=25 || loot==null || loot.Length!=ResourceInventory.SlotCount ||
                 rollStates==null || rollStates.Length!=17 || attempts==null || attempts.Length!=17 || successes==null || successes.Length!=17 ||
                 tools==null || tools.Length!=5 || cells==null || benefits==null || !Finite(energy) || !Finite(energyEarned) || energy<0 || energyEarned<0)
                 throw new InvalidOperationException("Повреждены данные незавершённого спуска.");
+            if(!Enum.IsDefined(typeof(MapId),map))throw new InvalidOperationException("Invalid saved world.");
+            if(spawners!=null)foreach(var s in spawners)if(s==null || s.row<0 || s.hits<1 || s.hits>4 || s.lastHits?.Length!=5 || !Finite(s.until) || s.until<0)throw new InvalidOperationException("Invalid trial state.");
             var profile=new PlayerProfile {upgrades=levels};profile.Validate();
             bool alive=false;
             for(int i=0;i<tools.Length;i++)

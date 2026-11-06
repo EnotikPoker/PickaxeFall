@@ -27,7 +27,7 @@ namespace PickaxeFall
             long wallet=game.Wallet;float energy=game.Energy.Value;int layout=game.World.LayoutFingerprint();
             Press(root,"open-settings");Press(root,"settings-tutorial");
             check(game.Paused && root.Q("tutorial-overlay").style.display==DisplayStyle.Flex,"tutorial pauses active run");
-            for(int i=0;i<10;i++)Press(root,"tutorial-next");
+            for(int i=0;i<13;i++)Press(root,"tutorial-next");
             check(!game.Paused && game.Settings.TutorialSeen && root.Q("tutorial-overlay").style.display==DisplayStyle.None,"all tutorial pages finish and resume");
             check(game.Wallet==wallet && game.Energy.Value==energy && game.World.LayoutFingerprint()==layout,"tutorial never spends resources or changes mine");
             Press(root,"open-settings");Press(root,"settings-tutorial");Press(root,"tutorial-skip");

@@ -26,7 +26,8 @@ namespace PickaxeFall
                     if(block.Kind==BlockKind.UpgradeWorkbench && tool.Tier<4)score=150;
                     else if(missing>.15f)score=40+100*missing;
                 }
-                else if(block.Kind==BlockKind.Chest)score=65;
+                else if(block.Kind==BlockKind.Chest || block.Kind==BlockKind.MinecartChest)score=65;
+                else if(block.Kind==PriorityOre)score=110;
                 else if(Progression.IsOre(block.Kind))score=block.Kind==PriorityOre?110:8+Mathf.Sqrt(game.RunUpgrades.Config.sellPrices[(int)ResourceInventory.DropKind(block.Kind)]);
                 if(score<=0)continue;
                 int firstX=cx,firstRow=cr;bool reached=true;int walls=0;
@@ -41,7 +42,8 @@ namespace PickaxeFall
                 score-=delta.magnitude*2+walls*8;
                 if(reached && score>best){best=score;direction=new Vector2(Mathf.Sign(delta.x),0);}
             }
-            bool used=game.TryUseAbility(best>0?AbilityKind.Dash:AbilityKind.Plunge,direction);
+            var action=best>0?AbilityKind.Dash:game.AbilityUnlocked(AbilityKind.Plunge)?AbilityKind.Plunge:AbilityKind.Dash;
+            bool used=game.TryUseAbility(action,direction);
             if(used)next=game.Clock.Now+.5f;
         }
     }

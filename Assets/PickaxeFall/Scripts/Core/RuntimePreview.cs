@@ -16,7 +16,16 @@ namespace PickaxeFall
             var game = GetComponent<GameController>(); var root = GetComponent<UIDocument>().rootVisualElement;
             game.Economy.Profile.coins = 250;
             for (int i = 0; i < 8; i++) game.Economy.Profile.resources[i] = (8 - i) * 7;
-            if(game.TestMode=="mapmine")Submit(root.Q<Button>("open-maps"));
+            if(game.TestMode=="desert"||game.TestMode=="nether"||game.TestMode=="temple"||game.TestMode=="fortress"||game.TestMode=="mineshaft"||game.TestMode=="treasure")
+            {
+                var map=game.TestMode=="nether"||game.TestMode=="fortress"?MapId.Nether:game.TestMode=="mineshaft"?MapId.Mine:MapId.Desert;
+                game.Economy.Profile.bridgeStone=1000;game.Economy.Profile.bridgeIron=50;game.Economy.Profile.portalObsidian=10;game.SelectMap(map);
+                int seed=8127,cx=0,cy=map==MapId.Nether?120:95;
+                if(game.TestMode=="temple"||game.TestMode=="fortress"||game.TestMode=="mineshaft")for(seed=1;seed<1000;seed++){var g=new MineGenerator(game.Balance,seed);if(g.TryFeature(0,out cx,out cy,out _))break;}
+                game.BeginProbeRun(4,seed,1);game.Pickaxe.DebugPlace(new Vector2(cx,-cy+1),Vector2.zero);game.Pickaxe.Body.gravityScale=0;game.Pickaxe.Body.simulated=false;game.StepMiningWorld();Camera.main.GetComponent<MineCamera>().SnapToTools();
+                if(game.TestMode=="treasure")game.World.DebugSetCell(0,cy,BlockKind.Chest).DestroyBlock(game.Pickaxe);
+            }
+            else if(game.TestMode=="mapmine")Submit(root.Q<Button>("open-maps"));
             else if(game.TestMode=="pinned")
             {
                 game.Economy.Profile.profileLevel=3;System.Array.Fill(game.Economy.Profile.revealed,true);

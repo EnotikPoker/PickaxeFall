@@ -12,7 +12,7 @@ namespace PickaxeFall
         {
             if(!game.CanTrade)return;
             if(!operation()){Toast(game.Economy.LastError);return;}
-            Refresh();success?.Invoke();
+            game.Audio?.Play("reward");Refresh();success?.Invoke();
         }
         void TickProfile()
         {

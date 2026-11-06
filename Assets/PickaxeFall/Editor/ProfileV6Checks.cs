@@ -18,7 +18,7 @@ namespace PickaxeFall.Editor
                 old.resources[6]=3000000000L;old.upgrades[0]=7;
                 string path=Path.Combine(dir,"profile-v2.json"),json=JsonUtility.ToJson(old);File.WriteAllText(path,json);
                 var store=new ProfileStore(dir);var p=store.Load();
-                Check(p.version==6&&p.profileLevel==1&&p.coins==0&&p.bestDepth==0&&p.resetNotice&&!p.dashUnlocked&&!p.plungeUnlocked&&p.run==null&&p.activeRunJson==null,"legacy reset v"+version);
+                Check(p.version==7&&p.profileLevel==1&&p.coins==0&&p.bestDepth==0&&p.resetNotice&&!p.dashUnlocked&&!p.plungeUnlocked&&p.run==null&&p.activeRunJson==null,"legacy reset v"+version);
                 Check(Array.TrueForAll(p.resources,x=>x==0)&&Array.TrueForAll(p.upgrades,x=>x==0)&&Array.TrueForAll(p.lifetimeMined,x=>x==0),"empty season v"+version);
                 Check(File.ReadAllText(path+".pre-v6.bak")==json,"exact old backup v"+version);
                 p.coins=321;p.profileLevel=2;p.lifetimeMined[1]=3000000000L;p.revealed[25]=true;p.bridgeStone=123;p.bridgeIron=4;p.portalObsidian=3;p.goalKind=GoalKind.Portal;store.Save(p);

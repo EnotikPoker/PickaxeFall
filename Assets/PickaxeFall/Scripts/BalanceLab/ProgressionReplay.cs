@@ -28,7 +28,7 @@ namespace PickaxeFall.BalanceLab
             int horizon=job.limit;
             var result=new LabResult {id=job.Id,scenario=job.scenario.id,seed=job.seed,limit=horizon,branches=1,firstPurchase=-1,dashOpenedAt=-1,plungeOpenedAt=-1,
                 profileLevelTimes=new double[]{0,-1,-1,-1,-1},profileCoinsBlocked=new double[4],profileMiningBlocked=new double[4],profileSkillsBlocked=new double[4]};
-            var purchases=new List<PurchaseEvent>();double elapsed=0;int cursor=0;
+            var purchases=new List<PurchaseEvent>();double elapsed=0;int cursor=0;UpgradeCost pending=null;
             while(elapsed+8<horizon)
             {
                 if(cancelled?.Invoke()==true)throw new OperationCanceledException();
@@ -36,11 +36,12 @@ namespace PickaxeFall.BalanceLab
                 bool finished;double segment;
                 try
                 {
-                    var game=root.AddComponent<GameController>();game.InitializeSimulation(balance);game.BeginSimulation(tier,seed,bank.Profile.upgrades,-1,-1,bank.Profile.dashUnlocked,bank.Profile.plungeUnlocked);
-                    var policy=new LabPolicy {PriorityOre=bank.Profile.profileLevel==4&&bank.Profile.lifetimeMined[(int)BlockKind.Diamond]<3?BlockKind.Diamond:(BlockKind?)null};int ticks=(int)Math.Floor((horizon-elapsed-8)*60);
+                    balance.map=ChooseMap(bank,pending);var game=root.AddComponent<GameController>();game.InitializeSimulation(balance);game.BeginSimulation(tier,seed,bank.Profile.upgrades,-1,-1,bank.Profile.dashUnlocked,bank.Profile.plungeUnlocked);
+                    var policy=new LabPolicy {PriorityOre=balance.map==MapId.Desert&&!ProfileRules.Complete(bank.Profile,GoalKind.Portal)?BlockKind.Obsidian:bank.Profile.profileLevel==4&&bank.Profile.lifetimeMined[(int)BlockKind.Diamond]<3?BlockKind.Diamond:(BlockKind?)null};int ticks=(int)Math.Floor((horizon-elapsed-8)*60);
                     while(game.Phase==RunPhase.Mining && game.Clock.Ticks<ticks)
                     {if(game.Clock.Ticks%120==0 && cancelled?.Invoke()==true)throw new OperationCanceledException();LabWorker.Step(game,policy);}
                     finished=game.Phase!=RunPhase.Mining;segment=game.Clock.Now+8;elapsed+=segment;result.depth=Math.Max(result.depth,game.Depth);result.runCount++;
+                    result.mapSeconds[(int)balance.map]+=segment;result.mapValues[(int)balance.map]+=game.PotentialSaleValue;result.mapRuns[(int)balance.map]++;result.chests+=game.Benefits.Chests;result.trials+=game.Benefits.Trials;result.failedTrials+=game.Benefits.FailedTrials;
                     result.value+=game.PotentialSaleValue;result.blocks+=game.BlocksBroken;result.benches+=game.WorkbenchesUsed;result.abilities+=game.Benefits.Abilities;result.upgradeBenches+=game.Benefits.UpgradeBenches;result.lavaWear+=game.Benefits.LavaWear;result.restoredWear+=game.Benefits.RestoredDurability;result.energySpent+=game.Benefits.EnergySpent;result.tools+=game.RunToolCount;
                     for(int i=0;i<17;i++){result.attempts[i]+=game.Rolls.Attempts[i];result.successes[i]+=game.Rolls.Successes[i];}
                     foreach(var tool in game.Pickaxes)result.strikes+=tool.TotalStrikes;
@@ -61,9 +62,9 @@ namespace PickaxeFall.BalanceLab
                 }
                 // The construction comparison deliberately contributes before selling,
                 // so the measured opportunity cost includes materials unavailable to skills.
-                if(job.scenario.cohort=="profile"&&job.scenario.regime>0)
+                if(job.scenario.cohort=="profile" && bank.Profile.profileLevel>=3)
                 {
-                    var construction=job.scenario.regime==1?GoalKind.Bridge:GoalKind.Portal;
+                    var construction=!ProfileRules.Complete(bank.Profile,GoalKind.Bridge)?GoalKind.Bridge:GoalKind.Portal;
                     long total=0;foreach(long n in bank.ConstructionQuote(construction))total+=n;
                     if(total>0)
                     {
@@ -94,7 +95,9 @@ namespace PickaxeFall.BalanceLab
                             continue;
                         }
                     }
-                    UpgradeKey? desired=mandatory;bool bought=false;
+                    UpgradeKey? desired=mandatory;
+                    if(!desired.HasValue && bank.Profile.profileLevel>=3){int foundation=bank.Profile.profileLevel>=4?5:3;for(int t=1;t<5&&!desired.HasValue;t++)foreach(var kind in new[]{UpgradeKind.Damage,UpgradeKind.Durability})if(bank.Profile.Level(K(kind,t))<foundation){desired=K(kind,t);break;}}
+                    bool bought=false;
                     if(!desired.HasValue && (job.scenario.strategy==1 || purchases.Count>=4))
                     foreach(var ability in new[]{AbilityKind.Dash,AbilityKind.Plunge})
                     {
@@ -120,7 +123,7 @@ namespace PickaxeFall.BalanceLab
                     }
                     if(!desired.HasValue)break;
                     var target=desired.Value;var price=Progression.Cost(target,bank.Profile.Level(target)+1,bank.Config);
-                    if(!Trade(bank,price))break;
+                    pending=price;if(!Trade(bank,price))break;pending=null;
                     if(!bank.TryBuy(target))throw new InvalidOperationException(bank.LastError);
                     if(mandatory.HasValue)result.requiredSkillCoinsSpent+=price.Coins;
                     purchases.Add(new PurchaseEvent {seconds=elapsed,key=target.Index,level=bank.Profile.Level(target),title=Progression.Title(target.Kind),coins=price.Coins});
@@ -130,6 +133,21 @@ namespace PickaxeFall.BalanceLab
             result.finalLevels=(int[])bank.Profile.upgrades.Clone();result.finalProfileLevel=bank.Profile.profileLevel;result.lifetimeMined=(long[])bank.Profile.lifetimeMined.Clone();
             result.bridgeStone=bank.Profile.bridgeStone;result.bridgeIron=bank.Profile.bridgeIron;result.portalObsidian=bank.Profile.portalObsidian;
             result.wallSeconds=watch.Elapsed.TotalSeconds;return result;
+        }
+        static MapId ChooseMap(EconomyService bank,UpgradeCost pending)
+        {
+            var p=bank.Profile;int gate=Math.Min(3,p.profileLevel-1);
+            // Visit the map for the largest unmet lifetime target. Ratios avoid
+            // one large stone requirement starving the new locations.
+            float best=0;MapId chosen=MapId.Mine;
+            foreach(var k in ResourceInventory.Materials){long need=ProfileRules.MiningRequirements[gate][(int)k];if(need==0)continue;float missing=(need-p.lifetimeMined[(int)k])/(float)need;MapId map=k>=BlockKind.Netherrack?MapId.Nether:k>=BlockKind.Sand?MapId.Desert:MapId.Mine;if(missing>best&&WorldCatalog.Open(p,map)){best=missing;chosen=map;}}
+            if(!ProfileRules.Complete(p,GoalKind.Portal)&&WorldCatalog.Open(p,MapId.Desert)&&p.profileLevel>=4)return MapId.Desert;
+            if(best>0)return chosen;
+            if(pending!=null)foreach(var k in ResourceInventory.Materials)if(p.resources[(int)k]<pending.Resources[(int)k]){var map=k>=BlockKind.Netherrack?MapId.Nether:k>=BlockKind.Sand?MapId.Desert:MapId.Mine;if(WorldCatalog.Open(p,map))return map;}
+            // When a purchase is blocked by a late recipe, obtain that material.
+            foreach(var key in Strategies[0])if(p.Level(key)<Progression.MaxLevel(key.Kind)){
+                var cost=Progression.Cost(key,p.Level(key)+1,bank.Config);foreach(var k in ResourceInventory.Materials)if(p.resources[(int)k]<cost.Resources[(int)k]){var map=k>=BlockKind.Netherrack?MapId.Nether:k>=BlockKind.Sand?MapId.Desert:MapId.Mine;if(WorldCatalog.Open(p,map))return map;}}
+            return WorldCatalog.Open(p,MapId.Nether)?MapId.Nether:WorldCatalog.Open(p,MapId.Desert)?MapId.Desert:MapId.Mine;
         }
         static bool Trade(EconomyService bank,UpgradeCost cost)
         {

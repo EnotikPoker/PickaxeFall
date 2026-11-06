@@ -22,13 +22,13 @@ namespace PickaxeFall
                 BoldText(project,"Бездонная шахта","map-title");
                 Text(project,"Каждый спуск — новая шахта.","skill-summary");
                 Text(project,"ДОСТУПНА","map-status cost-enough");
-                Button(card,"ВЕРНУТЬСЯ В ШАХТУ",()=>{CloseModal();SelectTab(HubTab.Mine);},"stone-button compact-button buy-ready").name="map-enter-mine";
+                Button(card,"ВЕРНУТЬСЯ В ШАХТУ",()=>{if(game.SelectMap(MapId.Mine)){CloseModal();SelectTab(HubTab.Mine);}else Toast("Заверши выбор текущей кирки перед сменой карты");},"stone-button compact-button buy-ready").name="map-enter-mine";
             }
             else
             {
                 var kind=page==1?GoalKind.Bridge:GoalKind.Portal;bool complete=ProfileRules.Complete(p,kind);
                 BoldText(project,page==1?"Мост в пустыню":"Портал в ад","map-title");
-                Text(project,complete?"Путь готов. Спуски появятся в следующем обновлении.":"Построй путь к будущей карте.","skill-summary");
+                Text(project,complete?(page==1?"Песчанник, кварцит и сокровища храмов.":"Лава, крепости и редчайшие минералы."):"Построй путь к новой карте.","skill-summary");
                 float fraction=page==1?(p.bridgeStone/1000f+p.bridgeIron/50f)*.5f:p.portalObsidian/10f;
                 var progress=Box(project,"map-progress-row");
                 Text(progress,complete?"ПОСТРОЕНО":"ГОТОВНОСТЬ","map-status"+(complete?" cost-enough":""));
@@ -38,6 +38,7 @@ namespace PickaxeFall
                 if(page==1){RecipeLine(requirements,BlockKind.Stone,p.bridgeStone,1000);RecipeLine(requirements,BlockKind.Iron,p.bridgeIron,50);}
                 else RecipeLine(requirements,BlockKind.Obsidian,p.portalObsidian,10);
                 var pin=PaperPin(project);pin.name="map-goal-pin";Display(pin,!complete&&p.goalKind==kind);
+                if(complete){Button(card,"ВЫБРАТЬ · "+names[page].ToUpperInvariant(),()=>{if(game.SelectMap((MapId)page)){CloseModal();SelectTab(HubTab.Mine);}else Toast("Заверши выбор текущей кирки перед сменой карты");},"stone-button compact-button buy-ready").name="map-enter-"+page;Text(card,"Рекорд: "+p.mapRecords[page]+" м · "+(page==1?"Сложнее шахты":"Высокая опасность лавы"),"profile-note");}
                 if(!complete)
                 {
                     CardClick(project,()=>{ToggleCardGoal(kind,0);OpenMaps(page);});

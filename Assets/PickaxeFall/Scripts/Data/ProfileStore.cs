@@ -22,7 +22,7 @@ namespace PickaxeFall
                 // A migration write failure must never fall back to an older, poorer profile.
                 if (migrated)
                 {
-                    string snapshot=path+".pre-v6.bak";
+                    string snapshot=path+(result.resetNotice?".pre-v6.bak":".pre-v7.bak");
                     if(!File.Exists(snapshot))File.WriteAllText(snapshot,json);
                     Save(result);
                     // Recovery after the intentional season reset must use the new profile.
@@ -45,11 +45,11 @@ namespace PickaxeFall
         {
             migrated = false;
             // Missing JSON fields must not inherit the defaults of a new, empty player.
-            var profile = new PlayerProfile { version = 0, coins = -1, bestDepth = -1, resources = null, upgrades = null, profileLevel=0,lifetimeMined=null,revealed=null };
+            var profile = new PlayerProfile { version = 0, coins = -1, bestDepth = -1, resources = null, upgrades = null, profileLevel=0,lifetimeMined=null,revealed=null,discovered=null,mapRecords=null,selectedMap=(MapId)(-1) };
             JsonUtility.FromJsonOverwrite(json, profile);
             if(profile.version>=2 && profile.version<=5)
             {
-                int slots=profile.version==2||profile.version==3?8:profile.version==4?14:ResourceInventory.SlotCount;
+                int slots=profile.version==2||profile.version==3?8:profile.version==4?14:21;
                 int upgrades=profile.version==2?18:25;
                 if(profile.coins<0 || profile.bestDepth<0 || profile.resources?.Length!=slots || profile.upgrades?.Length!=upgrades)
                     throw new InvalidOperationException("Invalid legacy profile.");
@@ -57,8 +57,15 @@ namespace PickaxeFall
                 foreach(int level in profile.upgrades)if(level<0||level>40)throw new InvalidOperationException("Invalid legacy upgrades.");
                 migrated=true;return new PlayerProfile {resetNotice=true};
             }
+            if(profile.version==6){
+                if(profile.resources?.Length!=21 || profile.lifetimeMined?.Length!=21)throw new InvalidOperationException("Invalid v6 resource arrays.");
+                Array.Resize(ref profile.resources,ResourceInventory.SlotCount);Array.Resize(ref profile.lifetimeMined,ResourceInventory.SlotCount);
+                profile.discovered=new bool[ResourceInventory.SlotCount];foreach(var kind in ResourceInventory.Materials)profile.discovered[(int)kind]=profile.resources[(int)kind]>0||profile.lifetimeMined[(int)kind]>0;
+                profile.mapRecords=new[]{profile.bestDepth,0,0};profile.selectedMap=MapId.Mine;profile.version=7;migrated=true;
+            }
             if(!string.IsNullOrEmpty(profile.activeRunJson)){
                 profile.run=JsonUtility.FromJson<RunSnapshot>(profile.activeRunJson);
+                if(profile.run.version<4 && profile.run.loot?.Length==21)Array.Resize(ref profile.run.loot,ResourceInventory.SlotCount);
                 if(profile.run.version==1 && profile.run.loot?.Length==14)Array.Resize(ref profile.run.loot,ResourceInventory.SlotCount);
             }
             profile.Validate(); return profile;

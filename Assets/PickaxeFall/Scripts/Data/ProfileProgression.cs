@@ -13,15 +13,17 @@ namespace PickaxeFall
     }
     public static class ProfileRules
     {
-        public static readonly long[] LevelCoins={250,1200,4000,10000};
+        public static readonly long[] LevelCoins={250,1200,6000,18000};
         public static readonly long[][] MiningRequirements={
             Materials(150,300,30,0,0,0,0),Materials(0,1800,160,60,15,0,0),
-            Materials(0,5000,0,250,100,20,0),Materials(0,12000,1400,650,260,75,3)};
+            DesertGate(),NetherGate()};
         public static readonly SkillRequirement[][] Skills={
             new[]{new SkillRequirement(UpgradeKind.Damage,3,true),new SkillRequirement(UpgradeKind.Durability,3,true)},
             new[]{new SkillRequirement(UpgradeKind.Fortune,3),new SkillRequirement(UpgradeKind.DoubleBench,3)},
             new[]{new SkillRequirement(UpgradeKind.Careful,5),new SkillRequirement(UpgradeKind.Fortune,5)},
             new[]{new SkillRequirement(UpgradeKind.DoubleBlast,5),new SkillRequirement(UpgradeKind.ImpactPower,3),new SkillRequirement(UpgradeKind.TeamChance,3)}};
+        static long[] DesertGate(){var a=Materials(0,3500,0,250,100,20,0);a[(int)BlockKind.Sandstone]=1000;a[(int)BlockKind.Malachite]=35;a[(int)BlockKind.Turquoise]=12;return a;}
+        static long[] NetherGate(){var a=Materials(0,8000,1400,450,200,75,3);a[(int)BlockKind.DarkQuartzite]=500;a[(int)BlockKind.Netherrack]=1200;a[(int)BlockKind.Basalt]=400;a[(int)BlockKind.Quartz]=50;a[(int)BlockKind.Sulfur]=20;a[(int)BlockKind.Cinnabar]=10;return a;}
         static long[] Materials(params long[] counts){var a=new long[ResourceInventory.SlotCount];Array.Copy(counts,a,counts.Length);return a;}
         public static UpgradeKey Key(int index)=>index<5?new(UpgradeKind.Damage,index):index<10?new(UpgradeKind.Durability,index-5):new((UpgradeKind)(index-8));
         public static int RequiredLevel(int index)=>index switch{

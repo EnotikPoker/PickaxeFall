@@ -27,7 +27,7 @@ namespace PickaxeFall
             if(!pendingLoot.TryGetValue(key,out var value))pendingLoot[key]=value=new PendingLoot {kind=kind};
             value.position=position;value.count+=quantity;
         }
-        void StartResults(){resultsAt=Time.unscaledTime;runGrid.Update(_=>0);}
+        void StartResults(){resultsAt=Time.unscaledTime;runGrid.Update(_=>0,kind=>game.OreCounts[(int)kind]>0);}
         void TickPresentation()
         {
             if(game.Phase==RunPhase.Ready || !game.Settings.LootMessages)
@@ -58,7 +58,7 @@ namespace PickaxeFall
             {
                 long target=game.OreCounts[(int)kind];float t=game.Settings.ReducedEffects?1:Mathf.Clamp01((elapsed-.2f-(int)kind*.065f)/1.1f);
                 return t>=1?target:(long)(target*(double)(1-Mathf.Pow(1-t,3)));
-            });
+            },kind=>game.OreCounts[(int)kind]>0);
         }
         void SpawnLoot(PendingLoot value)
         {

@@ -18,7 +18,10 @@ namespace PickaxeFall
     [Serializable]
     public sealed class PlayerProfile
     {
-        public int version = 6;
+        public int version = 7;
+        public bool[] discovered = new bool[ResourceInventory.SlotCount];
+        public MapId selectedMap;
+        public int[] mapRecords = new int[3];
         public int profileLevel = 1;
         public long[] lifetimeMined = new long[ResourceInventory.SlotCount];
         public bool[] revealed = new bool[27];
@@ -35,16 +38,18 @@ namespace PickaxeFall
         // optional snapshot as a JSON string so a finished run stays truly absent.
         [NonSerialized] public RunSnapshot run;
         public string activeRunJson;
-        public PlayerProfile Copy() => new() { version = version, coins = coins, bestDepth = bestDepth,
+        public PlayerProfile Copy() => new() { version = version, coins = coins, bestDepth = bestDepth,discovered=(bool[])discovered.Clone(),selectedMap=selectedMap,mapRecords=(int[])mapRecords.Clone(),
             profileLevel=profileLevel, lifetimeMined=(long[])lifetimeMined.Clone(), revealed=(bool[])revealed.Clone(),
             bridgeStone=bridgeStone,bridgeIron=bridgeIron,portalObsidian=portalObsidian,goalKind=goalKind,goalIndex=goalIndex,resetNotice=resetNotice,
             resources = (long[])resources.Clone(), upgrades = (int[])upgrades.Clone(), dashUnlocked=dashUnlocked,plungeUnlocked=plungeUnlocked,run=run,activeRunJson=activeRunJson };
         public int Level(UpgradeKey key) => key.IsValid ? upgrades[key.Index] : 0;
         public void Validate()
         {
-            if (version != 6 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
+            if (version != 7 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
                 throw new InvalidOperationException("Invalid player profile.");
             if(profileLevel<1 || profileLevel>5 || lifetimeMined?.Length!=ResourceInventory.SlotCount || revealed?.Length!=27 || bridgeStone<0 || bridgeStone>1000 || bridgeIron<0 || bridgeIron>50 || portalObsidian<0 || portalObsidian>10 || !ProfileRules.ValidGoal(goalKind,goalIndex))throw new InvalidOperationException("Invalid profile progression.");
+            if(discovered?.Length!=ResourceInventory.SlotCount || mapRecords?.Length!=3 || !Enum.IsDefined(typeof(MapId),selectedMap))throw new InvalidOperationException("Invalid world progression.");
+            foreach(int n in mapRecords)if(n<0)throw new InvalidOperationException("Invalid world record.");
             foreach(long count in lifetimeMined)if(count<0)throw new InvalidOperationException("Negative lifetime mining.");
             for(int i=0;i<lifetimeMined.Length;i++)if(!ResourceInventory.IsResource((BlockKind)i) && lifetimeMined[i]!=0)throw new InvalidOperationException("Invalid mining slot.");
             foreach (long count in resources) if (count < 0) throw new InvalidOperationException("Negative resource count.");
@@ -120,7 +125,7 @@ namespace PickaxeFall
         public static double ChanceStep(UpgradeKind kind, ProgressionBalance config=null) => (config??Default).chanceSteps[(int)kind];
         public static int DamageStepHalfUnits(int tier, ProgressionBalance config=null) => (config??Default).damageSteps[tier];
         public static int DurabilityStep(int tier, ProgressionBalance config=null) => (config??Default).durabilitySteps[tier];
-        public static bool IsOre(BlockKind kind) => kind >= BlockKind.Coal && kind <= BlockKind.Diamond || kind >= BlockKind.Emerald && kind <= BlockKind.AmethystCluster;
+        public static bool IsOre(BlockKind kind) => kind >= BlockKind.Coal && kind <= BlockKind.Diamond || kind >= BlockKind.Emerald && kind <= BlockKind.AmethystCluster || WorldCatalog.IsNewOre(kind);
         public static readonly BlockKind[] VeinOres={BlockKind.Coal,BlockKind.Copper,BlockKind.Iron,BlockKind.Gold,BlockKind.Diamond,BlockKind.Emerald,BlockKind.Lapis,BlockKind.Redstone};
         public static UpgradeCost AbilityCost(AbilityKind kind, ProgressionBalance config=null)
         {
@@ -171,12 +176,14 @@ namespace PickaxeFall
             {
                 cost.Coins = c.teamCoins[nextLevel-1];
                 for(int i=0;i<ResourceInventory.SlotCount;i++)cost.Resources[i]=c.teamMaterials[(nextLevel-1)*ResourceInventory.SlotCount+i];
+                if(c.worldRecipes)WorldCatalog.AddRecipe(cost,key,nextLevel);
                 return Scale(cost,c.recipeScale*c.recipeMultipliers[(int)key.Kind]);
             }
             if (key.Kind == UpgradeKind.PlungeDepth)
             {
                 cost.Coins = c.plungeCoins[nextLevel-1];
                 for(int i=0;i<ResourceInventory.SlotCount;i++)cost.Resources[i]=c.plungeMaterials[(nextLevel-1)*ResourceInventory.SlotCount+i];
+                if(c.worldRecipes)WorldCatalog.AddRecipe(cost,key,nextLevel);
                 return Scale(cost,c.recipeScale*c.recipeMultipliers[(int)key.Kind]);
             }
             int recipeLevel = key.Kind >= UpgradeKind.EnergyCapacity ? 1 + 19 * (nextLevel - 1) / (MaxLevel(key.Kind) - 1) : nextLevel;
@@ -194,7 +201,8 @@ namespace PickaxeFall
                 int resource = key.Tier == 2 ? 5 : key.Tier == 3 ? 4 : 6;
                 cost.Resources[resource] += (long)Math.Ceiling(c.tierOre*Math.Pow(c.tierOreGrowth, recipeLevel - 11));
             }
-            return Scale(cost,c.recipeScale*c.recipeMultipliers[(int)key.Kind]);
+            if(c.worldRecipes)WorldCatalog.AddRecipe(cost,key,nextLevel);
+                return Scale(cost,c.recipeScale*c.recipeMultipliers[(int)key.Kind]);
         }
 
         static UpgradeCost Scale(UpgradeCost cost,float scale)

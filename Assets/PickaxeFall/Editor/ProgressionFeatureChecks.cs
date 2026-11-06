@@ -10,7 +10,7 @@ namespace PickaxeFall.Editor
         {
             ProfileV5Checks.Validate();
             void Check(bool test,string message){if(!test)throw new Exception("Progression 0.5: "+message);}
-            Check(balance.rulesVersion==2,"new runs use current rules");
+            Check(balance.rulesVersion==3,"new runs use current rules");
             Check(balance.benchDepths.Length==balance.benchDensity.Length && balance.benchDepths.Length>1,"density curve");
             for(int i=1;i<balance.benchDepths.Length;i++)Check(balance.benchDepths[i]>balance.benchDepths[i-1] && balance.benchDensity[i]<=balance.benchDensity[i-1] && balance.benchDensity[i]>0,"monotone positive bench density");
             for(int level=0;level<=20;level++)for(int tier=1;tier<5;tier++)

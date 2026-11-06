@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PickaxeFall
 {
-    public class MiningWorld : MonoBehaviour
+    public partial class MiningWorld : MonoBehaviour
     {
         struct CellState { public BlockKind kind; public int health; public bool broken;public float litUntil; }
         readonly Dictionary<int, List<MineBlock>> rows = new();
@@ -24,6 +24,7 @@ namespace PickaxeFall
         public int ActiveBlocks { get; private set; }
         public int LoadedRows => rows.Count;
         public GameBalance Balance => balance;
+        public MineGenerator Generator=>generator;
         public bool CanMine => game.Phase == RunPhase.Mining && !game.Paused;
         public float Now=>game.Clock.Now;
         public IEnumerable<MineBlock> LoadedBlocks { get {foreach(var list in rows.Values)foreach(var block in list)if(!block.IsBroken)yield return block;} }
@@ -41,7 +42,7 @@ namespace PickaxeFall
         public void ResetWorld(int runSeed,CellSnapshot[] saved=null,LiquidCellSnapshot[] liquids=null)
         {
             foreach (var row in rows.Values) foreach (var block in row) Return(block);
-            Liquids.Reset(liquids);rows.Clear(); changes.Clear(); explosions.Clear(); ActiveBlocks = 0;
+            RestoreTrials(null);Liquids.Reset(liquids);rows.Clear(); changes.Clear(); explosions.Clear(); ActiveBlocks = 0;
             if(saved!=null)foreach(var cell in saved)changes[new Vector2Int(cell.x,cell.row)]=new CellState {kind=cell.kind,health=cell.health,broken=cell.broken,litUntil=cell.litUntil};
             generator = new MineGenerator(balance, runSeed); Stream(0);
         }
@@ -224,8 +225,8 @@ namespace PickaxeFall
         {
             int hash = 17;
             var keys = new List<int>(rows.Keys); keys.Sort();
-            foreach (int row in keys) foreach (var block in rows[row])
-                if (!block.IsBroken) hash = unchecked(hash * 31 + (int)block.Kind * 997 + block.Row * 41 + block.Column);
+            foreach (int row in keys) {var cells=new List<MineBlock>(rows[row]);cells.Sort((a,b)=>a.Column.CompareTo(b.Column));foreach(var block in cells)
+                if (!block.IsBroken) hash = unchecked(hash * 31 + (int)block.Kind * 997 + block.Row * 41 + block.Column);}
             return hash;
         }
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

@@ -26,7 +26,7 @@ namespace PickaxeFall
         {
             kind=ResourceInventory.DropKind(kind);
             if (!ResourceInventory.IsResource(kind) || quantity < 1) return false;
-            try { Profile.resources[(int)kind] = checked(Profile.resources[(int)kind] + quantity); return true; }
+            try { Profile.resources[(int)kind] = checked(Profile.resources[(int)kind] + quantity); Profile.discovered[(int)kind]=true; return true; }
             catch (OverflowException) { LastError = "Слишком много ресурсов."; return false; }
         }
         public bool CanBuy(UpgradeKey key, out string reason)

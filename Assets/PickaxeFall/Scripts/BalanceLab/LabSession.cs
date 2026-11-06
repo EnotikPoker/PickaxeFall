@@ -28,7 +28,7 @@ namespace PickaxeFall.BalanceLab
         int branches;
         public bool Running { get; private set; }
         public string Status { get; private set; } = "Готово к запуску";
-        public long Total => Plan.mode==4?Scenarios.Sum(s=>(long)s.sampleCount):(long)Scenarios.Count*Plan.samples;
+        public long Total => (Plan.mode==4||Plan.mode==6)?Scenarios.Sum(s=>(long)s.sampleCount):(long)Scenarios.Count*Plan.samples;
         public double Elapsed => timer?.Elapsed.TotalSeconds ?? 0;
         public int Busy => workers.Count(w => w.busy);
         public int CompletedBranches => branches;

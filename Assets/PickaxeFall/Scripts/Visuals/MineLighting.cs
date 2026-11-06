@@ -38,7 +38,8 @@ namespace PickaxeFall
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)
             {
                 int row=row0+y*step,i=y*width+x;float depth=Mathf.Clamp01(row/45f);
-                field[i]=Color.Lerp(Color.white,new Color(.34f,.38f,.46f,1),depth);solid[i]=game.World.BlocksLight(x0+x*step,row);
+                Color ambient=game.CurrentMap==MapId.Desert?new Color(.44f,.37f,.27f,1):game.CurrentMap==MapId.Nether?new Color(.4f,.25f,.3f,1):new Color(.34f,.38f,.46f,1);
+                field[i]=Color.Lerp(Color.white,ambient,depth);solid[i]=game.World.BlocksLight(x0+x*step,row);
             }
             foreach(var tool in game.Pickaxes)if(tool.IsAlive)Light(tool.Body.position,7,new Color(1,.94f,.82f));
             int sources=0;
@@ -47,6 +48,8 @@ namespace PickaxeFall
                 if(++sources>50000)break;
                 if(block.IsLit)Light(block.transform.position,4,new Color(1,.27f,.2f));
                 else if(block.Kind==BlockKind.AmethystCluster)Light(block.transform.position,4,new Color(.82f,.55f,1));
+                else if(block.Kind==BlockKind.SoulCrystal)Light(block.transform.position,4,new Color(.35f,.9f,1));
+                else if(block.Kind==BlockKind.FireOpal)Light(block.transform.position,2,new Color(1,.47f,.16f));
                 else if(block.Kind==BlockKind.Spawner)Light(block.transform.position,2.5f,new Color(.48f,.78f,.94f));
             }
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)if(game.World.Liquids.KindAt(x0+x*step,row0+y*step)==BlockKind.Lava)Light(new Vector2(x0+x*step,-row0-y*step-.5f),3,new Color(1,.46f,.1f));

@@ -1,0 +1,274 @@
+[
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/sand/impactSoft_medium_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactSoft_medium_001.ogg",
+    "sha256": "7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/stone/impactMining_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactMining_001.ogg",
+    "sha256": "61235a18de3f3d92118235398222dbf51d448f1be70b1c8bc962b10b86f2d9c6"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/sand/impactSoft_medium_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactSoft_medium_000.ogg",
+    "sha256": "7d3ba0bb5e60a11b5d3e558c141303dcf494256675fbf753c0d252d2cf0481e3"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/stone/impactMining_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactMining_002.ogg",
+    "sha256": "059558ec751115ca6b1441e00f0adc837c1a3eeb0a066b109e0fd879fc5d0b0c"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/stone/impactMining_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactMining_000.ogg",
+    "sha256": "36b4ea107222d073c67ca64dde26944975609202d5090b2f2021213c1a7e35cd"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/wood/impactWood_light_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactWood_light_000.ogg",
+    "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/sand/impactSoft_medium_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactSoft_medium_002.ogg",
+    "sha256": "5069e3571a77d7f7aae9ef71d0364aa245fb7d64a7c8cc9956f221d03088c089"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/wood/impactWood_light_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactWood_light_002.ogg",
+    "sha256": "b183cf7a5bd783817e0e4b82af34ac6658fa1927049089dadc8b15c2ecc771dc"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/wood/impactWood_light_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactWood_light_001.ogg",
+    "sha256": "4b76bf3ccc8e60d19188f3165b778a7817786faa6887c55d9049bcbeef3b425f"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/metal/impactMetal_light_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactMetal_light_000.ogg",
+    "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/metal/impactMetal_light_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactMetal_light_001.ogg",
+    "sha256": "fba69c467ddd85da7b1d82e259f936b876d9ba6a3d6f1b24bdd10468e46bfe08"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/metal/impactMetal_light_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactMetal_light_002.ogg",
+    "sha256": "25a96f90a9a1f88a531e824e126f0519504625e5635e65a72e4f31611428db29"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/crystal/impactGlass_light_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactGlass_light_000.ogg",
+    "sha256": "d750cf88097d0c3e69920e6e14496e1444e1a9da01aa4cca8f5ec8cb44c57b4f"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/crystal/impactGlass_light_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactGlass_light_002.ogg",
+    "sha256": "710db7451bb7857b9140dfe6afe4621ea2188ad65eda3919c569d1bb285b933d"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/crystal/impactGlass_light_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactGlass_light_001.ogg",
+    "sha256": "05e513fbd42829060eb37855f8c3866722ec5c39a8937c9bfde518cc609effa2"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/break/impactGeneric_light_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactGeneric_light_000.ogg",
+    "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/break/impactGeneric_light_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactGeneric_light_001.ogg",
+    "sha256": "c3cd1c073d186ae8fa35788ba94de581f1826e7427a7bb26490b2695fac18efa"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/break/impactGeneric_light_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactGeneric_light_002.ogg",
+    "sha256": "d0bf60905b59ff630ffe01eb0edeeacd2504eaa8fb6523aeef7d2458b78264d3"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/shatter/impactGlass_heavy_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/impact-sounds/impactGlass_heavy_000.ogg",
+    "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/dash/knifeSlice.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/rpg-audio/knifeSlice.ogg",
+    "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/dash/knifeSlice2.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/rpg-audio/knifeSlice2.ogg",
+    "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/bench/metalLatch.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/rpg-audio/metalLatch.ogg",
+    "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/chest/creak1.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/rpg-audio/creak1.ogg",
+    "sha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/explosion/explosionCrunch_000.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/sci-fi-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/sci-fi-sounds/explosionCrunch_000.ogg",
+    "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/trial/bong_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/interface-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/interface-sounds/bong_001.ogg",
+    "sha256": "d21d0f0b782445db579d11e2506b24cd1ac9d664ee33aeaf807761aa7b6fd710"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/reward/confirmation_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/interface-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/interface-sounds/confirmation_002.ogg",
+    "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/error/error_002.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/interface-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/interface-sounds/error_002.ogg",
+    "sha256": "76810ec365f41078fd0507101da5bb7b8730fe011dde43908329fdabd8575e79"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/click/click_001.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/interface-sounds",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/interface-sounds/click_001.ogg",
+    "sha256": "ccfb7fa0cccdd9faec0eb16033c732b1e308d139d80f799161495d58f7adcdb9"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/roll/chip-lay-1.ogg",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "source": "https://kenney.nl/assets/casino-audio",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/casino-audio/chip-lay-1.ogg",
+    "sha256": "4b2111252ccb64eed67f171e061053849cfbb29873536c03948646f244a3905c"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/water/bubble.wav",
+    "author": "artisticdude",
+    "license": "CC0-1.0",
+    "source": "https://opengameart.org/content/rpg-sound-pack",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/oga-rpg-pack/RPG%20Sound%20Pack/inventory/bubble.wav",
+    "sha256": "c5f15d81e2b169784b737d31876ef67eb6957232f3e9c8186dde12c2370c822e"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/lava/bubble2.wav",
+    "author": "artisticdude",
+    "license": "CC0-1.0",
+    "source": "https://opengameart.org/content/rpg-sound-pack",
+    "mirror": "https://raw.githubusercontent.com/Mcamento8/open-game-sfx-index/main/audio/oga-rpg-pack/RPG%20Sound%20Pack/inventory/bubble2.wav",
+    "sha256": "fea5d8f0049a71b0a73b3086271fc18d0b5d733965b53fbfe550b6de26b1bef9"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Music/Mine.mp3",
+    "title": "Dreams Become Real",
+    "author": "Kevin MacLeod",
+    "license": "CC-BY-4.0",
+    "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500027",
+    "sha256": "a8ea5df5f969ed8d898af7fe07eb4712233f03e9d83f7ebcc88d1c851f3171b0"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Music/Desert.mp3",
+    "title": "Eastern Thought",
+    "author": "Kevin MacLeod",
+    "license": "CC-BY-4.0",
+    "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100682",
+    "sha256": "5daab860de26f2c47701958a21dcbe6c6283a7955863e72fe9ca5a536d6d552d"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Music/Nether.mp3",
+    "title": "Ossuary 5 - Rest",
+    "author": "Kevin MacLeod",
+    "license": "CC-BY-4.0",
+    "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500047",
+    "sha256": "895d3f3ef3be3a1da4b4198a6c131b55fb87176f43bcaf7e104d320a3dee3bd4"
+  }
+]

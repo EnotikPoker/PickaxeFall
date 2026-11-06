@@ -41,7 +41,7 @@ namespace PickaxeFall
         public ResourceInventory Inventory { get; private set; }
         public int Depth { get; private set; }
         public int BlocksBroken { get; private set; }
-        public int BestDepth => Economy.Profile.bestDepth;
+        public int BestDepth => Economy.Profile.mapRecords[(int)CurrentMap];
         public long Wallet => Economy.Profile.coins;
         public long PotentialSaleValue { get { long value = 0; foreach(var kind in ResourceInventory.Materials)value+=OreCounts[(int)kind]*RunUpgrades.Config.sellPrices[(int)kind];return value; } }
         public int WorkbenchesUsed { get; private set; }
@@ -84,7 +84,7 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned", "desert", "nether", "temple", "fortress", "mineshaft", "treasure" }, TestMode) < 0) TestMode = "";
             bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
             if (probe) TestMode = "probe";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
@@ -112,6 +112,7 @@ namespace PickaxeFall
             Inventory = new ResourceInventory(Economy); RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
             rouletteRandom = new System.Random(Guid.NewGuid().GetHashCode());
             InitializeWorldAndTools();
+            Audio=gameObject.AddComponent<GameAudio>();Audio.Initialize(this);
             var cameraObject = new GameObject("Main Camera"); cameraObject.tag = "MainCamera";
             cameraObject.AddComponent<Camera>(); cameraObject.AddComponent<AudioListener>();
             cameraFollow = cameraObject.AddComponent<MineCamera>(); cameraFollow.Initialize(this);
@@ -145,13 +146,13 @@ namespace PickaxeFall
             if (!initialized) return;
             StopAllCoroutines(); Time.timeScale = 1; Paused = false; Effects.Clear();
             foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
-            UseOriginalBalance();Economy.Profile.run=null;
+            UseOriginalBalance();ApplySelectedMap();World.RestoreTrials(null);Economy.Profile.run=null;
             BenchVisits.Clear(); Depth = BlocksBroken = WorkbenchesUsed = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
             RunToolCount = 1; RescueUsed = false; RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
             SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); Clock.Reset(); hud?.CancelGesture();
             int previousSeed = Seed;
             do { Seed = Guid.NewGuid().GetHashCode() & int.MaxValue; } while (Seed == 0 || Seed == previousSeed);
-            World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); cameraFollow?.ResetView();
+            World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); Audio?.SetMap(CurrentMap);cameraFollow?.SetMap();cameraFollow?.ResetView();
             Phase = RunPhase.Ready; hud?.SelectTab(HubTab.Mine); Notify();
         }
         public void Spin()
@@ -165,6 +166,7 @@ namespace PickaxeFall
             var animationRandom = new System.Random(Guid.NewGuid().GetHashCode());
             for (int i = 0; i < ticks; i++)
             {
+                Audio?.Play(i==ticks-1?"reward":"roll");
                 hud.ShowRouletteTier(i == ticks - 1 ? selectedTier : balance.Roll(animationRandom));
                 float progress = (float)i / (ticks - 1);
                 yield return new WaitForSecondsRealtime(Mathf.Lerp(0.035f, 0.20f, progress * progress));
@@ -210,7 +212,7 @@ namespace PickaxeFall
         public void SimulateMiningStep(Action<GameController> policy = null)
         {
             if (Phase != RunPhase.Mining || Paused) return;
-            Clock.Advance(); Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); policy?.Invoke(this);
+            Clock.Advance(); Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
             foreach (var tool in tools) if (tool.IsAlive) tool.PhysicsTick();
             Physics2D.SyncTransforms(); PhysicsScene.Simulate(Clock.Delta);
         }
@@ -243,7 +245,7 @@ namespace PickaxeFall
                 direction = Mathf.Abs(direction.x) > Mathf.Abs(direction.y) ? new Vector2(Mathf.Sign(direction.x), 0) : new Vector2(0, Mathf.Sign(direction.y));
             }
             if (!SelectedTool.StartAbility(kind, direction)) return false;
-            Benefits.EnergySpent+=AbilityCost(kind);Energy.TrySpend(AbilityCost(kind)); Benefits.Abilities++; return true;
+            Audio?.Play("dash");Benefits.EnergySpent+=AbilityCost(kind);Energy.TrySpend(AbilityCost(kind)); Benefits.Abilities++; return true;
         }
         public void OnPhysicalHit(FallingPickaxe source, bool strong)
         {
@@ -254,6 +256,7 @@ namespace PickaxeFall
         public bool OnBlockBroken(MineBlock block, FallingPickaxe source, DamageOrigin origin)
         {
             if (Phase != RunPhase.Mining) return false;
+            Audio?.Play(GameBalance.IsWorkbench(block.Kind)?"bench":"break");
             if (GameBalance.IsWorkbench(block.Kind))
             {
                 if (source == null) return false;
@@ -279,7 +282,7 @@ namespace PickaxeFall
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
                     Benefits.BonusOre += quantity - 1;GiveResource(ResourceInventory.DropKind(block.Kind),quantity,source,block.transform.position);
                 }
-                else if(block.Kind==BlockKind.Chest)AwardChest(block.Column,block.Row,source);
+                else if(block.Kind==BlockKind.Chest || block.Kind==BlockKind.MinecartChest)AwardChest(block.Column,block.Row,source);
                 Effects.Impact(block.transform.position, block.BaseColor, 7);
             }
             bool tnt = (origin == DamageOrigin.Physical || origin == DamageOrigin.Dash || origin == DamageOrigin.Plunge) && source != null && Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.TntFind);
@@ -315,7 +318,7 @@ namespace PickaxeFall
             }
             hud.CancelGesture();
             Phase = RunPhase.Breaking; Paused = false; Time.timeScale = 1;
-            Economy.Profile.bestDepth = Mathf.Max(BestDepth, Depth); SaveProgress();
+            Economy.Profile.mapRecords[(int)CurrentMap]=Mathf.Max(BestDepth,Depth);if(CurrentMap==MapId.Mine)Economy.Profile.bestDepth=Economy.Profile.mapRecords[0]; SaveProgress();
             Notify(); StartCoroutine(FinishAnimation());
         }
         IEnumerator FinishAnimation() { yield return new WaitForSeconds(0.85f); Phase = RunPhase.Finished; Notify(); }
@@ -331,17 +334,17 @@ namespace PickaxeFall
             if (!CanTrade) return false;
             bool success = Economy.TryBuy(key);
             if (success && Phase == RunPhase.Equipped) { RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression); Pickaxe.Equip(selectedTier); }
-            hud.Toast(success ? "УЛУЧШЕНИЕ КУПЛЕНО" : Economy.LastError); Notify(); return success;
+            Audio?.Play(success?"reward":"error");hud.Toast(success ? "УЛУЧШЕНИЕ КУПЛЕНО" : Economy.LastError); Notify(); return success;
         }
         public bool Sell(BlockKind kind, long quantity)
         {
             if (!CanTrade) return false;
-            bool success = Economy.TrySell(kind, quantity); hud.Toast(success ? "РЕСУРСЫ ПРОДАНЫ" : Economy.LastError); Notify(); return success;
+            bool success = Economy.TrySell(kind, quantity); Audio?.Play(success?"reward":"error");hud.Toast(success ? "РЕСУРСЫ ПРОДАНЫ" : Economy.LastError); Notify(); return success;
         }
         public bool SellAll()
         {
             if (!CanTrade) return false;
-            bool success = Economy.TrySellAll(); hud.Toast(success ? "РЮКЗАК ПРОДАН" : Economy.LastError); Notify(); return success;
+            bool success = Economy.TrySellAll(); Audio?.Play(success?"reward":"error");hud.Toast(success ? "РЮКЗАК ПРОДАН" : Economy.LastError); Notify(); return success;
         }
         public void TogglePause()
         {
@@ -386,7 +389,7 @@ namespace PickaxeFall
             Economy.Profile.dashUnlocked=dashUnlocked;Economy.Profile.plungeUnlocked=plungeUnlocked;
             Economy.Profile.Validate(); Seed = seed; Clock.Reset(); forcedTeam = team; forcedRescue = rescue;
             BenchVisits.Clear(); Depth = BlocksBroken = WorkbenchesUsed = 0; RescueUsed = false; Array.Clear(OreCounts, 0, OreCounts.Length); Benefits.Reset();
-            World.ResetWorld(seed); selectedTier = tier; Phase = RunPhase.Equipped; StartDrop(0);
+            World.RestoreTrials(null);World.ResetWorld(seed); selectedTier = tier; Phase = RunPhase.Equipped; StartDrop(0);
         }
 #endif
     }

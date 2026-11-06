@@ -64,7 +64,7 @@ namespace PickaxeFall.BalanceLab
             for (int tier = 0; tier < 5; tier++)
             {
                 int allowed = Progression.Keys.Where(k => k.Kind > UpgradeKind.Durability || k.Tier >= tier).Aggregate(0,(a,k) => a | (1 << k.Index));
-                string id = $"t{tier}-p{scenario.point}-b{scenario.background}-a{(scenario.active ? 1 : 0)}-m{(session.Plan.mode == 3 ? scenario.mask : scenario.mask & allowed)}";
+                string id = (scenario.map==MapId.Mine?"":$"map{(int)scenario.map}-")+$"t{tier}-p{scenario.point}-b{scenario.background}-a{(scenario.active ? 1 : 0)}-m{(session.Plan.mode == 3 ? scenario.mask : scenario.mask & allowed)}";
                 if (!grouped.TryGetValue(id,out var rows)) return new();
                 sources.Add(rows.ToDictionary(r => r.seed));
             }
@@ -84,9 +84,9 @@ namespace PickaxeFall.BalanceLab
             }
             return result.OrderBy(r => r.seed).ToList();
         }
-        public List<LabSummary> View(int tier, int point, int background, bool active)
+        public List<LabSummary> View(int tier, int point, int background, bool active,int map=0)
         {
-            var templates = session.Scenarios.Where(s => s.point == point && s.background == background && s.active == active && (tier < 0 || s.tier == tier)).ToList();
+            var templates = session.Scenarios.Where(s => (int)s.map==map && s.point == point && s.background == background && s.active == active && (tier < 0 || s.tier == tier)).ToList();
             if (tier >= 0) return templates.Select(Get).ToList();
             var masks = new HashSet<int>(templates.Select(s => s.mask));
             if (session.Plan.mode == 1 || session.Plan.mode == 2)
@@ -102,7 +102,7 @@ namespace PickaxeFall.BalanceLab
             {
                 int[] levels = new int[25];
                 foreach (var key in Progression.Keys) if (((mask & (1 << key.Index)) != 0) != (background == 1)) levels[key.Index] = session.Plan.mode == 3 ? session.Plan.customLevels[key.Index] : pointLevels[point,key.Index];
-                return Get(new LabScenario { id = $"t-1-p{point}-b{background}-a{(active ? 1 : 0)}-m{mask}", tier = -1, point = point, background = background, active = active, mask = mask, order = LabPlanner.Bits(mask), levels = levels });
+                return Get(new LabScenario { map=(MapId)map,id = (map==0?"":$"map{map}-")+$"t-1-p{point}-b{background}-a{(active ? 1 : 0)}-m{mask}", tier = -1, point = point, background = background, active = active, mask = mask, order = LabPlanner.Bits(mask), levels = levels });
             }).ToList();
         }
         public LabSummary Related(LabSummary item, int mask)
@@ -111,7 +111,7 @@ namespace PickaxeFall.BalanceLab
             if (s.tier >= 0) return scenarios.TryGetValue(id,out var found) ? Get(found) : null;
             int[] levels = new int[25];
             foreach (var key in Progression.Keys) if (((mask & (1 << key.Index)) != 0) != (s.background == 1)) levels[key.Index] = session.Plan.mode == 3 ? session.Plan.customLevels[key.Index] : pointLevels[s.point,key.Index];
-            return Get(new LabScenario { id = id, tier = -1, point = s.point, background = s.background, active = s.active, mask = mask, order = LabPlanner.Bits(mask), levels = levels });
+            return Get(new LabScenario { map=s.map,id = id, tier = -1, point = s.point, background = s.background, active = s.active, mask = mask, order = LabPlanner.Bits(mask), levels = levels });
         }
         public double Delta(LabSummary item)
         {
@@ -237,12 +237,12 @@ namespace PickaxeFall.BalanceLab
         }
         public void Export(string directory)
         {
-            var csv = new StringBuilder("scenario,tier,point,background,active,mask,samples,depthMean,depthMedian,depthMin,depthMax,secondsMean,secondsMedian,valueMean,coinsPerMinute,deltaRate,ciLow,ciHigh,blocks,tools,benches,abilities,censored,costCoins,costEquivalent,paybackMinutes,interaction,tripleGain,dirt,stone,coal,copper,iron,gold,diamond,deepstone,emerald,lapis,redstone,amethyst,obsidian,depthP10,depthP50,depthP90,depthP95,secondsP50,secondsP95,upgradeBenches,restoredWear,lavaWear,energySpent,firstPurchase,purchases,runs,notes\n");
+            var csv = new StringBuilder("scenario,tier,point,background,active,mask,samples,depthMean,depthMedian,depthMin,depthMax,secondsMean,secondsMedian,valueMean,coinsPerMinute,deltaRate,ciLow,ciHigh,blocks,tools,benches,abilities,censored,costCoins,costEquivalent,paybackMinutes,interaction,tripleGain,"+string.Join(",",ResourceInventory.Materials.Select(k=>k.ToString()))+",depthP10,depthP50,depthP90,depthP95,secondsP50,secondsP95,upgradeBenches,restoredWear,lavaWear,energySpent,firstPurchase,purchases,runs,notes\n");
             var html = new StringBuilder("<!doctype html><html lang='ru'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>PickaxeFall Balance Lab</title><style>body{font:15px system-ui;background:#172128;color:#eee;margin:24px}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #53616a;text-align:right}td:first-child{text-align:left}input{padding:10px;width:400px}summary{cursor:pointer}small{color:#bbb}</style><h1>PickaxeFall Balance Lab</h1>");
             html.Append("<p>Версия "+WebUtility.HtmlEncode(session.Manifest.version)+" · Unity "+WebUtility.HtmlEncode(session.Manifest.unity)+" · "+session.Results.Count+" / "+session.Total+" физических сценариев-карт. Отпечаток: "+session.Manifest.fingerprint+"</p><p>Неопределённость и редкие эффекты указаны в деталях. Доход/мин включает 8 секунд меню. Цена материалов — их упущенная продажная стоимость. Взвешенные строки требуют всех пяти типов.</p><input placeholder='Фильтр по названию' oninput='document.querySelectorAll(\"tbody tr\").forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(this.value.toLowerCase()))'><table><thead><tr><th>Набор</th><th>Кирка/стадия/фон/бот</th><th>n</th><th>Глубина</th><th>Стоимость</th><th>Монет/мин</th><th>Δ</th><th>95% Δ</th></tr></thead><tbody>");
             var exportItems = session.Scenarios.Select(Get).ToList();
             if (session.Plan.mode<4 && session.Plan.tiers.All(x=>x))
-                foreach (var group in session.Scenarios.GroupBy(s => new { s.point,s.background,s.active })) exportItems.AddRange(View(-1,group.Key.point,group.Key.background,group.Key.active));
+                foreach (var group in session.Scenarios.GroupBy(s => new { s.map,s.point,s.background,s.active })) exportItems.AddRange(View(-1,group.Key.point,group.Key.background,group.Key.active,(int)group.Key.map));
             foreach (var item in exportItems)
             {
                 var scenario = item.scenario; if (item.Count == 0) continue;
@@ -256,8 +256,12 @@ namespace PickaxeFall.BalanceLab
                 html.Append("<tr><td><details><summary>"+WebUtility.HtmlEncode(scenario.Title)+"</summary><pre>"+WebUtility.HtmlEncode(Detail(item))+"</pre></details></td><td>"+scenario.tier+" / "+scenario.point+" / "+scenario.background+" / "+scenario.active+"</td><td>"+item.Count+"</td><td>"+fields[7]+"</td><td>"+fields[13]+"</td><td>"+fields[14]+"</td><td>"+fields[15]+"</td><td>"+fields[16]+" … "+fields[17]+"</td></tr>");
             }
             html.Append("</tbody></table>");
+            if(session.Plan.mode==6){
+                var structures=new StringBuilder("scenario,seed,chests,trialRewards,failedTrials\n");foreach(var row in resultSnapshot)structures.AppendLine(string.Join(",",row.scenario,row.seed,LabFiles.Number(row.chests),LabFiles.Number(row.trials),LabFiles.Number(row.failedTrials)));LabFiles.Atomic(Path.Combine(directory,"structures.csv"),structures.ToString());
+                html.Append("<h2>Локации и подготовка</h2><p>Начало / 25% / 75% — фиксированные купленные уровни ветвей; это сравнение физических условий. Кампании отдельно покупают подготовку типов кирок, строят оба маршрута и соблюдают ограничения профиля. Ни одно улучшение кампании не выдаётся бесплатно.</p>");
+            }
             if(session.Manifest.schema>=4)AuditReport.Append(session,html,directory,resultSnapshot);
-            if(session.Plan.mode==5)ProfileAuditReport.Append(html,directory,resultSnapshot);
+            if(session.Plan.mode==5||session.Plan.mode==6)ProfileAuditReport.Append(html,directory,resultSnapshot.Where(r=>r.profileLevelTimes?.Length==5).ToArray());
             html.Append("</html>");
             LabFiles.Atomic(Path.Combine(directory,"summary.csv"),csv.ToString()); LabFiles.Atomic(Path.Combine(directory,"report.html"),html.ToString());
         }

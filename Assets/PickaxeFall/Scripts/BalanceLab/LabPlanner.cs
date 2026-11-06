@@ -19,13 +19,20 @@ namespace PickaxeFall.BalanceLab
         public static List<LabScenario> Scenarios(LabPlan plan)
         {
             plan.Validate();
+            if(plan.mode==6){
+                var audit=new List<LabScenario>();
+                for(int map=0;map<3;map++)if(plan.maps[map])for(int tier=0;tier<5;tier++)if(plan.tiers[tier])for(int stage=0;stage<3;stage++)for(int active=0;active<2;active++){
+                    if(active==0&&!plan.passive||active==1&&!plan.active)continue;var levels=new int[25];foreach(var k in Progression.Keys)levels[k.Index]=stage==0?0:Math.Max(1,(int)(Progression.MaxLevel(k.Kind)*(stage==1?.25f:.75f)));
+                    audit.Add(new LabScenario {id=$"world-{map}-t{tier}-s{stage}-a{active}",map=(MapId)map,tier=tier,point=stage,stage=stage,cohort="world",mask=Progression.Keys.Where(k=>levels[k.Index]>0).Aggregate(0,(v,k)=>v|(1<<k.Index)),active=active==1,levels=levels,sampleCount=plan.samples});}
+                for(int strategy=0;strategy<3;strategy++)audit.Add(new LabScenario {id="world-profile-"+strategy,cohort="profile",hourly=true,active=true,strategy=strategy,levels=new int[25],sampleCount=Math.Min(16,plan.samples)});return audit;
+            }
             if(plan.mode==5){
                 var campaigns=new List<LabScenario>();
-                for(int construction=0;construction<3;construction++)for(int strategy=0;strategy<3;strategy++)
+                for(int construction=0;construction<1;construction++)for(int strategy=0;strategy<3;strategy++)
                     campaigns.Add(new LabScenario {id="profile-"+strategy+"-build-"+construction,tier=0,point=0,active=true,hourly=true,strategy=strategy,regime=construction,cohort="profile",levels=new int[25]});
                 return campaigns;
             }
-            if(plan.mode==4)return ProgressionAudit.Scenarios(plan); var result = new List<LabScenario>();
+            if(plan.mode==4){var list=new List<LabScenario>();for(int m=0;m<3;m++)if(plan.maps[m])foreach(var s in ProgressionAudit.Scenarios(plan)){s.map=(MapId)m;if(m>0)s.id="map"+m+"-"+s.id;list.Add(s);}return list;} var result = new List<LabScenario>();
             for (int tier = 0; tier < 5; tier++)
             {
                 if (!plan.tiers[tier]) continue;
@@ -65,10 +72,13 @@ namespace PickaxeFall.BalanceLab
                     }
                 }
             }
-            return result.OrderBy(s => s.order).ThenBy(s => s.point).ThenBy(s => s.background).ThenBy(s => s.tier).ThenBy(s => s.active).ThenBy(s => s.mask).ToList();
+            var expanded=new List<LabScenario>();
+            for(int m=0;m<3;m++)if(plan.maps[m])foreach(var s in result){var copy=UnityEngine.JsonUtility.FromJson<LabScenario>(UnityEngine.JsonUtility.ToJson(s));copy.map=(MapId)m;copy.id=copy.Family+"-m"+copy.mask;expanded.Add(copy);}
+            return expanded.OrderBy(s => s.order).ThenBy(s => s.point).ThenBy(s => s.background).ThenBy(s => s.tier).ThenBy(s => s.active).ThenBy(s => s.mask).ToList();
         }
         public static IEnumerable<LabJob> Jobs(LabPlan plan, List<LabScenario> scenarios)
         {
+            if(plan.mode==6){foreach(var s in scenarios)for(int n=0;n<s.sampleCount;n++)yield return new LabJob{scenario=s,seed=(int)((plan.seed+104729L*n)%2147483646L)+1,limit=s.hourly?21600:600,balanceJson=plan.balanceJson,diagnostic=plan.diagnostic};yield break;}
             if(plan.mode==4)
             {
                 foreach(var job in ProgressionAudit.Jobs(plan,scenarios))yield return job;

@@ -17,6 +17,7 @@ namespace PickaxeFall
         {
             yield return null;
             var game = GetComponent<GameController>();var root = GetComponent<UIDocument>().rootVisualElement;
+            yield return RuntimeWorldChecks.Run(game,root,Check);
             yield return RuntimeProfileChecks.Run(game,root,Check);
             game.BeginProbeRun(0,8127,1);float lockedEnergy=game.Energy.Value;
             Check(!game.AbilityUnlocked(AbilityKind.Dash) && !game.AbilityUnlocked(AbilityKind.Plunge) && !game.TryUseAbility(AbilityKind.Dash,Vector2.right) && !game.TryUseAbility(AbilityKind.Plunge,Vector2.down) && game.Energy.Value==lockedEnergy,"unbought gestures cannot act or spend energy during mining");

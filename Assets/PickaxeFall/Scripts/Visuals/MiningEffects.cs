@@ -7,9 +7,6 @@ namespace PickaxeFall
     {
         class Chip { public Transform transform; public SpriteRenderer renderer; public Vector2 velocity; public float life, spin; public bool tool; }
         readonly List<Chip> chips = new();
-        AudioSource audioSource;
-        AudioClip hitClip, rewardClip, breakClip;
-        float lastSound;
         GameSettings settings;
         bool silent;
         public bool Muted => settings.Volume < 0.001f;
@@ -20,8 +17,7 @@ namespace PickaxeFall
         {
             settings = options; silent = simulation;
             if (silent) return;
-            audioSource = gameObject.AddComponent<AudioSource>(); audioSource.playOnAwake = false;
-            hitClip = Tone(160, 0.045f); rewardClip = Tone(660, 0.14f); breakClip = Tone(85, 0.24f);
+
             for (int i = 0; i < 320; i++)
             {
                 var chip = new GameObject("Pooled chip"); chip.transform.SetParent(transform);
@@ -51,11 +47,7 @@ namespace PickaxeFall
                 chip.velocity = new Vector2(Random.Range(-2.5f, 2.5f), Random.Range(1, 3));
                 if (++emitted >= count) break;
             }
-            if (sound && !Muted && Time.time > lastSound + 0.07f)
-            {
-                lastSound = Time.time; audioSource.pitch = Random.Range(0.9f, 1.12f);
-                audioSource.PlayOneShot(reward ? rewardClip : hitClip, reward ? 0.13f : 0.06f);
-            }
+
         }
 
         public void Shatter(Sprite sprite, Transform tool, Vector2 velocity)
@@ -88,7 +80,7 @@ namespace PickaxeFall
                 piece.spin = Random.Range(-420, 420); piece.tool = true;
                 piece.transform.gameObject.SetActive(true); LastShatterPieces++;
             }
-            if (!Muted) audioSource.PlayOneShot(breakClip, 0.25f);
+            GetComponentInParent<GameController>()?.Audio?.Play("shatter");
         }
 
         public void Clear()
@@ -99,6 +91,7 @@ namespace PickaxeFall
 
         public void Explosion(Vector2 point, float radius)
         {
+            GetComponentInParent<GameController>()?.Audio?.Play("explosion");
             Impact(point, new Color32(255, 192, 78, 255), 30, true);
             foreach (var chip in chips)
             {
@@ -122,14 +115,5 @@ namespace PickaxeFall
             }
         }
 
-        static AudioClip Tone(float frequency, float duration)
-        {
-            const int rate = 22050;
-            float[] samples = new float[(int)(rate * duration)];
-            for (int i = 0; i < samples.Length; i++)
-                samples[i] = Mathf.Sin(2 * Mathf.PI * frequency * i / rate) * (1f - (float)i / samples.Length);
-            var clip = AudioClip.Create("Mining tone", samples.Length, 1, rate, false); clip.SetData(samples, 0); return clip;
-        }
-        void OnDestroy() { if (hitClip) Destroy(hitClip); if (rewardClip) Destroy(rewardClip); if (breakClip) Destroy(breakClip); }
     }
 }

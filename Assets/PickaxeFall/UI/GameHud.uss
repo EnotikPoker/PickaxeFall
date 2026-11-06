@@ -246,3 +246,9 @@ Label { white-space: normal; flex-shrink: 0; }
 .map-materials .recipe-item { margin-right: 20px; margin-bottom: 10px; }
 .map-materials .recipe-amount { font-size: 30px; }
 .map-card .compact-button { margin-top: 12px; }
+
+.treasure-panel { position: absolute; right: 28px; top: 420px; max-width: 450px; padding: 14px; background-color: rgba(25, 32, 38, .94); border-left-width: 4px; border-left-color: rgb(223, 183, 87); }
+.treasure-heading { font-size: 20px; color: rgb(255, 220, 138); margin-bottom: 8px; }
+.treasure-row { flex-direction: row; align-items: center; margin-top: 4px; }
+.treasure-text { font-size: 20px; color: rgb(240, 239, 224); flex-shrink: 1; }
+.trial-status { font-size: 22px; color: rgb(127, 231, 238); }

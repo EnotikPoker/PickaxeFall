@@ -5,7 +5,7 @@ namespace PickaxeFall
 {
     // Append-only IDs preserve all existing resource slots and saved block kinds.
     public enum BlockKind { Dirt, Stone, Coal, Copper, Iron, Gold, Diamond, Deepstone, Workbench, Tnt,
-        Emerald, Lapis, Redstone, Amethyst, AmethystCluster, Cobblestone, MossyCobblestone, Chest, Spawner, UpgradeWorkbench, Obsidian, Water, Lava }
+        Emerald, Lapis, Redstone, Amethyst, AmethystCluster, Cobblestone, MossyCobblestone, Chest, Spawner, UpgradeWorkbench, Obsidian, Water, Lava, Sand, Sandstone, DarkQuartzite, Malachite, Turquoise, Garnet, SmokyQuartz, Netherrack, Basalt, Blackstone, Quartz, Sulfur, Cinnabar, FireOpal, AncientDebris, SoulCrystal, Timber, Rail, MinecartChest, NetherBrick }
     public enum RunPhase { Ready, Spinning, Equipped, Mining, Breaking, Finished }
 
     [Serializable]
@@ -38,9 +38,12 @@ namespace PickaxeFall
     }
 
     [CreateAssetMenu(menuName = "PickaxeFall/Game balance")]
-    public class GameBalance : ScriptableObject
+    public partial class GameBalance : ScriptableObject
     {
-        public int rulesVersion = 2;
+        public int rulesVersion = 3;
+        public MapId map;
+        void OnEnable() { ExpandBlocks(); progression.ExpandSlots();if(locations==null||locations.Length!=3)locations=LocationBalance.Defaults(); }
+        public void ExpandBlocks() { int count=Enum.GetValues(typeof(BlockKind)).Length;int old=blocks.Length;Array.Resize(ref blocks,count);for(int i=old;i<count;i++)blocks[i]=new BlockStats((BlockKind)i,WorldCatalog.Health((BlockKind)i),0); }
         public ProgressionBalance progression = new();
         public static bool IsWorkbench(BlockKind kind)=>kind==BlockKind.Workbench || kind==BlockKind.UpgradeWorkbench;
         [Range(0,1)] public float upgradeWorkbenchFraction=.2f;
@@ -135,8 +138,10 @@ namespace PickaxeFall
 
         public int BlockHealthHalfUnits(BlockKind kind, int row)
         {
-            float hardness = ResourceInventory.IsMaterial(kind) && kind != BlockKind.Dirt ? Mathf.Pow(2, Mathf.Clamp((row - hardnessStartDepth) / (float)Mathf.Max(20, hardnessDoublingDepth), 0, 20)) : 1;
-            return Mathf.CeilToInt(Block(kind).health * 2 * hardness);
+            int start=rulesVersion>=3 && map!=MapId.Mine?Location.hardnessStart:hardnessStartDepth;
+            int doubling=rulesVersion>=3 && map!=MapId.Mine?Location.hardnessDoubling:hardnessDoublingDepth;
+            float hardness = ResourceInventory.IsMaterial(kind) && kind != BlockKind.Dirt && kind!=BlockKind.Sand ? Mathf.Pow(2, Mathf.Clamp((row - start) / (float)Mathf.Max(20, doubling), 0, 20)) : 1;
+            return Mathf.CeilToInt((rulesVersion>=3 && map!=MapId.Mine&&Location.healthOverrides[(int)kind]>0?Location.healthOverrides[(int)kind]:Block(kind).health) * 2 * hardness);
         }
 
         public BlockStats Block(BlockKind kind) => blocks[(int)kind];
@@ -157,6 +162,7 @@ namespace PickaxeFall
 
         public double OreChance(BlockKind kind, int depth)
         {
+            if(rulesVersion>=3 && map!=MapId.Mine)return Location.OreChance(kind,depth);
             var block = Block(kind);
             if (depth < block.minimumDepth) return 0;
             if(kind>=BlockKind.Emerald && kind<=BlockKind.Redstone && depth<Block(BlockKind.Deepstone).minimumDepth)return 0;
@@ -165,6 +171,9 @@ namespace PickaxeFall
 
         public static string BlockName(BlockKind kind) => kind switch
         {
+            BlockKind.Sand=>"Песок",BlockKind.Sandstone=>"Песчанник",BlockKind.DarkQuartzite=>"Тёмный кварцит",
+            BlockKind.Malachite=>"Малахит",BlockKind.Turquoise=>"Бирюза",BlockKind.Garnet=>"Гранат",BlockKind.SmokyQuartz=>"Дымчатый кварц",
+            BlockKind.Netherrack=>"Незерак",BlockKind.Basalt=>"Базальт",BlockKind.Blackstone=>"Чернит",BlockKind.Quartz=>"Кварц",BlockKind.Sulfur=>"Сера",BlockKind.Cinnabar=>"Киноварь",BlockKind.FireOpal=>"Огненный опал",BlockKind.AncientDebris=>"Древние обломки",BlockKind.SoulCrystal=>"Кристалл душ",BlockKind.Timber=>"Дерево",BlockKind.Rail=>"Рельсы",BlockKind.MinecartChest=>"Вагонетка с сундуком",BlockKind.NetherBrick=>"Кирпичи крепости",
             BlockKind.Dirt => "Земля", BlockKind.Stone => "Камень", BlockKind.Coal => "Уголь",
             BlockKind.Copper => "Медь", BlockKind.Iron => "Железо", BlockKind.Gold => "Золото",
             BlockKind.Diamond => "Алмаз", BlockKind.Deepstone => "Глубинный сланец",
