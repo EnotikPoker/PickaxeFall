@@ -20,6 +20,8 @@ namespace PickaxeFall
             var volumeText=BoldText(card,"Громкость: "+Mathf.RoundToInt(options.Volume*100)+"%","section-label");
             var volume=new Slider(0,1){value=options.Volume,name="settings-volume"};volume.AddToClassList("volume-slider");card.Add(volume);
             volume.RegisterValueChangedCallback(e=>{options.SetVolume(e.newValue);volumeText.text="Громкость: "+Mathf.RoundToInt(options.Volume*100)+"%";});
+            AudioSlider(card,"Музыка",options.MusicVolume,options.SetMusicVolume,"settings-music");AudioSlider(card,"Эффекты",options.EffectsVolume,options.SetEffectsVolume,"settings-sfx");
+            Button(card,"АВТОРЫ ЗВУКА И МУЗЫКИ",AudioCredits,"stone-button compact-button");
             BoldText(card,"Частота кадров","section-label");var fps=Box(card,"settings-row fps-options");
             foreach(int value in GameSettings.FrameRates)
                 Button(fps,value==0?"ПО ЭКРАНУ":value+" FPS",()=>{options.SetFrameRate(value);DrawSettings();},"stone-button settings-choice"+(options.FrameRate==value?" active":"")).name="settings-fps-"+value;
@@ -32,6 +34,7 @@ namespace PickaxeFall
             Button(card,"СБРОСИТЬ ПРОГРЕСС",ConfirmProgressReset,"stone-button settings-switch buy-blocked").name="settings-reset-progress";
             Button(card,"ГОТОВО",()=>CloseModal(),"stone-button primary").name="settings-close";
         }
+        void AudioSlider(VisualElement card,string name,float value,System.Action<float> setter,string id){var label=BoldText(card,name+": "+Mathf.RoundToInt(value*100)+"%","section-label");var slider=new Slider(0,1){value=value,name=id};slider.AddToClassList("volume-slider");card.Add(slider);slider.RegisterValueChangedCallback(e=>{setter(e.newValue);label.text=name+": "+Mathf.RoundToInt(e.newValue*100)+"%";});}
         void ConfirmProgressReset()
         {
             var card=OpenModal("Сбросить весь прогресс?");

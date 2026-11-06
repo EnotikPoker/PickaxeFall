@@ -27,7 +27,7 @@ namespace PickaxeFall.BalanceLab
             try
             {
                 if(!string.IsNullOrEmpty(job.balanceJson))JsonUtility.FromJsonOverwrite(job.balanceJson,config);
-                config.progression.Validate();
+                foreach(var location in config.locations)location.Validate();config.progression.Validate();config.map=job.scenario.map;
                 if(job.scenario.cohort!="profile"&&job.scenario.regime==1)config.workbenchChance=0;
                 if(job.scenario.cohort!="profile"&&job.scenario.regime==2)config.upgradeWorkbenchFraction=0;
                 return job.scenario.hourly?ProgressionReplay.Execute(config,job,cancelled):ExecutePhysical(config,job,cancelled);
@@ -67,6 +67,7 @@ namespace PickaxeFall.BalanceLab
                     result.value += weight * game.PotentialSaleValue; result.blocks += weight * game.BlocksBroken;
                     result.benches += weight * game.WorkbenchesUsed; result.tools += weight * game.RunToolCount;
                     result.abilities += weight * game.Benefits.Abilities;
+                    result.chests+=weight*game.Benefits.Chests;result.trials+=weight*game.Benefits.Trials;result.failedTrials+=weight*game.Benefits.FailedTrials;
                     result.upgradeBenches+=weight*game.Benefits.UpgradeBenches;result.restoredWear+=weight*game.Benefits.RestoredDurability;result.lavaWear+=weight*game.Benefits.LavaWear;result.energySpent+=weight*game.Benefits.EnergySpent;
                     foreach(var visit in game.BenchVisits){visit.weight=(float)weight;visit.terminalCensored=!visit.nextReached && game.Phase==RunPhase.Mining && game.Pickaxes[visit.tool].IsAlive;visits.Add(visit);}
                     if (game.Phase == RunPhase.Mining) result.censored += weight;

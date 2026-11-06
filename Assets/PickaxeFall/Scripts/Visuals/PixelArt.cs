@@ -15,7 +15,7 @@ namespace PickaxeFall
         static Sprite square;
         static Sprite chest;
         public static Sprite Square => square ? square : square = Make(1, 1, new[] { Color.white });
-        public static Sprite ResourceIcon(BlockKind kind)=>Block(kind==BlockKind.Amethyst?BlockKind.AmethystCluster:kind,0,kind==BlockKind.Deepstone || kind>=BlockKind.Emerald && kind<=BlockKind.Redstone);
+        public static Sprite ResourceIcon(BlockKind kind)=>kind>=BlockKind.Sand?WorldBlock(kind,0,kind):Block(kind==BlockKind.Amethyst?BlockKind.AmethystCluster:kind,0,kind==BlockKind.Deepstone || kind>=BlockKind.Emerald && kind<=BlockKind.Redstone);
 
         public static Sprite Chest()
         {

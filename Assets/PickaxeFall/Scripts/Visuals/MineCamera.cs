@@ -23,7 +23,7 @@ namespace PickaxeFall
             backdrop = obj.AddComponent<SpriteRenderer>(); backdrop.sprite = PixelArt.CaveWall();
             backdrop.sortingOrder = -30; obj.transform.localScale = Vector3.one * 90;
             var sky = new GameObject("Sky, clouds and distant forest");
-            landscape = sky.AddComponent<SpriteRenderer>(); landscape.sprite = PixelArt.Landscape();
+            landscape = sky.AddComponent<SpriteRenderer>(); landscape.sprite = PixelArt.WorldLandscape(game.CurrentMap);
             landscape.sortingOrder = -20; sky.transform.localScale = Vector3.one * 80;
             sky.transform.position = new Vector3(0, 20, 3);
             ResetView();
@@ -35,6 +35,7 @@ namespace PickaxeFall
             UpdateBackground();
         }
 
+        public void SetMap(){if(!landscape)return;Destroy(landscape.sprite.texture);Destroy(landscape.sprite);landscape.sprite=PixelArt.WorldLandscape(game.CurrentMap);backdrop.color=game.CurrentMap==MapId.Desert?new Color(1,.8f,.55f):game.CurrentMap==MapId.Nether?new Color(.8f,.35f,.4f):Color.white;}
         void SetFraming() => view.orthographicSize = Mathf.Clamp(6.2f / Mathf.Max(0.35f, view.aspect), 8, 16);
 
         public bool TryGetToolBounds(out Bounds bounds)

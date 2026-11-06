@@ -76,6 +76,14 @@ namespace PickaxeFall.BalanceLab
                 var savedPrices=manifest.prices;manifest.prices=null;
                 Check(double.IsNaN(new LabAnalysis(session).Cost(new LabAnalysis(session).Get(damage)).total),"legacy history does not invent old upgrade costs");manifest.prices=savedPrices;
                 loaded.Plan.diagnostic=true; Check(LabComparison.Describe(session,loaded,0,0,0,false).Contains("несовместимы"),"diagnostic reports cannot masquerade as real comparisons");
+                using(var worlds=LabSession.Create(Path.Combine(path,"worlds"),new LabPlan{mode=6,samples=1,seconds=900,maps=new[]{true,true,true}},manifest))
+                {
+                    var campaign=worlds.Scenarios.First(x=>x.hourly);var row=new LabResult{id="world-export-test",scenario=campaign.id,seed=1,profileLevelTimes=new double[]{0,-1,-1,-1,-1},profileSkillsBlocked=new double[4],profileMiningBlocked=new double[4],profileCoinsBlocked=new double[4],finalProfileLevel=1};worlds.Results.Add(row.id,row);
+                    var physical=worlds.Scenarios.First(x=>!x.hourly);var empty=new LabResult{id="physical-export-test",scenario=physical.id,seed=1,profileLevelTimes=Array.Empty<double>(),profileSkillsBlocked=Array.Empty<double>(),profileMiningBlocked=Array.Empty<double>(),profileCoinsBlocked=Array.Empty<double>()};worlds.Results.Add(empty.id,empty);
+                    new LabAnalysis(worlds).Export(worlds.DirectoryPath);
+                    Check(File.Exists(Path.Combine(worlds.DirectoryPath,"profile-levels.csv"))&&File.Exists(Path.Combine(worlds.DirectoryPath,"profile-maps.csv")),"world audit exports campaign tables");
+                    Check(File.ReadAllText(Path.Combine(worlds.DirectoryPath,"report.html")).Contains("Уровни профиля"),"world audit includes profile HTML section");
+                }
             }
             finally { if (Directory.Exists(path)) Directory.Delete(path,true); }
             Debug.Log("PICKAXEFALL_LAB_MODEL_OK: "+count+" checks; matrix, streams, costs, bootstrap, recovery and export.");

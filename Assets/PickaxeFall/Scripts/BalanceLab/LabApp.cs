@@ -20,7 +20,7 @@ namespace PickaxeFall.BalanceLab
         LabAnalysis analysis;
         string home, cli;
         Label status, detail, buildInfo;
-        DropdownField mode, tier, point, background, behavior, order, sorting;
+        DropdownField mapChoice, mode, tier, point, background, behavior, order, sorting;
         IntegerField samples, workers, budget, seed;
         Toggle passive, active, isolated, common, diagnostic;
         readonly List<Toggle> tierChoices = new();
@@ -76,7 +76,7 @@ namespace PickaxeFall.BalanceLab
                 try
                 {
                     Fresh(); Application.targetFrameRate = 30; Application.runInBackground = true;
-                    var plan = LabFiles.Arg("plan") != null ? LabFiles.Read<LabPlan>(LabFiles.Arg("plan")) : new LabPlan { mode = cli == "full" ? 1 : cli == "triples" ? 2 : cli=="audit"?4:cli=="profile"?5:0 };
+                    var plan = LabFiles.Arg("plan") != null ? LabFiles.Read<LabPlan>(LabFiles.Arg("plan")) : new LabPlan { mode = cli == "full" ? 1 : cli == "triples" ? 2 : cli=="audit"?4:cli=="profile"?5:cli=="worlds"?6:0 };
                     plan.samples = int.Parse(LabFiles.Arg("samples") ?? (LabFiles.Arg("plan") != null ? plan.samples.ToString() : plan.mode == 0 ? "8" : plan.mode==5?"16":"32"));
                     plan.seconds = int.Parse(LabFiles.Arg("seconds") ?? (LabFiles.Arg("plan") != null ? plan.seconds.ToString() : plan.mode == 0 ? "900" : plan.mode>=4?"7200":"0"));
                     plan.workers = int.Parse(LabFiles.Arg("workers") ?? plan.workers.ToString());
@@ -160,8 +160,9 @@ namespace PickaxeFall.BalanceLab
             Button(actions,"Экспорт CSV + HTML",Export);
             var split = Row(root); split.style.flexGrow = 1; split.style.flexShrink = 1; split.style.minHeight = 0;
             var config = new ScrollView(); config.style.width = 380; config.style.flexShrink = 0; config.style.paddingRight = 14; split.Add(config);
-            mode = Drop(config,"Режим","Быстрый","Все пары","Все тройки","Свой набор","Аудит прогрессии","Профиль · 3 часа");
+            mode = Drop(config,"Режим","Быстрый","Все пары","Все тройки","Свой набор","Аудит прогрессии","Профиль · 6 часов","Миры · выпуск 0.7");
             mode.RegisterValueChangedCallback(_ => { samples.value = mode.index == 0 ? 8 : mode.index==5?16:32; budget.value = mode.index == 0 ? 15 : mode.index>=4?120:0; });
+            mapChoice=Drop(config,"Локация","Шахта","Пустыня","Ад","Все карты");
             samples = Number(config,"Карт на сценарий",8); workers = Number(config,"Работников",Math.Min(6,Math.Max(1,Environment.ProcessorCount/2)));
             budget = Number(config,"Лимит минут (0 — без)",15); seed = Number(config,"Начальный seed",8127);
             passive = Toggle(config,"Без жестов",true); active = Toggle(config,"Активная стратегия",true);
@@ -222,7 +223,7 @@ namespace PickaxeFall.BalanceLab
         {
             if (session?.Running == true) throw new InvalidOperationException("Сначала останови текущий анализ"); Fresh();
             var plan = new LabPlan { mode = mode.index, samples = samples.value, workers = workers.value, seconds = checked(budget.value*60), seed = seed.value,
-                passive = passive.value, active = active.value, isolated = mode.index == 0 || mode.index == 3 || isolated.value, background = common.value, diagnostic = diagnostic.value,
+                maps=Enumerable.Range(0,3).Select(i=>mapChoice.index==3||mapChoice.index==i).ToArray(),passive = passive.value, active = active.value, isolated = mode.index == 0 || mode.index == 3 || isolated.value, background = common.value, diagnostic = diagnostic.value,
                 tiers = tierChoices.Select(t=>t.value).ToArray(), customLevels = levels.Select(l=>l.value).ToArray() };
             session?.Dispose();autoExport=false; session = LabSession.Create(NewPath(),plan,manifest); folder.value = session.DirectoryPath;
             SelectFilters(); session.Start(Executable(),manifest); nextRefresh = 0;
@@ -235,7 +236,7 @@ namespace PickaxeFall.BalanceLab
         }
         void ShowPlan(LabPlan p)
         {
-            mode.index=p.mode;samples.value=p.samples;workers.value=p.workers;budget.value=p.seconds/60;seed.value=p.seed;
+            mapChoice.index=Array.FindAll(p.maps,x=>x).Length>1?3:Array.FindIndex(p.maps,x=>x);mode.index=p.mode;samples.value=p.samples;workers.value=p.workers;budget.value=p.seconds/60;seed.value=p.seed;
             passive.value=p.passive;active.value=p.active;isolated.value=p.isolated;common.value=p.background;diagnostic.value=p.diagnostic;
             for(int i=0;i<5;i++)tierChoices[i].value=p.tiers[i];for(int i=0;i<25;i++)levels[i].value=p.customLevels[i];
         }
@@ -249,7 +250,7 @@ namespace PickaxeFall.BalanceLab
         void RefreshTable()
         {
             if (analysis == null || table == null || search == null) return;
-            visible = analysis.View(tier.index == 5 ? -1 : tier.index,point.index,background.index,behavior.index == 1)
+            visible = analysis.View(tier.index == 5 ? -1 : tier.index,point.index,background.index,behavior.index == 1,Math.Min(2,mapChoice.index))
                 .Where(x => (order.index == 0 || x.scenario.order == order.index-1) && Title(x.scenario).IndexOf(search.value ?? "",StringComparison.OrdinalIgnoreCase)>=0).ToList();
             Func<LabSummary,double> metric = sorting.index == 1 ? x=>x.Mean(r=>r.depth) : sorting.index == 2 ? x=>analysis.Delta(x) : sorting.index == 3 ? x=>analysis.Cost(x).total : x=>x.Rate;
             visible = visible.OrderByDescending(x => { double v = metric(x); return double.IsNaN(v) ? double.NegativeInfinity : v; }).ToList();
@@ -258,7 +259,7 @@ namespace PickaxeFall.BalanceLab
         void ShowMatrix()
         {
             if (analysis == null) return; matrix.Clear(); table.style.display = DisplayStyle.None; matrix.style.display = DisplayStyle.Flex;
-            var all = analysis.View(tier.index == 5 ? -1 : tier.index,point.index,background.index,behavior.index==1);
+            var all = analysis.View(tier.index == 5 ? -1 : tier.index,point.index,background.index,behavior.index==1,Math.Min(2,mapChoice.index));
             var keys = Progression.Keys.Where(k => all.Any(x => (x.scenario.mask & (1 << k.Index))!=0)).ToList();
             var header = Row(matrix); Label(header,"Δ взаимодействия, монет/мин",13).style.width = 220;
             foreach (var key in keys) { var l = Label(header,SkillName(key),12); l.style.width = 90; l.style.flexShrink = 0; }
@@ -280,7 +281,7 @@ namespace PickaxeFall.BalanceLab
         void ShowComparison()
         {
             if (session == null || previous == null) throw new InvalidOperationException("Загрузи текущий и предыдущий отчёты");
-            detail.text = LabComparison.Describe(session,previous,tier.index == 5 ? -1 : tier.index,point.index,background.index,behavior.index==1);
+            detail.text = LabComparison.Describe(session,previous,tier.index == 5 ? -1 : tier.index,point.index,background.index,behavior.index==1,Math.Min(2,mapChoice.index));
         }
         void Export()
         {

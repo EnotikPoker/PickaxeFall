@@ -7,7 +7,15 @@ namespace PickaxeFall
     [Serializable]
     public sealed class ProgressionBalance
     {
+        public ProgressionBalance(){ExpandSlots();}
         public int energyChargeModel = 1;
+        public bool worldRecipes=true;
+        public void ExpandSlots()
+        {
+            if(sellPrices.Length==21){Array.Resize(ref sellPrices,ResourceInventory.SlotCount);foreach(var k in ResourceInventory.Materials)if((int)k>=23)sellPrices[(int)k]=WorldCatalog.Price(k);}
+            teamMaterials=ExpandRows(teamMaterials);plungeMaterials=ExpandRows(plungeMaterials);
+        }
+        static int[] ExpandRows(int[] source){if(source.Length!=63)return source;var target=new int[3*ResourceInventory.SlotCount];for(int row=0;row<3;row++)Array.Copy(source,row*21,target,row*ResourceInventory.SlotCount,21);return target;}
         public int[] damageSteps = { 1, 2, 3, 4, 8 }, durabilitySteps = { 3, 6, 9, 14, 32 };
         public float energyCapacity = 60, capacityStep = 8, energyRegen = 3, regenStep = .12f, efficiencyStep = .01f;
         public float dashCost = 45, plungeCost = 45, dashSpeed = 10, dashSpeedStep = .6f;
@@ -25,9 +33,10 @@ namespace PickaxeFall
         public int[] oreGates={6,11,16,21};
         public float[] recipeMultipliers={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
         public float recipeScale = 1, dirtGrowth = 1.12f, stoneGrowth = 1.18f, oreGrowth = 1.15f, tierOreGrowth = 1.20f;
-        public static ProgressionBalance Legacy() => new() { energyChargeModel=0, energyRegen=2,regenStep=.04f,plungeCost=60 };
+        public static ProgressionBalance Legacy() => new() { worldRecipes=false,energyChargeModel=0, energyRegen=2,regenStep=.04f,plungeCost=60 };
         public void Validate()
         {
+            ExpandSlots();
             if(energyChargeModel<0||energyChargeModel>1)throw new InvalidOperationException("Unknown energy charge model.");
             if(recipeMultipliers?.Length!=17 || teamMaterials?.Length!=3*ResourceInventory.SlotCount || plungeMaterials?.Length!=3*ResourceInventory.SlotCount || oreGates?.Length!=4 || damageSteps?.Length!=5 || durabilitySteps?.Length!=5 || tierPrices?.Length!=5 || basePrices?.Length!=17 || growth?.Length!=17 || chanceSteps?.Length!=17 || sellPrices?.Length!=ResourceInventory.SlotCount || teamCoins?.Length!=3 || plungeCoins?.Length!=3 || unlockCoins?.Length!=2 || unlockStone?.Length!=2 || unlockOre?.Length!=2)throw new InvalidOperationException("Неполная конфигурация прогрессии.");
             foreach(float value in new[] {energyCapacity,capacityStep,energyRegen,regenStep,efficiencyStep,dashCost,plungeCost,dashSpeed,dashSpeedStep,recipeScale,dirtGrowth,stoneGrowth,oreGrowth,tierOreGrowth})if(float.IsNaN(value)||float.IsInfinity(value)||value<0)throw new InvalidOperationException("Некорректная конфигурация прогрессии.");

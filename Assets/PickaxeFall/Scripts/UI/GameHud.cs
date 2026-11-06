@@ -29,11 +29,14 @@ namespace PickaxeFall
             get
             {
                 Rect all = root.worldBound, top = sceneInfo.worldBound, bottom = controls.worldBound;
-                if (all.height <= 0 || bottom.yMin <= top.yMax) return new Rect(0.04f, 0.24f, 0.92f, 0.53f);
+                if (!FiniteBounds(all) || !FiniteBounds(top) || !FiniteBounds(bottom) || bottom.yMin <= top.yMax) return new Rect(0.04f, 0.24f, 0.92f, 0.53f);
                 return new Rect(top.xMin / all.width, 1 - bottom.yMin / all.height, top.width / all.width,
                     Mathf.Max(0.2f, (bottom.yMin - top.yMax) / all.height));
             }
         }
+
+        static bool FiniteBounds(Rect r)=>r.width>0&&r.height>0&&FiniteNumber(r.x)&&FiniteNumber(r.y)&&FiniteNumber(r.width)&&FiniteNumber(r.height);
+        static bool FiniteNumber(float value)=>!float.IsNaN(value)&&!float.IsInfinity(value);
 
         public GameHud(GameController owner, VisualElement document, StyleSheet style)
         {
@@ -51,7 +54,7 @@ namespace PickaxeFall
             Box(pauseGlyph, "pause-bar").pickingMode = PickingMode.Ignore; Box(pauseGlyph, "pause-bar").pickingMode = PickingMode.Ignore;
             var stats = Box(header, "stats-row");
             depth = Stat(stats, "ГЛУБИНА", "0 м"); wallet = Stat(stats, "МОНЕТЫ", "0"); best = Stat(stats, "РЕКОРД", "0 м");
-            sceneInfo = Box(safe, "scene-info"); Text(sceneInfo, "БЕЗДОННАЯ ШАХТА", "micro light"); status = Text(sceneInfo, "ПОВЕРХНОСТЬ", "micro light");
+            sceneInfo = Box(safe, "scene-info"); Text(sceneInfo, "БЕЗДОННАЯ ШАХТА", "micro light").name="map-heading"; status = Text(sceneInfo, "ПОВЕРХНОСТЬ", "micro light");
             window = Box(safe, "hub-window");
             mineView = Box(window, "inventory-panel mine-panel"); mineView.name = "mine-page";
             title = BoldText(mineView, "Спуск в шахту", "title");
@@ -91,10 +94,10 @@ namespace PickaxeFall
         public void SelectTab(HubTab tab) { CloseModal(); CurrentTab = tab; Refresh(); }
         public void Tick()
         {
-            TickCombat(); TickPresentation(); TickProfile(); TickTutorial();
+            TickTreasure();TickCombat(); TickPresentation(); TickProfile(); TickTutorial();
             SetText(depth, game.Depth + " м"); SetText(wallet, Short(game.Wallet)); SetText(best, game.BestDepth + " м");
             string nextOre = "";
-            foreach (var kind in MilestoneOres)
+            foreach (var kind in game.CurrentMap==MapId.Mine?MilestoneOres:System.Array.Empty<BlockKind>())
                 if (game.Depth < game.Balance.Block(kind).minimumDepth) { nextOre = GameBalance.BlockName(kind).ToUpperInvariant() + ": " + (game.Balance.Block(kind).minimumDepth - game.Depth) + " М"; break; }
             SetText(status, nextOre.Length > 0 ? nextOre : "РУБЕЖ: " + ((game.Depth / 50 + 1) * 50) + " М");
             if (game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking)
@@ -116,6 +119,8 @@ namespace PickaxeFall
         void Refresh()
         {
             if (!game.Pickaxe) return;
+            root.Q<Label>("map-heading").text=WorldCatalog.Name(game.CurrentMap).ToUpperInvariant();
+            title.text="Спуск · "+WorldCatalog.Name(game.CurrentMap);
             bool newResults=game.Phase==RunPhase.Finished && presentedPhase!=RunPhase.Finished;
             presentedPhase=game.Phase;
             if(newResults)StartResults();
@@ -133,7 +138,7 @@ namespace PickaxeFall
             switch (game.Phase)
             {
                 case RunPhase.Ready:
-                    title.text = "Спуск в шахту"; description.text = "Крути рулетку, добывай и улучшай снаряжение.";
+                    title.text = "Спуск · "+WorldCatalog.Name(game.CurrentMap); description.text = "Крути рулетку, добывай и улучшай снаряжение.";
                     heroName.text = "Пять видов кирок";
                     var preview = new RunUpgrades(game.Economy.Profile,game.Economy.Config);
                     heroDetail.text = $"Отряд: {Progression.Number(preview.Chance(UpgradeKind.TeamChance) * 100)}% · {preview.TeamSize} кирки при удаче";
@@ -143,7 +148,7 @@ namespace PickaxeFall
                     title.text = "Испытываем удачу"; description.text = "Вероятности каждого типа указаны под кирками."; action.text = "ВРАЩАЕТСЯ…"; break;
                 case RunPhase.Equipped:
                     title.text = "Готов к спуску?"; description.text = "Кирка готова. Самое время для нового рекорда.";
-                    ShowRouletteTier(game.Pickaxe.Tier); action.text = "В ШАХТУ ↓"; break;
+                    ShowRouletteTier(game.Pickaxe.Tier); action.text = "НАЧАТЬ СПУСК ↓"; break;
                 case RunPhase.Finished:
                     SetText(runBenefits, game.Benefits.Summary);
                     title.text = $"Экспедиция: {game.Depth} м"; description.text = "Добыча в рюкзаке. Продай лишнее и усиль кирки.";
@@ -174,7 +179,7 @@ namespace PickaxeFall
         static VisualElement Icon(VisualElement parent, Sprite sprite, string classes) { var icon = Box(parent, classes); icon.style.backgroundImage = Background.FromSprite(sprite); return icon; }
         Button Button(VisualElement parent, string text, Action click, string classes)
         {
-            var button = new Button(click) { text = text };
+            var button = new Button(()=>{game.Audio?.Play("click");click();}) { text = text };
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             button.userData = click; // Command binding for isolated development previews.
 #endif
@@ -231,9 +236,9 @@ namespace PickaxeFall
                     if (!compact) Text(slot, kind == BlockKind.Deepstone ? "Сланец" : GameBalance.BlockName(kind), "resource-name");
                 }
             }
-            public void Update(Func<BlockKind, long> quantity)
+            public void Update(Func<BlockKind, long> quantity,Func<BlockKind,bool> visible=null)
             {
-                foreach(var kind in ResourceInventory.Materials){int i=(int)kind;long n=quantity(kind);if(n==previous[i])continue;previous[i]=n;counts[i].text=Short(n);}
+                foreach(var kind in ResourceInventory.Materials){int i=(int)kind;long n=quantity(kind);Display(counts[i].parent,visible!=null?visible(kind):n>0);if(n==previous[i])continue;previous[i]=n;counts[i].text=Short(n);}
             }
         }
     }

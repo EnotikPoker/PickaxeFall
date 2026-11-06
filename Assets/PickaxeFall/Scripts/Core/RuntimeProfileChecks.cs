@@ -16,7 +16,7 @@ namespace PickaxeFall
         }
         public static IEnumerator Run(GameController game,VisualElement root,Action<bool,string> check)
         {
-            check(game.Economy.Profile.profileLevel==1&&game.Economy.Profile.version==6,"new profile starts level one");
+            check(game.Economy.Profile.profileLevel==1&&game.Economy.Profile.version==7,"new profile starts level one");
             game.BeginProbeRun(0,8127,1);yield return null;
             check(root.Q("run-energy").parent.resolvedStyle.display==DisplayStyle.None,"energy panel hidden before ability purchase");
             game.FinishRun();yield return new WaitForSeconds(1);game.NewRun();
@@ -43,7 +43,7 @@ namespace PickaxeFall
             Press(root,"map-page-1");Press(root,"contribute-Bridge");Press(root,"confirm-construction");yield return new WaitForSeconds(1.1f);
             check(game.Economy.Profile.bridgeStone==250&&game.Economy.Profile.bridgeIron==7&&game.Inventory[BlockKind.Stone]==0&&game.Inventory[BlockKind.Iron]==0,"bridge UI accepts and animates partial contribution");
             Press(root,"map-page-2");game.Economy.Profile.resources[20]=10;Press(root,"map-page-2");Press(root,"contribute-Portal");Press(root,"confirm-construction");yield return new WaitForSeconds(1.1f);
-            check(game.Economy.Profile.portalObsidian==10&&root.Q("map-enter-mine")==null&&root.Q<Button>("contribute-Portal")==null,"portal built permanently but future map cannot be entered");
+            check(game.Economy.Profile.portalObsidian==10&&root.Q("map-enter-mine")==null&&root.Q<Button>("contribute-Portal")==null&&root.Q<Button>("map-enter-2")!=null,"portal built permanently and offers entry");
             var persisted=new ProfileStore(game.ProfileDirectory).Load();
             check(persisted.bridgeStone==250&&persisted.bridgeIron==7&&persisted.portalObsidian==10,"partial bridge and complete portal survive reload");
             game.SelectHubTab(HubTab.Mine);

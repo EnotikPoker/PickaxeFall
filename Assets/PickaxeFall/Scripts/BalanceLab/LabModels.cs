@@ -12,8 +12,8 @@ namespace PickaxeFall.BalanceLab
 {
     [Serializable] public sealed class LabManifest
     {
-        public int schema = 5;
-        public string version, unity, fingerprint, project, builtUtc, policy = "profile-gates-v1";
+        public int schema = 6;
+        public string version, unity, fingerprint, project, builtUtc, policy = "world-progression-v2";
         public string balance;
         public double[] roulette;
         public long[] sellPrices;
@@ -48,15 +48,17 @@ namespace PickaxeFall.BalanceLab
     {
         public int mode, samples = 8, workers = Math.Min(6, Math.Max(1, Environment.ProcessorCount / 2)), seconds = 900, seed = 8127;
         public string balanceJson;
+        public bool[] maps={true,false,false};
         public bool passive = true, active = true, isolated = true, background = true, diagnostic;
         public bool[] tiers = { true, true, true, true, true };
         public int[] customLevels = new int[25];
-        public int limit => mode==5?10800:mode == 0 || mode==4 ? 600 : 1800;
+        public int limit => mode==5?21600:mode == 0 || mode==4 ? 600 : 1800;
         public void Validate(bool checkLevels = true)
         {
-            if (mode < 0 || mode > 5 || samples < 1 || samples > 100000 || workers < 1 || workers > 32 || seconds < 0 || seconds > 604800 || seed < 1)
+            if(maps==null || maps.Length!=3 || !maps.Any(x=>x))throw new ArgumentException("Выбери локацию.");
+            if (mode < 0 || mode > 6 || samples < 1 || samples > 100000 || workers < 1 || workers > 32 || seconds < 0 || seconds > 604800 || seed < 1)
                 throw new ArgumentException("Недопустимые параметры запуска.");
-            if((mode==4||mode==5) && (seconds<=0 || seconds>7200))throw new ArgumentException("Аудит прогрессии ограничен двумя часами; выбери 1–120 минут.");
+            if((mode==4||mode==5||mode==6) && (seconds<=0 || seconds>7200))throw new ArgumentException("Аудит прогрессии ограничен двумя часами; выбери 1–120 минут.");
             if (!passive && !active || !isolated && !background || tiers == null || tiers.Length != 5 || !tiers.Any(x => x)) throw new ArgumentException("Выбери кирку, управление и способ сравнения.");
             if (customLevels == null || customLevels.Length != 25) throw new ArgumentException("Нужно 25 уровней.");
             if(checkLevels) new PlayerProfile { upgrades = customLevels }.Validate();
@@ -65,20 +67,23 @@ namespace PickaxeFall.BalanceLab
     [Serializable] public sealed class LabScenario
     {
         public string id;
+        public MapId map;
         public int tier, point, mask, background, order;
         public bool active,hourly,holdout;
         public int regime,stage,sampleCount,strategy;
         public string cohort;
 
         public int[] levels;
-        public string Family => $"t{tier}-p{point}-b{background}-a{(active ? 1 : 0)}"+(string.IsNullOrEmpty(cohort)?"":"-"+cohort);
+        public string Family => (map==MapId.Mine?"":$"map{(int)map}-")+$"t{tier}-p{point}-b{background}-a{(active ? 1 : 0)}"+(string.IsNullOrEmpty(cohort)?"":"-"+cohort);
         static readonly string[] ToolTitles={"дерево","камень","золото","железо","алмаз"};
-        public string Title
+        public string Title=>hourly?LocalTitle:WorldCatalog.Name(map)+" · "+LocalTitle;
+        string LocalTitle
         {
             get
             {
+                if(cohort=="world")return "Прокачка · "+new[]{"начало","25% ветвей","75% ветвей"}[point];
                 if(cohort=="full-max")return "Вся прокачка · максимум";
-                if(cohort=="profile")return "Профиль · 3 часа · "+new[]{"Кирки","Приёмы","Добыча"}[strategy]+" · "+new[]{"Без строительства","Мост","Портал"}[regime];
+                if(cohort=="profile")return "Профиль · 6 часов · "+new[]{"Кирки","Приёмы","Добыча"}[strategy]+" · Все маршруты";
                 if(hourly)return "Час развития · "+new[] {"Кирки","Приёмы","Добыча"}[strategy];
                 string prefix=cohort=="r0"?"Обычная генерация · ":regime==1?"Без верстаков · ":regime==2?"Только ремонт · ":holdout?"Независимые карты · ":"";
                 var names = Progression.Keys.Where(k => (mask & (1 << k.Index)) != 0).Select(k => Progression.Title(k.Kind)+(k.Kind<=UpgradeKind.Durability?" · "+ToolTitles[k.Tier]:""));
@@ -101,6 +106,8 @@ namespace PickaxeFall.BalanceLab
         public int seed, branches, limit;
         public double seconds, depth, value, blocks, strikes, tools, benches, abilities, censored;
         public double[] resources = new double[ResourceInventory.SlotCount], attempts = new double[17], successes = new double[17];
+        public double chests,trials,failedTrials;
+        public double[] mapSeconds=new double[3],mapValues=new double[3],mapRuns=new double[3];
         public double wallSeconds,upgradeBenches,restoredWear,lavaWear,energySpent;
         public LabOutcome[] outcomes;
         public BenchVisit[] benchVisits;

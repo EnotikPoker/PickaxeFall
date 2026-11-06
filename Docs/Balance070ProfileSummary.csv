@@ -1,0 +1,4 @@
+strategy,samples,level5Reached,level2MedianMinutes,level3MedianMinutes,level4MedianMinutes,level5MedianMinutesAmongReached,bridgeComplete,portalComplete
+world-profile-0,8,8,8.57,26.77,72.7,204.32,8,8
+world-profile-1,8,6,8.57,26.16,73.7,223.09,8,8
+world-profile-2,8,8,8.57,26.43,69.96,216.98,8,8

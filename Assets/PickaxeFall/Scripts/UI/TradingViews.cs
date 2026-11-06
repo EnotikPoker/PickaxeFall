@@ -46,7 +46,7 @@ namespace PickaxeFall
             bool quote = game.Economy.TryInventoryValue(out long total);
             bagValue.text = quote ? $"Предметов: {Short(game.Inventory.Total)}\nМожно продать за {Exact(total)} монет" : "Большой запас: продавай ресурсы частями.";
             sellBag.SetEnabled(quote && total > 0 && game.CanTrade);
-            foreach(var kind in ResourceInventory.Materials)bagCounts[(int)kind].text=Short(game.Inventory[kind]);
+            foreach(var kind in ResourceInventory.Materials){int i=(int)kind;bagCounts[i].text=Short(game.Inventory[kind]);Display(bagCounts[i].parent,game.Economy.Profile.discovered[i]||game.Inventory[kind]>0);}
             bagGoal.text=game.Economy.GoalTitle;
             bagGoalResources.Clear();
             if(game.Economy.Profile.goalKind!=GoalKind.None){
@@ -241,7 +241,7 @@ namespace PickaxeFall
                     if(price.Resources[i]==0)continue;var kind=(BlockKind)i;bool enough=hud.game.Inventory[kind]>=price.Resources[i];
                     var item=Box(resources,"recipe-item");item.tooltip=GameBalance.BlockName(kind);
                     Icon(item,PixelArt.ResourceIcon(kind),"recipe-icon");
-                    hud.BoldText(item,Short(hud.game.Inventory[kind])+"/"+Short(price.Resources[i]),enough?"recipe-amount cost-enough":"recipe-amount cost-short").name="required-"+kind;
+                    item.tooltip=GameBalance.BlockName(kind)+" · "+WorldCatalog.FoundIn(kind);hud.BoldText(item,Short(hud.game.Inventory[kind])+"/"+Short(price.Resources[i]),enough?"recipe-amount cost-enough":"recipe-amount cost-short").name="required-"+kind;
                 }
                 reason.text=why??"";Display(reason,!available&&skillLock.IsOpen);
             }
