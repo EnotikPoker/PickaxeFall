@@ -20,6 +20,7 @@ namespace PickaxeFall
         public static Sprite Chest()
         {
             if (chest) return chest;
+            var imported=ImportedWorld(BlockKind.Chest,0,BlockKind.Chest);if(imported)return chest=imported;
             var pixels = new Color[256];
             Fill(pixels, 16, 1, 1, 14, 13, new Color32(53, 35, 20, 255));
             Fill(pixels, 16, 2, 2, 12, 11, new Color32(164, 110, 46, 255));
@@ -48,7 +49,8 @@ namespace PickaxeFall
             int key = (int)kind * 32 + variant % 4 + (deep ? 4 : 0) + (surface ? 8 : 0);
             if (Blocks.TryGetValue(key, out var cached) && cached) return cached;
             if(kind==BlockKind.UpgradeWorkbench)return Blocks[key]=UpgradeBenchSprite(variant);
-            var imported = Resources.Load<Sprite>(BlockResourcePath(kind, variant, deep, surface));
+            var imported = ImportedWorld(kind,variant,kind==BlockKind.Amethyst?kind:deep?BlockKind.Deepstone:Progression.IsOre(kind)?BlockKind.Stone:kind);
+            if(!imported)imported=Resources.Load<Sprite>(BlockResourcePath(kind, variant, deep, surface));
             if (imported) return Blocks[key] = imported;
             if(kind>=BlockKind.Emerald)return Blocks[key]=ExtraBlock(kind,variant);
             var random = new System.Random(key * 7919 + 23);

@@ -18,7 +18,7 @@ namespace PickaxeFall
                 hud.Button(heading,"?",()=>hud.ShowSkillDetails(title,detail),"skill-info");
                 Text(body,kind==AbilityKind.Dash?"Импульс в выбранную сторону.":"Удар вниз с пробитием.","skill-summary");
                 state=hud.BoldText(body,"","upgrade-effect");var row=Box(body,"skill-price-row");price=hud.BoldText(row,"","upgrade-price");materials=Box(row,"recipe-resources");reason=Text(body,"","upgrade-reason");
-                buy=hud.Button(body,"ОТКРЫТЬ",()=>hud.game.BuyAbility(kind),"stone-button skill-buy");buy.name="unlock-"+kind;
+                buy=hud.Button(body,"ОТКРЫТЬ",()=>hud.game.BuyAbility(kind),"stone-button skill-buy",UiSound.None);buy.name="unlock-"+kind;
                 pin=PaperPin(card);pin.name="goal-pin-ability-"+kind;
                 skillLock=new SkillLock(hud,card,kind==AbilityKind.Dash?25:26);
                 CardClick(card,()=>{if(!skillLock.IsOpen)skillLock.Activate();else if(!hud.game.Economy.AbilityUnlocked(kind))hud.ToggleCardGoal(GoalKind.Ability,(int)kind);});

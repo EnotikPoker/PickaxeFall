@@ -40,7 +40,7 @@ namespace PickaxeFall
 
         public GameHud(GameController owner, VisualElement document, StyleSheet style)
         {
-            game = owner; root = document; root.styleSheets.Add(style); root.AddToClassList("screen"); root.pickingMode = PickingMode.Ignore;
+            game = owner;startingRecords=(int[])owner.Economy.Profile.mapRecords.Clone(); root = document; root.styleSheets.Add(style); root.AddToClassList("screen"); root.pickingMode = PickingMode.Ignore;
             var regular = Resources.Load<Font>("Fonts/Monocraft"); bold = Resources.Load<Font>("Fonts/Monocraft-Bold");
             if (regular) root.style.unityFontDefinition = FontDefinition.FromFont(regular);
             safe = Box(root, "safe"); safe.pickingMode = PickingMode.Ignore;
@@ -81,7 +81,7 @@ namespace PickaxeFall
             tabs = Box(safe, "tabs"); string[] captions = { "ШАХТА", "РЮКЗАК", "МАГАЗИН" };
             for (int i = 0; i < 3; i++)
             {
-                var tab = (HubTab)i; tabButtons[i] = Button(tabs, captions[i], () => game.SelectHubTab(tab), "stone-button tab");
+                var tab = (HubTab)i; tabButtons[i] = Button(tabs, captions[i], () => {if(CurrentTab!=tab){game.Audio?.Ui(UiSound.Navigate);game.SelectHubTab(tab);}}, "stone-button tab",UiSound.None);
                 tabButtons[i].name = "tab-" + tab.ToString().ToLowerInvariant();
             }
             toast = BoldText(root, "", "toast"); toast.pickingMode = PickingMode.Ignore; Display(toast, false);
@@ -121,6 +121,7 @@ namespace PickaxeFall
             if (!game.Pickaxe) return;
             root.Q<Label>("map-heading").text=WorldCatalog.Name(game.CurrentMap).ToUpperInvariant();
             title.text="Спуск · "+WorldCatalog.Name(game.CurrentMap);
+            if(game.Phase is RunPhase.Ready or RunPhase.Equipped)startingRecords[(int)game.CurrentMap]=game.BestDepth;
             bool newResults=game.Phase==RunPhase.Finished && presentedPhase!=RunPhase.Finished;
             presentedPhase=game.Phase;
             if(newResults)StartResults();
@@ -145,13 +146,13 @@ namespace PickaxeFall
                     action.text = "КРУТИТЬ РУЛЕТКУ";
                     foreach (var slot in slots) slot.RemoveFromClassList("selected"); break;
                 case RunPhase.Spinning:
-                    title.text = "Испытываем удачу"; description.text = "Вероятности каждого типа указаны под кирками."; action.text = "ВРАЩАЕТСЯ…"; break;
+                    title.text = "Выбираем кирку"; description.text = "Вероятности каждого типа указаны под кирками."; action.text = "ВРАЩАЕТСЯ…"; break;
                 case RunPhase.Equipped:
-                    title.text = "Готов к спуску?"; description.text = "Кирка готова. Самое время для нового рекорда.";
+                    title.text = "Готов к спуску?"; description.text = "Кирка готова к спуску.";
                     ShowRouletteTier(game.Pickaxe.Tier); action.text = "НАЧАТЬ СПУСК ↓"; break;
                 case RunPhase.Finished:
                     SetText(runBenefits, game.Benefits.Summary);
-                    title.text = $"Экспедиция: {game.Depth} м"; description.text = "Добыча в рюкзаке. Продай лишнее и усиль кирки.";
+                    title.text = $"Спуск завершён · {game.Depth} м"; description.text = "Добыча в рюкзаке. Продай лишнее и усиль кирки.";
                     result.text = $"Собрано на {Short(game.PotentialSaleValue)} монет\nРазрушено блоков: {game.BlocksBroken}";
 
                     ShowRouletteTier(game.Pickaxe.Tier); action.text = "ЕЩЁ ОДИН ЗАБЕГ"; break;
@@ -177,9 +178,9 @@ namespace PickaxeFall
         static Label Text(VisualElement parent, string text, string classes) { var item = new Label(text); AddClasses(item, classes); parent.Add(item); return item; }
         Label BoldText(VisualElement parent, string text, string classes) { var item = Text(parent, text, classes); if (bold) item.style.unityFontDefinition = FontDefinition.FromFont(bold); return item; }
         static VisualElement Icon(VisualElement parent, Sprite sprite, string classes) { var icon = Box(parent, classes); icon.style.backgroundImage = Background.FromSprite(sprite); return icon; }
-        Button Button(VisualElement parent, string text, Action click, string classes)
+        Button Button(VisualElement parent, string text, Action click, string classes,UiSound cue=UiSound.Tap)
         {
-            var button = new Button(()=>{game.Audio?.Play("click");click();}) { text = text };
+            var button = new Button(()=>{game.Audio?.Ui(cue);click();}) { text = text };
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             button.userData = click; // Command binding for isolated development previews.
 #endif

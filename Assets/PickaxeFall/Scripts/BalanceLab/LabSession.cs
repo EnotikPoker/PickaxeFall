@@ -44,7 +44,8 @@ namespace PickaxeFall.BalanceLab
         public static LabSession Load(string path)
         {
             var session = new LabSession { DirectoryPath = Path.GetFullPath(path), Plan = LabFiles.Read<LabPlan>(Path.Combine(path,"plan.json")), Manifest = LabFiles.Read<LabManifest>(Path.Combine(path,"manifest.json")), Scenarios = LabFiles.Read<ScenarioList>(Path.Combine(path,"scenarios.json")).scenarios };
-            session.Plan.Validate(false); string journal = Path.Combine(path,"results.jsonl");
+            session.Plan.Validate(false);foreach(var scenario in session.Scenarios)if(scenario.levels?.Length==25)Array.Resize(ref scenario.levels,Progression.KeyCount);
+            string journal = Path.Combine(path,"results.jsonl");
             if (File.Exists(journal))
             {
                 // A killed process can leave only the last append incomplete. Keep its bytes for inspection.
@@ -74,7 +75,8 @@ namespace PickaxeFall.BalanceLab
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     var row = JsonUtility.FromJson<LabResult>(line);
-                    if(row.resources!=null && (row.resources.Length==8 || row.resources.Length==14))Array.Resize(ref row.resources,ResourceInventory.SlotCount);
+                    if(row.resources!=null && (row.resources.Length==8 || row.resources.Length==14 || row.resources.Length==21))Array.Resize(ref row.resources,ResourceInventory.SlotCount);
+                    if(row.attempts?.Length==17)Array.Resize(ref row.attempts,Progression.KindCount);if(row.successes?.Length==17)Array.Resize(ref row.successes,Progression.KindCount);
                     if (string.IsNullOrEmpty(row.id) || row.resources == null || row.resources.Length != ResourceInventory.SlotCount) throw new IOException("Повреждён журнал результатов: " + journal);
                     if (string.IsNullOrEmpty(row.error))
                     {

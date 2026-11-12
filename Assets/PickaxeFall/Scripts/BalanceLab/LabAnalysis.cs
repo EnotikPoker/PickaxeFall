@@ -35,7 +35,7 @@ namespace PickaxeFall.BalanceLab
     {
         readonly LabSession session;
         readonly LabResult[] resultSnapshot;
-        readonly int[,] pointLevels = new int[3,25];
+        readonly int[,] pointLevels = new int[3,Progression.KeyCount];
         readonly Dictionary<(int,int),LabPrice> prices;
         readonly Dictionary<string,LabScenario> scenarios;
         readonly Dictionary<string,List<LabResult>> grouped;
@@ -44,7 +44,7 @@ namespace PickaxeFall.BalanceLab
         {
             session = source;resultSnapshot=source.Results.Values.ToArray();
             prices=(source.Manifest.prices ?? Array.Empty<LabPrice>()).ToDictionary(p=>(p.key,p.level));
-            foreach(var scenario in source.Scenarios.Where(s=>s.cohort!="size-base")) for(int i=0;i<25;i++) pointLevels[scenario.point,i]=Math.Max(pointLevels[scenario.point,i],scenario.levels[i]);
+            foreach(var scenario in source.Scenarios.Where(s=>s.cohort!="size-base")) for(int i=0;i<Progression.KeyCount;i++) pointLevels[scenario.point,i]=Math.Max(pointLevels[scenario.point,i],scenario.levels[i]);
             scenarios = source.Scenarios.ToDictionary(s => s.id);
             grouped = source.Results.Values.Where(r => string.IsNullOrEmpty(r.error)).GroupBy(r => r.scenario).ToDictionary(g => g.Key,g => g.OrderBy(r => r.seed).ToList());
         }
@@ -78,7 +78,7 @@ namespace PickaxeFall.BalanceLab
                     row.seconds += w*x.seconds; row.depth += w*x.depth; row.value += w*x.value; row.blocks += w*x.blocks;
                     row.strikes += w*x.strikes; row.tools += w*x.tools; row.benches += w*x.benches; row.abilities += w*x.abilities; row.censored += w*x.censored;
                     for (int i = 0; i < ResourceInventory.SlotCount; i++) row.resources[i] += w*x.resources[i];
-                    for (int i = 0; i < 17; i++) { row.attempts[i] += w*x.attempts[i]; row.successes[i] += w*x.successes[i]; }
+                    for (int i = 0; i < Progression.KindCount; i++) { row.attempts[i] += w*x.attempts[i]; row.successes[i] += w*x.successes[i]; }
                 }
                 result.Add(row);
             }
@@ -91,16 +91,16 @@ namespace PickaxeFall.BalanceLab
             var masks = new HashSet<int>(templates.Select(s => s.mask));
             if (session.Plan.mode == 1 || session.Plan.mode == 2)
             {
-                for (int i = 0; i < 25; i++) for (int j = i+1; j < 25; j++)
+                for (int i = 0; i < Progression.KeyCount; i++) for (int j = i+1; j < Progression.KeyCount; j++)
                 {
                     masks.Add((1<<i)|(1<<j));
-                    if (session.Plan.mode == 2) for (int k=j+1;k<25;k++) masks.Add((1<<i)|(1<<j)|(1<<k));
+                    if (session.Plan.mode == 2) for (int k=j+1;k<Progression.KeyCount;k++) masks.Add((1<<i)|(1<<j)|(1<<k));
                 }
             }
             if (templates.Count == 0) return new();
             return masks.Select(mask =>
             {
-                int[] levels = new int[25];
+                int[] levels = new int[Progression.KeyCount];
                 foreach (var key in Progression.Keys) if (((mask & (1 << key.Index)) != 0) != (background == 1)) levels[key.Index] = session.Plan.mode == 3 ? session.Plan.customLevels[key.Index] : pointLevels[point,key.Index];
                 return Get(new LabScenario { map=(MapId)map,id = (map==0?"":$"map{map}-")+$"t-1-p{point}-b{background}-a{(active ? 1 : 0)}-m{mask}", tier = -1, point = point, background = background, active = active, mask = mask, order = LabPlanner.Bits(mask), levels = levels });
             }).ToList();
@@ -109,7 +109,7 @@ namespace PickaxeFall.BalanceLab
         {
             var s = item.scenario; string id = s.Family+"-m"+mask;
             if (s.tier >= 0) return scenarios.TryGetValue(id,out var found) ? Get(found) : null;
-            int[] levels = new int[25];
+            int[] levels = new int[Progression.KeyCount];
             foreach (var key in Progression.Keys) if (((mask & (1 << key.Index)) != 0) != (s.background == 1)) levels[key.Index] = session.Plan.mode == 3 ? session.Plan.customLevels[key.Index] : pointLevels[s.point,key.Index];
             return Get(new LabScenario { map=s.map,id = id, tier = -1, point = s.point, background = s.background, active = s.active, mask = mask, order = LabPlanner.Bits(mask), levels = levels });
         }
@@ -223,6 +223,7 @@ namespace PickaxeFall.BalanceLab
             text.AppendLine($"Время: среднее {LabFiles.Number(item.Mean(r => r.seconds))}, медиана {LabFiles.Number(item.Median(r => r.seconds))}, диапазон {LabFiles.Number(item.Min(r => r.seconds))}–{LabFiles.Number(item.Max(r => r.seconds))} с; ограничено {LabFiles.Number(100*item.Mean(r => r.censored))}%");
             text.AppendLine($"Глубина P10/P50/P90/P95: {LabFiles.Number(item.Percentile(.1))} / {LabFiles.Number(item.Percentile(.5))} / {LabFiles.Number(item.Percentile(.9))} / {LabFiles.Number(item.Percentile(.95))}; время P50/P95: {LabFiles.Number(item.Percentile(.5,true))} / {LabFiles.Number(item.Percentile(.95,true))} с");
             text.AppendLine($"Улучшающие верстаки: {LabFiles.Number(item.Mean(r=>r.upgradeBenches))}; ремонт: {LabFiles.Number(item.Mean(r=>r.restoredWear))}; потери от лавы: {LabFiles.Number(item.Mean(r=>r.lavaWear))}; энергия потрачена: {LabFiles.Number(item.Mean(r=>r.energySpent))}");
+            text.AppendLine($"Вода (с × погружение): {LabFiles.Number(item.Mean(r=>r.waterSeconds))}; лава: {LabFiles.Number(item.Mean(r=>r.lavaSeconds))}; сбережено в лаве: {LabFiles.Number(item.Mean(r=>r.lavaWearSaved))}; бонусы сундуков: {LabFiles.Number(item.Mean(r=>r.treasureBonuses))}; бонусы землекопа: {LabFiles.Number(item.Mean(r=>r.bonusEarth))}");
             if(item.scenario.hourly)text.AppendLine($"Первая покупка: {LabFiles.Number(item.Mean(r=>r.firstPurchase))} с; забегов: {LabFiles.Number(item.Mean(r=>r.runCount))}; покупок: {LabFiles.Number(item.Mean(r=>r.purchases?.Length??0))}");
             foreach(var kind in ResourceInventory.Materials){int index=(int)kind;text.AppendLine(GameBalance.BlockName(kind)+": "+LabFiles.Number(item.Mean(r=>r.resources[index])));}
             text.AppendLine($"Блоки {LabFiles.Number(item.Mean(r => r.blocks))}; удары {LabFiles.Number(item.Mean(r => r.strikes))}; кирки {LabFiles.Number(item.Mean(r => r.tools))}; верстаки {LabFiles.Number(item.Mean(r => r.benches))}; действия {LabFiles.Number(item.Mean(r => r.abilities))}");
@@ -237,6 +238,9 @@ namespace PickaxeFall.BalanceLab
         }
         public void Export(string directory)
         {
+            var utility=new StringBuilder("scenario,samples,waterSeconds,lavaSeconds,lavaWearSaved,treasureBonuses,bonusEarth\n");
+            foreach(var scenario in session.Scenarios){var row=Get(scenario);utility.AppendLine(scenario.id+","+row.Count+","+string.Join(",",new[]{row.Mean(r=>r.waterSeconds),row.Mean(r=>r.lavaSeconds),row.Mean(r=>r.lavaWearSaved),row.Mean(r=>r.treasureBonuses),row.Mean(r=>r.bonusEarth)}.Select(LabFiles.Number)));}
+            File.WriteAllText(Path.Combine(directory,"skill-benefits.csv"),utility.ToString());
             var csv = new StringBuilder("scenario,tier,point,background,active,mask,samples,depthMean,depthMedian,depthMin,depthMax,secondsMean,secondsMedian,valueMean,coinsPerMinute,deltaRate,ciLow,ciHigh,blocks,tools,benches,abilities,censored,costCoins,costEquivalent,paybackMinutes,interaction,tripleGain,"+string.Join(",",ResourceInventory.Materials.Select(k=>k.ToString()))+",depthP10,depthP50,depthP90,depthP95,secondsP50,secondsP95,upgradeBenches,restoredWear,lavaWear,energySpent,firstPurchase,purchases,runs,notes\n");
             var html = new StringBuilder("<!doctype html><html lang='ru'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>PickaxeFall Balance Lab</title><style>body{font:15px system-ui;background:#172128;color:#eee;margin:24px}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #53616a;text-align:right}td:first-child{text-align:left}input{padding:10px;width:400px}summary{cursor:pointer}small{color:#bbb}</style><h1>PickaxeFall Balance Lab</h1>");
             html.Append("<p>Версия "+WebUtility.HtmlEncode(session.Manifest.version)+" · Unity "+WebUtility.HtmlEncode(session.Manifest.unity)+" · "+session.Results.Count+" / "+session.Total+" физических сценариев-карт. Отпечаток: "+session.Manifest.fingerprint+"</p><p>Неопределённость и редкие эффекты указаны в деталях. Доход/мин включает 8 секунд меню. Цена материалов — их упущенная продажная стоимость. Взвешенные строки требуют всех пяти типов.</p><input placeholder='Фильтр по названию' oninput='document.querySelectorAll(\"tbody tr\").forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(this.value.toLowerCase()))'><table><thead><tr><th>Набор</th><th>Кирка/стадия/фон/бот</th><th>n</th><th>Глубина</th><th>Стоимость</th><th>Монет/мин</th><th>Δ</th><th>95% Δ</th></tr></thead><tbody>");

@@ -22,12 +22,12 @@ namespace PickaxeFall
             Press(root,"settings-fps-0");check(Application.targetFrameRate==game.Settings.EffectiveFrameRate,"display-rate option applies detected refresh");
             check(root.Q<Label>("game-version").text.Contains(GameVersion.Name) && root.Q<Button>("telegram-channel").text=="@gamedevmaxon","settings show current version and channel");
             Press(root,"settings-close");
-            Array.Clear(game.Economy.Profile.upgrades,0,25);game.BeginProbeRun(0,8127,1);
+            Array.Clear(game.Economy.Profile.upgrades,0,Progression.KeyCount);game.BeginProbeRun(0,8127,1);
             check(!game.Pickaxe.SelectionVisible,"one tool has no outline");
             long wallet=game.Wallet;float energy=game.Energy.Value;int layout=game.World.LayoutFingerprint();
             Press(root,"open-settings");Press(root,"settings-tutorial");
             check(game.Paused && root.Q("tutorial-overlay").style.display==DisplayStyle.Flex,"tutorial pauses active run");
-            for(int i=0;i<13;i++)Press(root,"tutorial-next");
+            for(int i=0;i<14;i++)Press(root,"tutorial-next");
             check(!game.Paused && game.Settings.TutorialSeen && root.Q("tutorial-overlay").style.display==DisplayStyle.None,"all tutorial pages finish and resume");
             check(game.Wallet==wallet && game.Energy.Value==energy && game.World.LayoutFingerprint()==layout,"tutorial never spends resources or changes mine");
             Press(root,"open-settings");Press(root,"settings-tutorial");Press(root,"tutorial-skip");
@@ -54,7 +54,7 @@ namespace PickaxeFall
             var grid=root.Q("run-resources");
             foreach(var kind in ResourceInventory.Materials)check(grid.Q<Label>("count-"+kind).text==GameHud.Short(resources[(int)kind]),"animated resource count reaches exact total "+kind);
             check(game.OreCounts.SequenceEqual(resources),"results animation cannot award loot twice");
-            Array.Clear(game.Economy.Profile.upgrades,0,25);game.Economy.Profile.coins=0;Array.Clear(game.Economy.Profile.resources,0,game.Economy.Profile.resources.Length);
+            Array.Clear(game.Economy.Profile.upgrades,0,Progression.KeyCount);game.Economy.Profile.coins=0;Array.Clear(game.Economy.Profile.resources,0,game.Economy.Profile.resources.Length);
             game.SelectHubTab(HubTab.Shop);Press(root,"shop-category-0");Press(root,"shop-tier-0");
             var card=root.Q("upgrade-Damage-0");
             check(!card.Q<Button>("buy-Damage-0").enabledSelf && card.Q<Button>("buy-Damage-0").ClassListContains("buy-blocked"),"unaffordable upgrade is visibly red and disabled");

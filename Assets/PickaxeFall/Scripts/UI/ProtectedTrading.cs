@@ -13,12 +13,12 @@ namespace PickaxeFall
             try{amounts=game.Economy.SurplusQuote(out value);checked{_=game.Wallet+value;}}catch(OverflowException){Toast("Слишком большая сумма.");return;}
             if(value<=0)return;
             var card=OpenModal("Продать лишнее?");
-            Text(card,"Цель: "+game.Economy.GoalTitle+"\nВыручка: "+Exact(value)+" монет","description");
+            Text(card,"Цель: "+game.Economy.GoalTitle+"\nЗапас: "+(game.Economy.Profile.goalKind==GoalKind.Upgrade?(game.Economy.ReserveSteps==0?"до максимума":game.Economy.ReserveSteps+" ступ."):"оставшаяся стоимость цели")+"\nВыручка: "+Exact(value)+" монет","description");
             BoldText(card,"Останется в рюкзаке","section-label");
             foreach(var kind in ResourceInventory.Materials){long keep=game.Inventory[kind]-amounts[(int)kind];if(keep>0)RecipeLine(card,kind,keep,0);}
             Button(card,"ПРОДАТЬ ЛИШНЕЕ",()=>{
                 if(Time.unscaledTime<nextTrade)return;nextTrade=Time.unscaledTime+.25f;
-                CommitProfile(game.Economy.TrySellSurplus,()=>{CloseModal();Toast("ЛИШНЕЕ ПРОДАНО · РЕСУРСЫ ЦЕЛИ СОХРАНЕНЫ");});
+                CommitProfile(game.Economy.TrySellSurplus,()=>{CloseModal();Toast("ЛИШНЕЕ ПРОДАНО");},UiSound.Sale);
             },"stone-button primary").name="confirm-sell-surplus";
             Button(card,"ОТМЕНА",()=>CloseModal(),"stone-button secondary");
         }

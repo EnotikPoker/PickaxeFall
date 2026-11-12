@@ -31,7 +31,7 @@ namespace PickaxeFall.Editor
             importer.mipmapEnabled = false;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.npotScale = TextureImporterNPOTScale.None;
-            importer.alphaIsTransparency = cracks;
+            importer.alphaIsTransparency = true;
             importer.isReadable = true;
             importer.maxTextureSize = 1024;
             var settings = new TextureImporterSettings(); importer.ReadTextureSettings(settings);

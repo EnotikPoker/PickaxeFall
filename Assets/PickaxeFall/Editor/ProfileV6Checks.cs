@@ -8,7 +8,7 @@ namespace PickaxeFall.Editor
     {
         static int checks;
         static void Check(bool ok,string name){checks++;if(!ok)throw new Exception("Profile 0.6: "+name);}
-        public static bool[] OpenLocks(){var flags=new bool[27];Array.Fill(flags,true);return flags;}
+        public static bool[] OpenLocks(){var flags=new bool[Progression.RevealCount];Array.Fill(flags,true);return flags;}
         public static void LegacyReset(int version)
         {
             string dir=Path.Combine(Application.temporaryCachePath,"profile-reset-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);
@@ -18,7 +18,7 @@ namespace PickaxeFall.Editor
                 old.resources[6]=3000000000L;old.upgrades[0]=7;
                 string path=Path.Combine(dir,"profile-v2.json"),json=JsonUtility.ToJson(old);File.WriteAllText(path,json);
                 var store=new ProfileStore(dir);var p=store.Load();
-                Check(p.version==7&&p.profileLevel==1&&p.coins==0&&p.bestDepth==0&&p.resetNotice&&!p.dashUnlocked&&!p.plungeUnlocked&&p.run==null&&p.activeRunJson==null,"legacy reset v"+version);
+                Check(p.version==8&&p.profileLevel==1&&p.coins==0&&p.bestDepth==0&&p.resetNotice&&!p.dashUnlocked&&!p.plungeUnlocked&&p.run==null&&p.activeRunJson==null,"legacy reset v"+version);
                 Check(Array.TrueForAll(p.resources,x=>x==0)&&Array.TrueForAll(p.upgrades,x=>x==0)&&Array.TrueForAll(p.lifetimeMined,x=>x==0),"empty season v"+version);
                 Check(File.ReadAllText(path+".pre-v6.bak")==json,"exact old backup v"+version);
                 p.coins=321;p.profileLevel=2;p.lifetimeMined[1]=3000000000L;p.revealed[25]=true;p.bridgeStone=123;p.bridgeIron=4;p.portalObsidian=3;p.goalKind=GoalKind.Portal;store.Save(p);
@@ -37,14 +37,14 @@ namespace PickaxeFall.Editor
         public static void Validate()
         {
             checks=0;LegacyReset(5);
-            int[] required={1,1,1,1,1,1,1,1,1,1,2,4,5,5,2,4,3,4,2,3,5,2,3,4,5,2,3};
-            for(int i=0;i<27;i++)
+            int[] required={1,1,1,1,1,1,1,1,1,1,2,4,5,5,2,4,3,4,2,3,5,2,3,4,5,2,3,3,4,3,2};
+            for(int i=0;i<Progression.RevealCount;i++)
             {
                 Check(ProfileRules.RequiredLevel(i)==required[i],"skill mapping "+i);
                 if(i<10)continue;
                 var p=Rich(required[i]-1);var e=new EconomyService(p);
                 Check(!e.SkillAvailable(i,out _)&&!e.TryReveal(i),"level cannot bypass revealed flag "+i);
-                bool bought=i<25?e.TryBuy(ProfileRules.Key(i)):e.TryUnlock((AbilityKind)(i-25));
+                bool bought=i==25||i==26?e.TryUnlock((AbilityKind)(i-25)):e.TryBuy(ProfileRules.RevealKey(i));
                 Check(!bought&&e.Profile.coins==p.coins,"direct purchase gated "+i);
                 e.Profile.profileLevel=required[i];e.Profile.revealed[i]=false;
                 Check(!e.SkillAvailable(i,out _)&&e.TryReveal(i)&&e.Profile.coins==p.coins&&e.SkillAvailable(i,out _)&&!e.TryReveal(i),"free one-time reveal "+i);

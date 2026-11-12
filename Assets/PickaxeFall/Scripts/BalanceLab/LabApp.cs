@@ -160,7 +160,7 @@ namespace PickaxeFall.BalanceLab
             Button(actions,"Экспорт CSV + HTML",Export);
             var split = Row(root); split.style.flexGrow = 1; split.style.flexShrink = 1; split.style.minHeight = 0;
             var config = new ScrollView(); config.style.width = 380; config.style.flexShrink = 0; config.style.paddingRight = 14; split.Add(config);
-            mode = Drop(config,"Режим","Быстрый","Все пары","Все тройки","Свой набор","Аудит прогрессии","Профиль · 6 часов","Миры · выпуск 0.7");
+            mode = Drop(config,"Режим","Быстрый","Все пары","Все тройки","Свой набор","Аудит прогрессии","Профиль · 6 часов","Миры и навыки · 0.8");
             mode.RegisterValueChangedCallback(_ => { samples.value = mode.index == 0 ? 8 : mode.index==5?16:32; budget.value = mode.index == 0 ? 15 : mode.index>=4?120:0; });
             mapChoice=Drop(config,"Локация","Шахта","Пустыня","Ад","Все карты");
             samples = Number(config,"Карт на сценарий",8); workers = Number(config,"Работников",Math.Min(6,Math.Max(1,Environment.ProcessorCount/2)));
@@ -238,7 +238,7 @@ namespace PickaxeFall.BalanceLab
         {
             mapChoice.index=Array.FindAll(p.maps,x=>x).Length>1?3:Array.FindIndex(p.maps,x=>x);mode.index=p.mode;samples.value=p.samples;workers.value=p.workers;budget.value=p.seconds/60;seed.value=p.seed;
             passive.value=p.passive;active.value=p.active;isolated.value=p.isolated;common.value=p.background;diagnostic.value=p.diagnostic;
-            for(int i=0;i<5;i++)tierChoices[i].value=p.tiers[i];for(int i=0;i<25;i++)levels[i].value=p.customLevels[i];
+            for(int i=0;i<5;i++)tierChoices[i].value=p.tiers[i];for(int i=0;i<Progression.KeyCount;i++)levels[i].value=p.customLevels[i];
         }
         void SelectFilters()
         {
