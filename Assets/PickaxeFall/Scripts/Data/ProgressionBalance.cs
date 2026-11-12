@@ -12,9 +12,11 @@ namespace PickaxeFall
         public bool worldRecipes=true;
         public void ExpandSlots()
         {
+            basePrices=Extend(basePrices,new[]{200,300,350,35});growth=Extend(growth,new[]{1.35,1.35,1.40,1.25});chanceSteps=Extend(chanceSteps,new[]{0.0,0.0,.02,.01});recipeMultipliers=Extend(recipeMultipliers,new[]{1f,1f,1f,1f});
             if(sellPrices.Length==21){Array.Resize(ref sellPrices,ResourceInventory.SlotCount);foreach(var k in ResourceInventory.Materials)if((int)k>=23)sellPrices[(int)k]=WorldCatalog.Price(k);}
             teamMaterials=ExpandRows(teamMaterials);plungeMaterials=ExpandRows(plungeMaterials);
         }
+        static T[] Extend<T>(T[] source,T[] tail){if(source==null || source.Length!=17)return source;var result=new T[Progression.KindCount];Array.Copy(source,result,17);Array.Copy(tail,0,result,17,tail.Length);return result;}
         static int[] ExpandRows(int[] source){if(source.Length!=63)return source;var target=new int[3*ResourceInventory.SlotCount];for(int row=0;row<3;row++)Array.Copy(source,row*21,target,row*ResourceInventory.SlotCount,21);return target;}
         public int[] damageSteps = { 1, 2, 3, 4, 8 }, durabilitySteps = { 3, 6, 9, 14, 32 };
         public float energyCapacity = 60, capacityStep = 8, energyRegen = 3, regenStep = .12f, efficiencyStep = .01f;
@@ -38,12 +40,12 @@ namespace PickaxeFall
         {
             ExpandSlots();
             if(energyChargeModel<0||energyChargeModel>1)throw new InvalidOperationException("Unknown energy charge model.");
-            if(recipeMultipliers?.Length!=17 || teamMaterials?.Length!=3*ResourceInventory.SlotCount || plungeMaterials?.Length!=3*ResourceInventory.SlotCount || oreGates?.Length!=4 || damageSteps?.Length!=5 || durabilitySteps?.Length!=5 || tierPrices?.Length!=5 || basePrices?.Length!=17 || growth?.Length!=17 || chanceSteps?.Length!=17 || sellPrices?.Length!=ResourceInventory.SlotCount || teamCoins?.Length!=3 || plungeCoins?.Length!=3 || unlockCoins?.Length!=2 || unlockStone?.Length!=2 || unlockOre?.Length!=2)throw new InvalidOperationException("Неполная конфигурация прогрессии.");
+            if(recipeMultipliers?.Length!=Progression.KindCount || teamMaterials?.Length!=3*ResourceInventory.SlotCount || plungeMaterials?.Length!=3*ResourceInventory.SlotCount || oreGates?.Length!=4 || damageSteps?.Length!=5 || durabilitySteps?.Length!=5 || tierPrices?.Length!=5 || basePrices?.Length!=Progression.KindCount || growth?.Length!=Progression.KindCount || chanceSteps?.Length!=Progression.KindCount || sellPrices?.Length!=ResourceInventory.SlotCount || teamCoins?.Length!=3 || plungeCoins?.Length!=3 || unlockCoins?.Length!=2 || unlockStone?.Length!=2 || unlockOre?.Length!=2)throw new InvalidOperationException("Неполная конфигурация прогрессии.");
             foreach(float value in new[] {energyCapacity,capacityStep,energyRegen,regenStep,efficiencyStep,dashCost,plungeCost,dashSpeed,dashSpeedStep,recipeScale,dirtGrowth,stoneGrowth,oreGrowth,tierOreGrowth})if(float.IsNaN(value)||float.IsInfinity(value)||value<0)throw new InvalidOperationException("Некорректная конфигурация прогрессии.");
             if(energyCapacity<=0 || energyRegen<=0 || dashCost<=0 || plungeCost<=0 || efficiencyStep*Progression.MaxLevel(UpgradeKind.EnergyEfficiency)>=1 || recipeScale<=0)throw new InvalidOperationException("Некорректная энергия или рецепт.");
             if(energyChargeModel==1 && 3*Math.Min(dashCost,plungeCost)*(1-efficiencyStep*Progression.MaxLevel(UpgradeKind.EnergyEfficiency))<energyCapacity+capacityStep*5)throw new InvalidOperationException("Three uses must exceed the original capacity levels.");
             for(int i=0;i<5;i++)if(damageSteps[i]<1 || durabilitySteps[i]<1 || tierPrices[i]<=0 || double.IsNaN(tierPrices[i]) || double.IsInfinity(tierPrices[i]))throw new InvalidOperationException("Некорректная прибавка кирки.");
-            for(int i=0;i<17;i++)if(basePrices[i]<1 || growth[i]<1 || double.IsNaN(growth[i]) || double.IsInfinity(growth[i]) || chanceSteps[i]<0 || double.IsNaN(chanceSteps[i]) || double.IsInfinity(chanceSteps[i]) || chanceSteps[i]*Progression.MaxLevel((UpgradeKind)i)>1)throw new InvalidOperationException("Некорректная цена или вероятность.");
+            for(int i=0;i<Progression.KindCount;i++)if(basePrices[i]<1 || growth[i]<1 || double.IsNaN(growth[i]) || double.IsInfinity(growth[i]) || chanceSteps[i]<0 || double.IsNaN(chanceSteps[i]) || double.IsInfinity(chanceSteps[i]) || chanceSteps[i]*Progression.MaxLevel((UpgradeKind)i)>1)throw new InvalidOperationException("Некорректная цена или вероятность.");
             foreach(float scale in recipeMultipliers)if(scale<=0||float.IsNaN(scale)||float.IsInfinity(scale))throw new InvalidOperationException("Некорректный множитель рецепта.");
             foreach(int count in teamMaterials)if(count<0)throw new InvalidOperationException("Отрицательный рецепт.");
             foreach(int count in plungeMaterials)if(count<0)throw new InvalidOperationException("Отрицательный рецепт.");

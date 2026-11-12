@@ -16,7 +16,7 @@ namespace PickaxeFall
         }
         public static IEnumerator Run(GameController game,VisualElement root,Action<bool,string> check)
         {
-            check(game.Economy.Profile.profileLevel==1&&game.Economy.Profile.version==7,"new profile starts level one");
+            check(game.Economy.Profile.profileLevel==1&&game.Economy.Profile.version==8,"new profile starts level one");
             game.BeginProbeRun(0,8127,1);yield return null;
             check(root.Q("run-energy").parent.resolvedStyle.display==DisplayStyle.None,"energy panel hidden before ability purchase");
             game.FinishRun();yield return new WaitForSeconds(1);game.NewRun();
@@ -37,7 +37,7 @@ namespace PickaxeFall
             Press(root,"tab-inventory");
             check(game.Economy.Profile.goalKind==GoalKind.Upgrade&&root.Q<Button>("sell-surplus").enabledSelf,"goal persists and enables surplus sale");
             Press(root,"sell-surplus");Press(root,"confirm-sell-surplus");yield return new WaitForSeconds(.3f);
-            var recipe=game.Economy.GoalCost();foreach(var kind in ResourceInventory.Materials)check(game.Inventory[kind]==recipe.Resources[(int)kind],"surplus retains exact material "+kind);
+            var recipe=game.Economy.ReservationCost();foreach(var kind in ResourceInventory.Materials)check(game.Inventory[kind]==recipe.Resources[(int)kind],"surplus retains exact material "+kind);
             Press(root,"tab-mine");Press(root,"open-maps");Press(root,"map-page-1");
             game.Economy.Profile.resources[1]=250;game.Economy.Profile.resources[4]=7;
             Press(root,"map-page-1");Press(root,"contribute-Bridge");Press(root,"confirm-construction");yield return new WaitForSeconds(1.1f);

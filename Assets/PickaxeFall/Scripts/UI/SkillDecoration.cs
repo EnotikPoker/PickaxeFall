@@ -28,6 +28,10 @@ namespace PickaxeFall
             Button(card,"ПОНЯТНО",()=>CloseModal(),"stone-button compact-button");
         }
         static string SkillSummary(UpgradeKind kind)=>kind switch{
+            UpgradeKind.Underwater=>"Меньше штраф урона в воде.",
+            UpgradeKind.HeatShield=>"Меньше износ в лаве.",
+            UpgradeKind.TreasureHunter=>"Шанс на дополнительную добычу из сундука.",
+            UpgradeKind.EarthDigger=>"Шанс добыть больше земли и песка.",
             UpgradeKind.Damage=>"Больше урона выбранной кирке.",
             UpgradeKind.Durability=>"Больше прочности выбранной кирке.",
             UpgradeKind.Fortune=>"Шанс получить дополнительную руду.",
@@ -58,7 +62,7 @@ namespace PickaxeFall
                 panel=Box(card,"skill-lock-layer");panel.name="lock-"+index;
                 cover=hud.Button(panel,"",Activate,"skill-lock-cover");cover.name="reveal-"+index;
                 drawing=new ChainDrawing {pickingMode=PickingMode.Ignore};drawing.AddToClassList("chain-drawing");cover.Add(drawing);
-                string title=index==25?"Рывок":index==26?"Пробой":Progression.Title(ProfileRules.Key(index).Kind);
+                string title=index==25?"Рывок":index==26?"Пробой":Progression.Title(ProfileRules.RevealKey(index).Kind);
                 hud.BoldText(cover,title,"locked-title").pickingMode=PickingMode.Ignore;
                 note=hud.BoldText(cover,"","locked-note");note.pickingMode=PickingMode.Ignore;
                 cover.tooltip=title;

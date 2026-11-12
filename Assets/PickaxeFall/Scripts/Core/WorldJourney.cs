@@ -21,7 +21,8 @@ namespace PickaxeFall
         {
             if(trial)Benefits.Trials++;else Benefits.Chests++;
             bool temple=!trial && balance.map==MapId.Desert && World.Generator.TryFeature(row/64,out int cx,out int cy,out _) && row==cy+5 && x==cx-2;
-            var loot=ChestLoot.Roll(balance,Seed,x,row,trial,temple);
+            bool extra=!trial && RollEffect(UpgradeKind.TreasureHunter);if(extra)Benefits.TreasureBonuses++;
+            var loot=ChestLoot.Roll(balance,Seed,x,row,trial,temple,extra);
             foreach(var item in loot)GiveResource(item.kind,item.count,source,new Vector2(x,-row-.5f),false);
             Audio?.Play(trial?"reward":"chest");hud?.ShowTreasure(loot,trial?"ИСПЫТАНИЕ ПРОЙДЕНО":"СУНДУК ОТКРЫТ");
         }

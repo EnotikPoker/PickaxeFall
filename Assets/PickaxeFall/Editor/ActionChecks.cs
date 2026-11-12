@@ -11,7 +11,7 @@ namespace PickaxeFall.Editor
         public static void Validate()
         {
             checks = 0;
-            var profile = new PlayerProfile(); Check(profile.version == 7 && profile.upgrades.Length == 25, "schema v7");
+            var profile = new PlayerProfile(); Check(profile.version == 8 && profile.upgrades.Length == Progression.KeyCount, "schema v8");
             for (int i = 0; i < Progression.Keys.Length; i++) Check(Progression.Keys[i].Index == i && Progression.Keys[i].IsValid, "stable upgrade index " + i);
             var run = new RunUpgrades(profile); var energy = new RunEnergy(); energy.Reset(run);
             Check(energy.Maximum == 60 && energy.Value == 60, "initial energy allows one action");

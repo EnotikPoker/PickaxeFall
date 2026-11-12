@@ -22,14 +22,25 @@ namespace PickaxeFall.BalanceLab
             if(plan.mode==6){
                 var audit=new List<LabScenario>();
                 for(int map=0;map<3;map++)if(plan.maps[map])for(int tier=0;tier<5;tier++)if(plan.tiers[tier])for(int stage=0;stage<3;stage++)for(int active=0;active<2;active++){
-                    if(active==0&&!plan.passive||active==1&&!plan.active)continue;var levels=new int[25];foreach(var k in Progression.Keys)levels[k.Index]=stage==0?0:Math.Max(1,(int)(Progression.MaxLevel(k.Kind)*(stage==1?.25f:.75f)));
+                    if(active==0&&!plan.passive||active==1&&!plan.active)continue;var levels=new int[Progression.KeyCount];foreach(var k in Progression.Keys)levels[k.Index]=stage==0?0:Math.Max(1,(int)(Progression.MaxLevel(k.Kind)*(stage==1?.25f:.75f)));
                     audit.Add(new LabScenario {id=$"world-{map}-t{tier}-s{stage}-a{active}",map=(MapId)map,tier=tier,point=stage,stage=stage,cohort="world",mask=Progression.Keys.Where(k=>levels[k.Index]>0).Aggregate(0,(v,k)=>v|(1<<k.Index)),active=active==1,levels=levels,sampleCount=plan.samples});}
-                for(int strategy=0;strategy<3;strategy++)audit.Add(new LabScenario {id="world-profile-"+strategy,cohort="profile",hourly=true,active=true,strategy=strategy,levels=new int[25],sampleCount=Math.Min(16,plan.samples)});return audit;
+                var additions=new[]{UpgradeKind.Underwater,UpgradeKind.HeatShield,UpgradeKind.TreasureHunter,UpgradeKind.EarthDigger};
+                foreach(MapId map in Enum.GetValues(typeof(MapId)))if(plan.maps[(int)map])for(int tier=0;tier<5;tier++)if(plan.tiers[tier])for(int active=0;active<2;active++)if(active==0?plan.passive:plan.active)
+                for(int point=1;point<3;point++)
+                {
+                    var masks=new HashSet<int>{0};foreach(var k in additions)masks.Add(1<<new UpgradeKey(k).Index);
+                    foreach(var old in new[]{UpgradeKind.Careful,UpgradeKind.Fortune,UpgradeKind.DoubleBench,UpgradeKind.PlungeDepth})masks.Add(1<<new UpgradeKey(old).Index);
+                    foreach(var a in additions)foreach(var b in additions)if(a<b)masks.Add((1<<new UpgradeKey(a).Index)|(1<<new UpgradeKey(b).Index));
+                    foreach(var k in additions)foreach(var other in new[]{UpgradeKind.Careful,UpgradeKind.Fortune,UpgradeKind.DoubleBench,UpgradeKind.PlungeDepth})masks.Add((1<<new UpgradeKey(k).Index)|(1<<new UpgradeKey(other).Index));
+                    foreach(int mask in masks){var levels=new int[Progression.KeyCount];foreach(var key in Progression.Keys)if((mask&(1<<key.Index))!=0)levels[key.Index]=Level(key.Kind,point);
+                        var scenario=new LabScenario{map=map,tier=tier,point=point,active=active==1,levels=levels,mask=mask,order=Bits(mask),cohort="polish",sampleCount=plan.samples};scenario.id=scenario.Family+"-m"+mask;audit.Add(scenario);}
+                }
+                for(int strategy=0;strategy<3;strategy++)audit.Add(new LabScenario {id="world-profile-"+strategy,cohort="profile",hourly=true,active=true,strategy=strategy,levels=new int[Progression.KeyCount],sampleCount=Math.Min(16,plan.samples)});return audit;
             }
             if(plan.mode==5){
                 var campaigns=new List<LabScenario>();
                 for(int construction=0;construction<1;construction++)for(int strategy=0;strategy<3;strategy++)
-                    campaigns.Add(new LabScenario {id="profile-"+strategy+"-build-"+construction,tier=0,point=0,active=true,hourly=true,strategy=strategy,regime=construction,cohort="profile",levels=new int[25]});
+                    campaigns.Add(new LabScenario {id="profile-"+strategy+"-build-"+construction,tier=0,point=0,active=true,hourly=true,strategy=strategy,regime=construction,cohort="profile",levels=new int[Progression.KeyCount]});
                 return campaigns;
             }
             if(plan.mode==4){var list=new List<LabScenario>();for(int m=0;m<3;m++)if(plan.maps[m])foreach(var s in ProgressionAudit.Scenarios(plan)){s.map=(MapId)m;if(m>0)s.id="map"+m+"-"+s.id;list.Add(s);}return list;} var result = new List<LabScenario>();
@@ -60,7 +71,7 @@ namespace PickaxeFall.BalanceLab
                     if (active == 0 && !plan.passive || active == 1 && !plan.active || background == 0 && !plan.isolated || background == 1 && !plan.background) continue;
                     foreach (int mask in masks.OrderBy(Bits).ThenBy(x => x))
                     {
-                        int[] levels = new int[25];
+                        int[] levels = new int[Progression.KeyCount];
                         foreach (var key in Progression.Keys)
                         {
                             bool on = (mask & (1 << key.Index)) != 0;
@@ -78,7 +89,7 @@ namespace PickaxeFall.BalanceLab
         }
         public static IEnumerable<LabJob> Jobs(LabPlan plan, List<LabScenario> scenarios)
         {
-            if(plan.mode==6){foreach(var s in scenarios)for(int n=0;n<s.sampleCount;n++)yield return new LabJob{scenario=s,seed=(int)((plan.seed+104729L*n)%2147483646L)+1,limit=s.hourly?21600:600,balanceJson=plan.balanceJson,diagnostic=plan.diagnostic};yield break;}
+            if(plan.mode==6){for(int n=0;n<plan.samples;n++)foreach(var s in scenarios)if(n<s.sampleCount)yield return new LabJob{scenario=s,seed=(int)((plan.seed+104729L*n)%2147483646L)+1,limit=s.hourly?21600:600,balanceJson=plan.balanceJson,diagnostic=plan.diagnostic};yield break;}
             if(plan.mode==4)
             {
                 foreach(var job in ProgressionAudit.Jobs(plan,scenarios))yield return job;

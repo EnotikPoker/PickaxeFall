@@ -18,3 +18,7 @@ Water/lava bubble effects by artisticdude — RPG Sound Pack:
 https://opengameart.org/content/rpg-sound-pack — CC0 1.0 Universal.
 
 The original Kenney download host was unavailable during acquisition. Selected unchanged recordings were obtained from the public mirror https://github.com/Mcamento8/open-game-sfx-index . Each download was checked against the mirror's Git blob SHA-1; individual source URLs, mirror paths and SHA-256 hashes are preserved in AudioSources.json. Music was downloaded from the original author's host. The audio is embedded in the game, and does not require network access.
+
+## Интерфейс 0.8.0
+
+Восемь оригинальных коротких сигналов созданы скриптом `Tools/GenerateInterfaceAudio.py`: переход, нажатие, продажа, навык, способность, профиль, строительство и рекорд. Эти записи предоставлены по CC0-1.0. Существующие музыка и эффекты сохраняют свои лицензии.

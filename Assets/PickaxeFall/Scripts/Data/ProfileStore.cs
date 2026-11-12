@@ -22,7 +22,7 @@ namespace PickaxeFall
                 // A migration write failure must never fall back to an older, poorer profile.
                 if (migrated)
                 {
-                    string snapshot=path+(result.resetNotice?".pre-v6.bak":".pre-v7.bak");
+                    string snapshot=path+(result.resetNotice?".pre-v6.bak":".pre-v8.bak");
                     if(!File.Exists(snapshot))File.WriteAllText(snapshot,json);
                     Save(result);
                     // Recovery after the intentional season reset must use the new profile.
@@ -62,6 +62,10 @@ namespace PickaxeFall
                 Array.Resize(ref profile.resources,ResourceInventory.SlotCount);Array.Resize(ref profile.lifetimeMined,ResourceInventory.SlotCount);
                 profile.discovered=new bool[ResourceInventory.SlotCount];foreach(var kind in ResourceInventory.Materials)profile.discovered[(int)kind]=profile.resources[(int)kind]>0||profile.lifetimeMined[(int)kind]>0;
                 profile.mapRecords=new[]{profile.bestDepth,0,0};profile.selectedMap=MapId.Mine;profile.version=7;migrated=true;
+            }
+            if(profile.version==7){
+                if(profile.upgrades?.Length!=25 || profile.revealed?.Length!=27)throw new InvalidOperationException("Invalid v7 skill arrays.");
+                Array.Resize(ref profile.upgrades,Progression.KeyCount);Array.Resize(ref profile.revealed,Progression.RevealCount);profile.version=8;migrated=true;
             }
             if(!string.IsNullOrEmpty(profile.activeRunJson)){
                 profile.run=JsonUtility.FromJson<RunSnapshot>(profile.activeRunJson);

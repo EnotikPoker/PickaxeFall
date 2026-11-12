@@ -62,6 +62,8 @@ namespace PickaxeFall
         [Range(0,.01f)] public float lavaPocketChance=.0015f;
         public int waterMinimumDepth=8,lavaMinimumDepth=35;
         public float lavaWearPerSecond=8,waterDamageMultiplier=.7f;
+        [Header("Fluid resistance / per second at full immersion")]
+        public float waterDrag=1.6f,lavaDrag=2.4f,waterSpinDrag=2.8f,lavaSpinDrag=3.6f;
         [Header("World (one block = one metre)")]
         [Min(15)] public int worldWidth = 41;
         [Min(20)] public int rowsAhead = 32;

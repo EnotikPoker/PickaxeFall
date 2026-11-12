@@ -270,5 +270,61 @@
     "license": "CC-BY-4.0",
     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500047",
     "sha256": "895d3f3ef3be3a1da4b4198a6c131b55fb87176f43bcaf7e104d320a3dee3bd4"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/navigate/ui-navigate.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "45882d945800e92ce8bb3518cf1c3b4653a06bc05f6f50b1c5d738048e198e2f"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/click/ui-click.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "5e03233830c184eb47e4df383807d112f99ee0a733fe7308ac9a99dc93c07146"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/sale/ui-sale.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "a42234e6042bf3dc89828d17cea27e03b2521c5b8050c490a273ce559ddc917d"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/skill/ui-skill.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "2078f97975a48d16f0c00b8bb27b295317bc7a6c57019b2ae49c2fc71110e4e9"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/ability/ui-ability.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "627e9b0b4f9d14b9b5ce3b8d2f1dcda44be7b3af45bb3e5e714e04629e049ef2"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/profile/ui-profile.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "b46841a30d5f52d18473f1d681625b20fc8a4cbe57ee613287fc9d7e8d3ffc91"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/construction/ui-construction.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "69a256f0f18c00bee7de8d41af7e0498a244b457fef44c20e3b81c7c27b7e386"
+  },
+  {
+    "file": "Assets/PickaxeFall/Resources/Audio/Sfx/record/ui-record.wav",
+    "author": "PickaxeFall",
+    "license": "CC0-1.0",
+    "source": "Tools/GenerateInterfaceAudio.py",
+    "sha256": "9743fdd8948cd32bff1465ba09070be70df4b7ad287f1fe1908fe2968c37e5d0"
   }
 ]

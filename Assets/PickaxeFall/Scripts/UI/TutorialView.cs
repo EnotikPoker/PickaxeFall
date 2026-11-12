@@ -5,80 +5,88 @@ namespace PickaxeFall
 {
     public sealed partial class GameHud
     {
-        bool tutorialOpen, tutorialChecked, tutorialResume;
-        int tutorialStep;
+        bool tutorialOpen,tutorialChecked,tutorialResume,tutorialLibrary;
+        int tutorialStep,pendingHints,contextHintIndex;
         HubTab tutorialReturnTab;
-        VisualElement tutorialOverlay, tutorialFocus;
-        static readonly string[] TutorialTitles={"Добро пожаловать!","Испытай удачу","Кирка и шахта","Управляй падением","Энергия и отряд","Находки под землёй","Продай добычу","Усиль снаряжение","Удача и приёмы","Новые маршруты","Сундуки и руины","Испытание спавнера","Играй в своём темпе"};
-        static readonly string[] TutorialBodies={
-            "Крути рулетку, отправляй кирку в новую шахту и собирай ресурсы. После каждого забега продавай лишнее и улучшай снаряжение. Можно пропустить обучение и вернуться к нему в настройках.",
-            "Проценты под пятью кирками — реальные шансы выпадения. Золотая встречается чаще железной, но железная сильнее и прочнее. Выпавшую кирку отправляет вниз кнопка начала спуска.",
-            "Кирка сама падает, вращается и отскакивает. Сильное касание наносит урон, на блоке растут трещины. Каждый удар тратит прочность; лежание блоки не добывает. Когда сломается последняя кирка, забег завершится.",
-            "На втором уровне профиля можно купить рывок, на третьем — пробой в разделе «Приёмы». Достигни уровня и бесплатно сними замок, затем купи способность. Свайп влево, вправо, вверх или вниз — рывок за 45 энергии: первый материал пробивается сразу. Короткое нажатие на шахту — пробой одного блока вниз за 45 энергии. Пробитие тоже расходует прочность. Сохраняй энергию для нужной траектории.",
-            "Энергия появляется только после покупки первого приёма. Энергия общая: в начале 60, во время спуска восстанавливается по 3 в секунду. Удары её не дают, пауза останавливает восстановление. Если выпал отряд, выбирай кирку её значком внизу. Жесты действуют на выбранную; она отмечена тонким жёлтым контуром. Одна кирка не нуждается в обводке.",
-            "Чем глубже, тем прочнее порода и ценнее руда. Обычный верстак полностью чинит ударившую кирку, редкий улучшающий — ещё и повышает её тип. Урон и прочность учитывают купленные улучшения нового типа. TNT взрывается от удара, разрушает соседние блоки и тоже приносит добычу. Верстаки защищены от взрывов. Лава сжигает прочность, вода временно уменьшает урон кирки на 30%. При встрече воды и лавы получается добываемый обсидиан. Навык двойного верстака добавляет повышение; на алмазной заполняет энергию.",
-            "Земля, камень и все руды остаются в рюкзаке. До первой находки ресурс скрыт; после продажи запись остаётся с нулём. Монеты появляются только после продажи. Нажми на материал: можно ввести количество или продать весь вид. Кнопка внизу продаёт весь рюкзак с подтверждением. Нажми на открытую карточку навыка — красная канцелярская кнопка отметит цель. Затем нажми «Продать лишнее»: нужные материалы останутся. Целью может быть навык, приём или постройка.",
-            "Урон и прочность покупаются отдельно для каждого вида кирки. Нужны и монеты, и материалы. Зелёные числа означают, что хватает, красные — чего недостаёт. Зелёная кнопка разрешает покупку. Каждая следующая ступень дороже предыдущей. Для повышения уровня профиля нужны накопленная добыча, прокачка указанных навыков и монеты. Накопленная добыча не расходуется.",
-            "Общие навыки дают больше руды, отряд и дополнительные кирки, TNT из добытой руды, двойной верстак, усиленный взрыв, экономию прочности и спасение последней кирки. Мощный удар усиливает сильные столкновения, осколочный повреждает соседей. Последний шанс срабатывает только для последней кирки и один раз за забег. Приёмы улучшают энергию и пробитие. Размер отряда работает после открытия его шанса. Поздние ступени требуют материалы новых локаций.",
-            "В «Картах» построй мост в пустыню за 1000 камня и 50 железа или портал в ад за 10 обсидиана. Материалы можно вносить частями. После строительства вход постоянный и бесплатный; выбери локацию перед рулеткой. Пустыня сложнее шахты, ад опаснее пустыни. Рюкзак и навыки общие, рекорд у каждой карты свой. Для 4-го уровня профиля нужна добыча пустыни, для 5-го — ещё и ада.",
-            "В шахте встречаются подземелья, аметистовые жеоды и заброшенные проходы с рельсами. В пустыне ищи храм с сундуками на дне, в аду — руины крепости. Сундук открывается от удара или взрыва один раз, иногда находится в вагонетке. Добыча сразу попадает в рюкзак, значки и количества появляются сбоку. Содержимое зависит от локации и глубины. Дерево и рельсы ресурсов не дают.",
-            "Первое прямое попадание в спавнер начинает испытание: нанеси всего четыре удара за 12 секунд. Рывок и пробой засчитываются, взрывы и осколки — нет. Таймер и четыре отметки видны сверху. Успех даёт сокровища, провал не снимает дополнительную прочность. Испытание нельзя повторить; пауза останавливает отсчёт.",
-            "Пауза останавливает спуск. В настройках есть звук, частота кадров до 240 и по экрану, уменьшение эффектов, подсказки добычи и повтор обучения. Прогресс сохраняется автоматически; сброс требует отдельного подтверждения. Незавершённый спуск сохраняется и после запуска ждёт на паузе. После забега дождись подсчёта добычи и возвращайся за новым рекордом!"};
+        VisualElement tutorialOverlay,tutorialFocus,contextHint;
+        static readonly string[] TutorialTitles={"Кирка выбирается рулеткой","Всё добытое — твоё","Рюкзак и продажа","Запас на улучшения","Улучшения кирок","Уровень профиля","Рывок и пробой","Верстаки","Вода и лава","Сундуки","Спавнер","Другие локации","Навыки для локаций","Сохранение"};
+        string TutorialBody(int index)=>index switch {
+            0=>"Крути рулетку. Шанс каждой кирки указан под её значком. После выбора нажми «Начать спуск».",
+            1=>"Кирка падает и разбивает блоки. Удары тратят прочность. Когда сломается последняя кирка, добыча останется в рюкзаке.",
+            2=>"Нажми на ресурс в рюкзаке, чтобы продать нужное количество. Внизу можно продать весь рюкзак с подтверждением.",
+            3=>"Нажми на карточку навыка: красная кнопка отметит цель. «Продать лишнее» сохранит материалы на выбранное число будущих ступеней.",
+            4=>"У каждого вида кирки свои урон и прочность. На карточке видно, что даст покупка. Зелёным отмечено то, на что уже хватает ресурсов.",
+            5=>"Для нового уровня нужны монеты, добытые за всё время блоки и указанные навыки. Счётчик добычи не расходуется.",
+            6=>"Рывок покупается на втором уровне профиля, пробой — на третьем. Свайп толкает выбранную кирку в сторону, нажатие пробивает блоки вниз. Энергия восстанавливается сама.",
+            7=>"Любой верстак полностью чинит кирку. Улучшающий верстак ещё и повышает её вид. Купленные улучшения получившегося вида сохраняются.",
+            8=>"Вода замедляет кирку и снижает её урон. Лава тоже замедляет, но ещё тратит прочность — даже при касании кончиком. Встреча воды и лавы даёт обсидиан.",
+            9=>"Разбей сундук, чтобы забрать находки. Содержимое появится сбоку и сразу попадёт в рюкзак. Награды зависят от карты и глубины.",
+            10=>"Удар по спавнеру запускает испытание: всего четыре прямых попадания за 12 секунд. Успех даст добычу. За неудачу отдельного штрафа нет.",
+            11=>"В разделе «Карты» внеси материалы в мост или портал. Можно строить частями. Готовая локация остаётся открытой навсегда.",
+            12=>"«Землекоп» даёт больше земли и песка. «Подводник» уменьшает штраф воды, «Термозащита» — износ в лаве. «Искатель сокровищ» добавляет добычу из сундуков.",
+            _=>"Игра сохраняет прогресс сама. Незавершённый спуск после запуска ждёт на паузе. Повторить обучение и изменить эффекты можно в настройках."
+        };
         void TickTutorial()
         {
-            if(game.Economy.Profile.resetNotice)return;
-            if(tutorialChecked || !game.ReadyToPresent || game.TestMode.Length>0)return;
-            tutorialChecked=true;if(!game.Settings.TutorialSeen)BeginTutorial();
+            if(game.Economy.Profile.resetNotice || !game.ReadyToPresent || game.TestMode.Length>0)return;
+            if(!tutorialChecked){tutorialChecked=true;if(!game.Settings.TutorialSeen)BeginTutorial();}
+            if(tutorialOpen || !game.Settings.TutorialSeen)return;
+            if(contextHint!=null&&!game.CanTrade&&!game.Paused){game.Settings.SetTutorialHints(game.Settings.TutorialHints&~(1<<contextHintIndex));DismissHint();}
+            var p=game.Economy.Profile;
+            if(CurrentTab==HubTab.Inventory&&game.Inventory.Total>0)pendingHints|=1<<2;
+            if(p.goalKind!=GoalKind.None)pendingHints|=1<<3;
+            if(CurrentTab==HubTab.Shop)pendingHints|=1<<4;
+            if(game.Economy.CanLevelUp(out _))pendingHints|=1<<5;
+            if(p.dashUnlocked||p.plungeUnlocked)pendingHints|=1<<6;
+            if(game.WorkbenchesUsed>0)pendingHints|=1<<7;
+            if(game.SelectedTool!=null&&game.SelectedTool.IsAlive&&(game.SelectedTool.InWater||game.World.Liquids.Touches(game.SelectedTool,BlockKind.Lava)))pendingHints|=1<<8;
+            if(game.Benefits.Chests>0)pendingHints|=1<<9;
+            if(game.Benefits.Trials+game.Benefits.FailedTrials>0)pendingHints|=1<<10;
+            if(root.Q("construction-scene")!=null)pendingHints|=1<<11;
+            if(p.Level(new(UpgradeKind.EarthDigger))+p.Level(new(UpgradeKind.Underwater))+p.Level(new(UpgradeKind.HeatShield))+p.Level(new(UpgradeKind.TreasureHunter))>0)pendingHints|=1<<12;
+            if(contextHint!=null || ModalOpen || (!game.CanTrade&&!game.Paused))return;
+            for(int i=2;i<13;i++)if((pendingHints&(1<<i))!=0&&(game.Settings.TutorialHints&(1<<i))==0){ShowContextHint(i);break;}
         }
+        void ShowContextHint(int index)
+        {
+            contextHintIndex=index;game.Settings.SetTutorialHints(game.Settings.TutorialHints|(1<<index));game.Settings.Save();
+            contextHint=Box(root,"context-hint");contextHint.name="context-hint";
+            BoldText(contextHint,TutorialTitles[index],"context-hint-title");Text(contextHint,TutorialBody(index),"context-hint-body");
+            var row=Box(contextHint,"settings-row");
+            Button(row,"ПОНЯТНО",DismissHint,"stone-button compact-button");
+            Button(row,"БЕЗ ПОДСКАЗОК",()=>{game.Settings.SetTutorialHints(int.MaxValue);game.Settings.Save();DismissHint();},"stone-button compact-button");
+        }
+        void DismissHint(){contextHint?.RemoveFromHierarchy();contextHint=null;}
         void BeginTutorial()
         {
             if(tutorialOpen)return;
-            bool resume=settingsOpen && resumeAfterSettings;resumeAfterSettings=false;CloseModal();
-            tutorialResume=resume || game.Phase==RunPhase.Mining && !game.Paused;
-            if(game.Phase==RunPhase.Mining && !game.Paused)game.TogglePause();
+            tutorialLibrary=settingsOpen;
+            if(tutorialLibrary){game.Settings.SetTutorialHints(0);game.Settings.Save();}
+            DismissHint();bool resume=settingsOpen&&resumeAfterSettings;resumeAfterSettings=false;CloseModal();
+            tutorialResume=resume||game.Phase==RunPhase.Mining&&!game.Paused;
+            if(game.Phase==RunPhase.Mining&&!game.Paused)game.TogglePause();
             CancelGesture();tutorialReturnTab=CurrentTab;tutorialStep=0;tutorialOpen=true;tutorialChecked=true;
             if(tutorialOverlay==null){tutorialOverlay=Box(root,"tutorial-overlay");tutorialOverlay.name="tutorial-overlay";}
             DrawTutorial();
         }
         void DrawTutorial()
         {
-            tutorialFocus?.RemoveFromClassList("tutorial-focus");tutorialFocus=null;
-            if(game.CanTrade)
-            {
-                CurrentTab=tutorialStep==6?HubTab.Inventory:tutorialStep==7||tutorialStep==8?HubTab.Shop:HubTab.Mine;Refresh();
-                tutorialFocus=root.Q(tutorialStep==6?"tab-inventory":tutorialStep==7||tutorialStep==8?"tab-shop":tutorialStep==1?"main-action":"open-settings");
-                tutorialFocus?.AddToClassList("tutorial-focus");
-            }
-            tutorialOverlay.Clear();Display(tutorialOverlay,true);tutorialOverlay.BringToFront();
+            tutorialOverlay.Clear();Display(tutorialOverlay,true);tutorialOverlay.BringToFront();int count=tutorialLibrary?TutorialTitles.Length:2;
             var scroll=new ScrollView(ScrollViewMode.Vertical);scroll.AddToClassList("tutorial-scroll");tutorialOverlay.Add(scroll);
             var card=Box(scroll.contentContainer,"modal-card tutorial-card");
-            Text(card,$"ОБУЧЕНИЕ · {tutorialStep+1} / {TutorialTitles.Length}","section-label");
-            BoldText(card,TutorialTitles[tutorialStep],"title");
-            var art=Box(card,"tutorial-art");
-            if(tutorialStep==5)
-            {
-                Icon(art,PixelArt.Block(BlockKind.Coal,0),"tutorial-icon");Icon(art,PixelArt.Block(BlockKind.Workbench,0),"tutorial-icon");Icon(art,PixelArt.Block(BlockKind.UpgradeWorkbench,0),"tutorial-icon");Icon(art,PixelArt.Block(BlockKind.Tnt,0),"tutorial-icon");
-            }
-            else if(tutorialStep==9){Icon(art,PixelArt.ResourceIcon(BlockKind.Sandstone),"tutorial-icon");Icon(art,PixelArt.ResourceIcon(BlockKind.Obsidian),"tutorial-icon");Icon(art,PixelArt.ResourceIcon(BlockKind.Netherrack),"tutorial-icon");}
-            else if(tutorialStep==10){Icon(art,PixelArt.Chest(),"tutorial-icon");Icon(art,PixelArt.ResourceIcon(BlockKind.Garnet),"tutorial-icon");}
-            else if(tutorialStep==11)Icon(art,PixelArt.Block(BlockKind.Spawner,0),"tutorial-icon");
-            else if(tutorialStep==6||tutorialStep==7){Icon(art,PixelArt.Block(BlockKind.Stone,0),"tutorial-icon");Icon(art,PixelArt.Block(BlockKind.Copper,0),"tutorial-icon");}
-            else Icon(art,PixelArt.Pickaxe(tutorialStep==1?3:0),"tutorial-icon");
-            if(tutorialStep==3)BoldText(art,"← ↑ ↓ →","tutorial-arrows");
-            Text(card,TutorialBodies[tutorialStep],"tutorial-body");
-            var buttons=Box(card,"tutorial-actions");
-            var back=Button(buttons,"НАЗАД",()=>{tutorialStep--;DrawTutorial();},"stone-button tutorial-nav");back.SetEnabled(tutorialStep>0);back.name="tutorial-back";
-            Button(buttons,tutorialStep==TutorialTitles.Length-1?"ИГРАТЬ":"ДАЛЕЕ",()=>{if(tutorialStep==TutorialTitles.Length-1)EndTutorial();else{tutorialStep++;DrawTutorial();}},"stone-button primary tutorial-nav").name="tutorial-next";
-            Button(card,"ПРОПУСТИТЬ ОБУЧЕНИЕ",EndTutorial,"stone-button tutorial-skip").name="tutorial-skip";
+            Text(card,$"ОБУЧЕНИЕ · {tutorialStep+1} / {count}","section-label");BoldText(card,TutorialTitles[tutorialStep],"title");
+            var art=Box(card,"tutorial-art");Icon(art,PixelArt.Pickaxe(tutorialStep==0?3:0),"tutorial-icon");
+            Text(card,TutorialBody(tutorialStep),"tutorial-body");var row=Box(card,"tutorial-actions");
+            var back=Button(row,"НАЗАД",()=>{tutorialStep--;DrawTutorial();},"stone-button tutorial-nav");back.SetEnabled(tutorialStep>0);back.name="tutorial-back";
+            Button(row,tutorialStep==count-1?"ИГРАТЬ":"ДАЛЕЕ",()=>{if(tutorialStep==count-1)EndTutorial();else{tutorialStep++;DrawTutorial();}},"stone-button primary tutorial-nav").name="tutorial-next";
+            Button(card,"ПРОПУСТИТЬ",()=>{game.Settings.SetTutorialHints(int.MaxValue);EndTutorial();},"stone-button tutorial-skip").name="tutorial-skip";
         }
         void EndTutorial()
         {
-            if(!tutorialOpen)return;tutorialOpen=false;tutorialFocus?.RemoveFromClassList("tutorial-focus");
-            Display(tutorialOverlay,false);game.Settings.SetTutorialSeen(true);game.Settings.Save();
+            if(!tutorialOpen)return;if(tutorialLibrary)game.Settings.SetTutorialHints(int.MaxValue);tutorialOpen=false;Display(tutorialOverlay,false);game.Settings.SetTutorialSeen(true);game.Settings.Save();
             if(game.CanTrade)CurrentTab=tutorialReturnTab;
-            if(tutorialResume && game.Phase==RunPhase.Mining && game.Paused)game.TogglePause();
-            tutorialResume=false;Refresh();
+            if(tutorialResume&&game.Phase==RunPhase.Mining&&game.Paused)game.TogglePause();tutorialResume=false;Refresh();
         }
-        public void ProgressReset(){tutorialChecked=false;CloseModal();Toast("ПРОГРЕСС СБРОШЕН");}
+        public void ProgressReset(){DismissHint();game.Settings.SetTutorialHints(0);tutorialChecked=false;CloseModal();Toast("ПРОГРЕСС СБРОШЕН");}
     }
 }

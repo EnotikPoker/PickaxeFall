@@ -37,18 +37,17 @@ namespace PickaxeFall
             var list=new List<LiquidCellSnapshot>();foreach(var pair in cells)list.Add(new LiquidCellSnapshot {x=pair.Key.x,row=pair.Key.y,kind=pair.Value.kind,amount=pair.Value.amount});
             list.Sort((a,b)=>a.row==b.row?a.x.CompareTo(b.x):a.row.CompareTo(b.row));return list.ToArray();
         }
-        public bool Touches(FallingPickaxe tool,BlockKind kind)
+        public bool Touches(FallingPickaxe tool,BlockKind kind)=>Immersion(tool,kind)>0.00001f;
+        public float Immersion(FallingPickaxe tool,BlockKind kind)
         {
-            var bounds=tool.HitBounds;
+            var bounds=tool.HitBounds;float area=0;
             for(int row=Mathf.FloorToInt(-bounds.max.y);row<=Mathf.FloorToInt(-bounds.min.y);row++)
             for(int x=Mathf.CeilToInt(bounds.min.x-.5f);x<=Mathf.FloorToInt(bounds.max.x+.5f);x++)
             {
                 if(!cells.TryGetValue(new Vector2Int(x,row),out var c)||c.amount<=0||c.kind!=kind)continue;
-                float height=c.amount/8f,bottom=-row-1;
-                var center=new Vector2(x,bottom+height*.5f);var closest=tool.ClosestPoint(center);
-                if(closest.x>=x-.5f && closest.x<=x+.5f && closest.y>=bottom && closest.y<=bottom+height)return true;
+                area+=tool.LiquidOverlapArea(new Rect(x-.5f,-row-1,1,c.amount/8f));
             }
-            return false;
+            return Mathf.Clamp01(area/Mathf.Max(.0001f,tool.OpaqueArea));
         }
         public void Tick()
         {

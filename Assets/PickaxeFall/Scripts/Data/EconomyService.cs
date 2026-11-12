@@ -33,7 +33,7 @@ namespace PickaxeFall
         {
             reason = null;
             if (!key.IsValid) { reason = "Неизвестное улучшение"; return false; }
-            if(!SkillAvailable(key.Index,out reason))return false;
+            if(!SkillAvailable(key.RevealIndex,out reason))return false;
             int level = Profile.Level(key);
             if (level >= Progression.MaxLevel(key.Kind)) { reason = "Максимальный уровень"; return false; }
             if(key.Kind==UpgradeKind.DashForce && !Profile.dashUnlocked || key.Kind==UpgradeKind.PlungeDepth && !Profile.plungeUnlocked ||
