@@ -261,7 +261,7 @@ namespace PickaxeFall.BalanceLab
             }
             html.Append("</tbody></table>");
             if(session.Plan.mode==6){
-                var structures=new StringBuilder("scenario,seed,chests,trialRewards,failedTrials\n");foreach(var row in resultSnapshot)structures.AppendLine(string.Join(",",row.scenario,row.seed,LabFiles.Number(row.chests),LabFiles.Number(row.trials),LabFiles.Number(row.failedTrials)));LabFiles.Atomic(Path.Combine(directory,"structures.csv"),structures.ToString());
+                var structures=new StringBuilder("scenario,seed,chests,trialRewards,failedTrials,trialSeconds,trialWear,slowMiningSeconds\n");foreach(var row in resultSnapshot)structures.AppendLine(string.Join(",",row.scenario,row.seed,LabFiles.Number(row.chests),LabFiles.Number(row.trials),LabFiles.Number(row.failedTrials),LabFiles.Number(row.trialSeconds),LabFiles.Number(row.trialWear),LabFiles.Number(row.slowMiningSeconds)));LabFiles.Atomic(Path.Combine(directory,"structures.csv"),structures.ToString());
                 html.Append("<h2>Локации и подготовка</h2><p>Начало / 25% / 75% — фиксированные купленные уровни ветвей; это сравнение физических условий. Кампании отдельно покупают подготовку типов кирок, строят оба маршрута и соблюдают ограничения профиля. Ни одно улучшение кампании не выдаётся бесплатно.</p>");
             }
             if(session.Manifest.schema>=4)AuditReport.Append(session,html,directory,resultSnapshot);

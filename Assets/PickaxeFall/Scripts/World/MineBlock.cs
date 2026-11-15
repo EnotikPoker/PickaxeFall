@@ -9,6 +9,7 @@ namespace PickaxeFall
         public int Row { get; private set; }
         public int Column { get; private set; }
         public int HealthHalfUnits { get; private set; }
+        public int MaxHealthHalfUnits => maxHealthHalfUnits;
         public float Health => HealthHalfUnits * 0.5f;
         public bool IsBroken { get; private set; }
         public bool IsDeep { get; private set; }
@@ -35,7 +36,7 @@ namespace PickaxeFall
             cracks.enabled = false; cracks.sprite = null;
             transform.position = new Vector3(x, -row - 0.5f, 0);
             transform.rotation=Quaternion.identity;
-            visual.sprite = owner.Balance.rulesVersion>=3?PixelArt.WorldBlock(kind,variant,owner.Balance.TerrainAt(row),surface):PixelArt.Block(kind, variant, deep, surface); visual.color = Color.white;
+            visual.sprite = owner.Balance.rulesVersion>=3?PixelArt.WorldBlock(kind,variant,owner.Balance.TerrainAt(row,owner.SurfaceRow(x)),surface):PixelArt.Block(kind, variant, deep, surface); visual.color = Color.white;
             hitbox.size = new Vector2(0.99f, 0.99f); hitbox.enabled = kind!=BlockKind.Rail;
             gameObject.SetActive(true);
         }
@@ -57,7 +58,7 @@ namespace PickaxeFall
             if(Kind==BlockKind.Redstone && origin!=DamageOrigin.Shrapnel)world.ActivateRedstone(Column,Row,source);
             HealthHalfUnits = damage >= HealthHalfUnits ? 0 : HealthHalfUnits - damage;
             if (HealthHalfUnits == 0) return DestroyBlock(source, origin);
-            UpdateCracks(); world.Remember(this); return false;
+            UpdateCracks(); world.Remember(this);if(Kind==BlockKind.Obsidian && origin==DamageOrigin.Physical)world.ReportHardBlock(this);return false;
         }
         public bool DestroyBlock(FallingPickaxe source, bool explosion) => DestroyBlock(source, explosion ? DamageOrigin.Explosion : DamageOrigin.Physical);
         public bool DestroyBlock(FallingPickaxe source, DamageOrigin origin = DamageOrigin.Physical)

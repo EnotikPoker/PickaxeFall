@@ -57,17 +57,18 @@ namespace PickaxeFall.BalanceLab
                     game.BeginSimulation(job.scenario.tier, job.seed, job.scenario.levels, team, rescue);
                     if (job.diagnostic) for (int i = 0; i < Progression.KindCount; i++) if (upgrades.Chance((UpgradeKind)i) > 0) game.Rolls.Forced[i] = 1;
                     var policy = new LabPolicy(); int maxTicks = job.limit * 60;
-                    while (game.Phase == RunPhase.Mining && game.Clock.Ticks < maxTicks)
+                    while (game.Phase == RunPhase.Mining && game.SessionSeconds < job.limit)
                     {
                         if (game.Clock.Ticks % 120 == 0 && cancelled?.Invoke() == true) throw new OperationCanceledException();
                         Step(game, job.scenario.active ? policy : null);
                     }
-                    outcomes.Add(new LabOutcome {weight=weight,depth=game.Depth,seconds=game.Clock.Now});
-                    result.branches++; result.seconds += weight * game.Clock.Now; result.depth += weight * game.Depth;
+                    outcomes.Add(new LabOutcome {weight=weight,depth=game.Depth,seconds=game.SessionSeconds});
+                    result.branches++; result.seconds += weight * game.SessionSeconds; result.depth += weight * game.Depth;
                     result.value += weight * game.PotentialSaleValue; result.blocks += weight * game.BlocksBroken;
                     result.benches += weight * game.WorkbenchesUsed; result.tools += weight * game.RunToolCount;
                     result.abilities += weight * game.Benefits.Abilities;
                     result.waterSeconds+=weight*game.Benefits.WaterSeconds;result.lavaSeconds+=weight*game.Benefits.LavaSeconds;result.lavaWearSaved+=weight*game.Benefits.LavaWearSaved;result.treasureBonuses+=weight*game.Benefits.TreasureBonuses;result.bonusEarth+=weight*game.Benefits.BonusEarth;
+                    result.trialSeconds+=weight*game.Benefits.TrialSeconds;result.trialWear+=weight*game.Benefits.TrialWear;result.slowMiningSeconds+=weight*game.Benefits.SlowMiningSeconds;
                     result.chests+=weight*game.Benefits.Chests;result.trials+=weight*game.Benefits.Trials;result.failedTrials+=weight*game.Benefits.FailedTrials;
                     result.upgradeBenches+=weight*game.Benefits.UpgradeBenches;result.restoredWear+=weight*game.Benefits.RestoredDurability;result.lavaWear+=weight*game.Benefits.LavaWear;result.energySpent+=weight*game.Benefits.EnergySpent;
                     foreach(var visit in game.BenchVisits){visit.weight=(float)weight;visit.terminalCensored=!visit.nextReached && game.Phase==RunPhase.Mining && game.Pickaxes[visit.tool].IsAlive;visits.Add(visit);}
@@ -83,7 +84,16 @@ namespace PickaxeFall.BalanceLab
         }
         public static void Step(GameController game, LabPolicy policy = null)
         {
+            if(game.TrialOpen){SimulateTrial(game,4);return;}
             game.SimulateMiningStep(policy == null ? null : policy.Tick);
+        }
+        public static void SimulateTrial(GameController game,float tapsPerSecond)
+        {
+            var state=game.World.ActiveTrial;if(state==null)return;
+            if(!state.started&&!state.done)game.World.StartTrial();
+            float elapsed=SpawnerState.Duration-state.remaining;
+            if(!state.done && state.hits<Mathf.FloorToInt(elapsed*tapsPerSecond+.00001f))game.World.TapTrial();
+            game.World.AdvanceTrial(1f/60);
         }
         public static IEnumerator Serve(GameBalance balance, string cancelFile, string responseFile)
         {

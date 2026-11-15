@@ -25,7 +25,7 @@ namespace PickaxeFall
         public int LoadedRows => rows.Count;
         public GameBalance Balance => balance;
         public MineGenerator Generator=>generator;
-        public bool CanMine => game.Phase == RunPhase.Mining && !game.Paused;
+        public bool CanMine => game.Phase == RunPhase.Mining && !game.WorldFrozen;
         public float Now=>game.Clock.Now;
         public IEnumerable<MineBlock> LoadedBlocks { get {foreach(var list in rows.Values)foreach(var block in list)if(!block.IsBroken)yield return block;} }
         public void SetBalance(GameBalance config)=>balance=config;
@@ -109,7 +109,8 @@ namespace PickaxeFall
             rows.Add(row, blocks);
         }
         public bool IsRowLoaded(int row)=>rows.ContainsKey(row);
-        public bool CanLiquidOccupy(int x,int row)
+        public bool CanLiquidOccupy(int x,int row)=>!Liquids.IsCooling(x,row) && CanCellFill(x,row);
+        bool CanCellFill(int x,int row)
         {
             if(Mathf.Abs(x)>balance.worldWidth/2 || row< -2 || !rows.ContainsKey(row))return false;
             if(changes.TryGetValue(new Vector2Int(x,row),out var state))return state.broken;
@@ -117,13 +118,16 @@ namespace PickaxeFall
         }
         public bool PlaceObsidian(int x,int row)
         {
-            if(!CanLiquidOccupy(x,row))return false;
+            if(!CanCellFill(x,row))return false;
+            var rect=new Rect(x-.5f,-row-1,1,1);
+            foreach(var tool in game.Pickaxes)if(tool.IsAlive && tool.LiquidOverlapArea(rect)>.00001f)return false;
             MineBlock block;
             if(pool.Count>0)block=pool.Pop();else {var obj=new GameObject("Cooled obsidian");obj.transform.SetParent(transform);block=obj.AddComponent<MineBlock>();}
             block.Setup(this,BlockKind.Obsidian,x,row,0,row>=balance.Block(BlockKind.Deepstone).minimumDepth);
             rows[row].Add(block);ActiveBlocks++;Remember(block);return true;
         }
 
+        internal void ReportHardBlock(MineBlock block)=>game.ReportHardBlock(block);
         public void Remember(MineBlock block) => changes[new Vector2Int(block.Column, block.Row)] = new CellState
             { kind = block.Kind, health = block.HealthHalfUnits, broken = block.IsBroken,litUntil=block.LitUntil };
         public CellSnapshot[] CaptureChanges()
@@ -229,7 +233,12 @@ namespace PickaxeFall
                 if (!block.IsBroken) hash = unchecked(hash * 31 + (int)block.Kind * 997 + block.Row * 41 + block.Column);}
             return hash;
         }
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || PICKAXEFALL_DEVTOOLS
+        public void DebugClearCell(int x,int row)
+        {
+            var block=CellAt(x,row);if(block)block.RetireTrial();
+            changes[new Vector2Int(x,row)]=new CellState{kind=BlockKind.Stone,broken=true};
+        }
         public MineBlock DebugSetCell(int x, int row, BlockKind kind)
         {
             if (!rows.TryGetValue(row, out var cells)) { cells = new List<MineBlock>(); rows.Add(row, cells); }

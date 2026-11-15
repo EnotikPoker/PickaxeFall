@@ -15,7 +15,8 @@ namespace PickaxeFall
             if(IsSimulation)return;
             restoredBalance=Instantiate(originalBalance);balance=restoredBalance;balance.map=Economy.Profile.selectedMap;World.SetBalance(balance);
         }
-        public void TrialEvent(bool failed){if(failed)Benefits.FailedTrials++;Audio?.Play(failed?"error":"trial");hud?.Toast(failed?"СПАВНЕР ПОГАС · БЕЗ ШТРАФА":"СПАВНЕР · 4 УДАРА ЗА 12 СЕКУНД");}
+        public void TrialEvent(bool failed){if(failed)Benefits.FailedTrials++;Audio?.Play(failed?"error":"trial");hud?.Toast(failed?"СПАВНЕР СЛОМАН · −30% МАКС. ПРОЧНОСТИ":"СПАВНЕР · 30 НАЖАТИЙ ЗА 8 СЕКУНД");}
+        internal void ReportHardBlock(MineBlock block)=>hud?.ShowBlockHealth(block);
         public void AwardTrial(int x,int row,FallingPickaxe source)=>AwardTreasure(x,row,source,true);
         void AwardTreasure(int x,int row,FallingPickaxe source,bool trial=false)
         {

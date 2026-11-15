@@ -43,8 +43,10 @@ namespace PickaxeFall
             Check(game.Buy(new(UpgradeKind.Durability)) && game.PreviewDurability(0) == game.Balance.pickaxes[0].durability + Progression.DurabilityStep(0) && game.PreviewDamageHalfUnits(1) == game.Balance.pickaxes[1].damage * 2, "durability and tier isolation");
             game.BeginProbeRun(0, 8127, 1); long wallet = game.Wallet;
             Check(game.Pickaxe.transform.position.y > 5 && game.Depth == 0, "spawn in sky");
-            (root.Q<Button>("open-settings").userData as Action)(); Check(game.Paused, "opening settings pauses physical run");
-            (root.Q<Button>("settings-close").userData as Action)(); Check(!game.Paused, "closing settings resumes previously running game");
+            (root.Q<Button>("open-pause").userData as Action)();
+            Check(root.Q<Button>("open-settings").style.display==DisplayStyle.None,"settings header hidden while mining");
+            (root.Q<Button>("pause-settings").userData as Action)(); Check(game.Paused, "settings reached from pause");
+            (root.Q<Button>("settings-close").userData as Action)(); Check(game.Paused, "settings returns to manual pause");game.TogglePause();
             Check(!game.Buy(new(UpgradeKind.Damage)) && !game.Sell(BlockKind.Dirt, 1), "trade blocked during mining");
             var cell = game.World.DebugSetCell(-10, 5, BlockKind.Stone);
             cell.HitHalfUnits(1, game.Pickaxe);
@@ -125,6 +127,7 @@ namespace PickaxeFall
             yield return RuntimePresentationChecks.Run(game,root,Check);
             yield return RuntimeProgressionChecks.Run(game,Check);
             yield return RuntimePolishChecks.Run(game,root,Check);
+            yield return RuntimePatchChecks.Run(game,root,Check);
             Debug.Log("PICKAXEFALL_SMOKE_OK: " + assertions + " checks; trading, half damage, opaque cracks, stronger hops, group lifecycle, streaming, camera, workbench and rescue.");
             Application.Quit(0);
         }

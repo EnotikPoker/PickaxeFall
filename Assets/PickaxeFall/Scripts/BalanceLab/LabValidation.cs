@@ -130,7 +130,7 @@ namespace PickaxeFall.BalanceLab
                     foreach(var tool in game.Pickaxes) tool.Body.interpolation=RigidbodyInterpolation2D.Interpolate;
                     var driver=root.AddComponent<LabParityDriver>();driver.game=game;driver.policy=scenario.active?new LabPolicy():null;
                     Physics2D.simulationMode=SimulationMode2D.Script; Time.timeScale=20;
-                    while(game.Phase==RunPhase.Mining && game.Clock.Ticks<36000)yield return null;
+                    while(game.Phase==RunPhase.Mining && game.SessionSeconds<600)yield return null;
                     driver.enabled=false;
                     Debug.Log($"LAB_PARITY_SAMPLE: fixture={fixture}; manual={manual.seconds}/{manual.depth}/{manual.value}; auto={game.Clock.Now}/{game.Depth}/{game.PotentialSaleValue}; autoResources={string.Join(",",game.OreCounts)}; manualResources={string.Join(",",manual.resources)}");
                     Check(game.Clock.Now==manual.seconds && game.Depth==manual.depth && game.PotentialSaleValue==manual.value && Enumerable.Range(0,ResourceInventory.SlotCount).All(i=>game.OreCounts[i]==manual.resources[i]),"batch / rendered-frame physics parity fixture "+fixture);
@@ -146,7 +146,7 @@ namespace PickaxeFall.BalanceLab
     {
         public GameController game;
         public LabPolicy policy;
-        void FixedUpdate() { if(game.Phase==RunPhase.Mining && game.Clock.Ticks<36000)game.SimulateMiningStep(policy == null ? null : policy.Tick); }
+        void FixedUpdate() { if(game.Phase==RunPhase.Mining && game.SessionSeconds<600)LabWorker.Step(game,policy); }
     }
 }
 #endif

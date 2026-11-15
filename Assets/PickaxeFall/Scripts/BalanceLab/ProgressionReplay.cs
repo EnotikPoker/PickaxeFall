@@ -38,10 +38,11 @@ namespace PickaxeFall.BalanceLab
                 {
                     balance.map=ChooseMap(bank,pending);var game=root.AddComponent<GameController>();game.InitializeSimulation(balance);game.BeginSimulation(tier,seed,bank.Profile.upgrades,-1,-1,bank.Profile.dashUnlocked,bank.Profile.plungeUnlocked);
                     var policy=new LabPolicy {PriorityOre=balance.map==MapId.Desert&&!ProfileRules.Complete(bank.Profile,GoalKind.Portal)?BlockKind.Obsidian:bank.Profile.profileLevel==4&&bank.Profile.lifetimeMined[(int)BlockKind.Diamond]<3?BlockKind.Diamond:(BlockKind?)null};int ticks=(int)Math.Floor((horizon-elapsed-8)*60);
-                    while(game.Phase==RunPhase.Mining && game.Clock.Ticks<ticks)
+                    while(game.Phase==RunPhase.Mining && game.SessionSeconds*60<ticks)
                     {if(game.Clock.Ticks%120==0 && cancelled?.Invoke()==true)throw new OperationCanceledException();LabWorker.Step(game,policy);}
-                    finished=game.Phase!=RunPhase.Mining;segment=game.Clock.Now+8;elapsed+=segment;result.depth=Math.Max(result.depth,game.Depth);result.runCount++;
+                    finished=game.Phase!=RunPhase.Mining;segment=game.SessionSeconds+8;elapsed+=segment;result.depth=Math.Max(result.depth,game.Depth);result.runCount++;
                     result.mapSeconds[(int)balance.map]+=segment;result.mapValues[(int)balance.map]+=game.PotentialSaleValue;result.mapRuns[(int)balance.map]++;result.waterSeconds+=game.Benefits.WaterSeconds;result.lavaSeconds+=game.Benefits.LavaSeconds;result.lavaWearSaved+=game.Benefits.LavaWearSaved;result.treasureBonuses+=game.Benefits.TreasureBonuses;result.bonusEarth+=game.Benefits.BonusEarth;result.chests+=game.Benefits.Chests;result.trials+=game.Benefits.Trials;result.failedTrials+=game.Benefits.FailedTrials;
+                    result.trialSeconds+=game.Benefits.TrialSeconds;result.trialWear+=game.Benefits.TrialWear;result.slowMiningSeconds+=game.Benefits.SlowMiningSeconds;
                     result.value+=game.PotentialSaleValue;result.blocks+=game.BlocksBroken;result.benches+=game.WorkbenchesUsed;result.abilities+=game.Benefits.Abilities;result.upgradeBenches+=game.Benefits.UpgradeBenches;result.lavaWear+=game.Benefits.LavaWear;result.restoredWear+=game.Benefits.RestoredDurability;result.energySpent+=game.Benefits.EnergySpent;result.tools+=game.RunToolCount;
                     for(int i=0;i<Progression.KindCount;i++){result.attempts[i]+=game.Rolls.Attempts[i];result.successes[i]+=game.Rolls.Successes[i];}
                     foreach(var tool in game.Pickaxes)result.strikes+=tool.TotalStrikes;

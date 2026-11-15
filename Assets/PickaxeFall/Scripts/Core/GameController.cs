@@ -36,7 +36,7 @@ namespace PickaxeFall
         public int SelectedToolIndex { get; private set; }
         public FallingPickaxe SelectedTool => tools.Count > SelectedToolIndex ? tools[SelectedToolIndex] : null;
         public float AbilityCost(AbilityKind kind) => RunUpgrades.EnergyCost(kind == AbilityKind.Dash ? RunUpgrades.Config.dashCost : RunUpgrades.Config.plungeCost);
-        public bool ControlsAvailable => Phase == RunPhase.Mining && !Paused && (IsSimulation || hud != null && !hud.ModalOpen);
+        public bool ControlsAvailable => Phase == RunPhase.Mining && !WorldFrozen && (IsSimulation || hud != null && !hud.ModalOpen);
         public RunUpgrades RunUpgrades { get; private set; }
         public ResourceInventory Inventory { get; private set; }
         public int Depth { get; private set; }
@@ -51,6 +51,18 @@ namespace PickaxeFall
         public HubTab CurrentHubTab => hud.CurrentTab;
         public int Seed { get; private set; }
         public bool Paused { get; private set; }
+        public bool SystemSuspended { get; private set; }
+        public bool TrialOpen => World != null && World.ActiveTrial != null;
+        public bool WorldFrozen => Paused || SystemSuspended || TrialOpen;
+        public float SessionSeconds => Clock.Now + Benefits.TrialSeconds;
+        void RefreshTimeScale() { if(!IsSimulation)Time.timeScale=WorldFrozen?0:1; }
+        internal void TrialChanged() { hud?.CancelGesture(); RefreshTimeScale(); Notify(); SaveProgress(); }
+        public void SetApplicationSuspended(bool value)
+        {
+            if(!initialized || IsSimulation)return;
+            hud?.CancelGesture();SystemSuspended=value;if(!value)skipTrialFrame=true;RefreshTimeScale();if(value)SaveProgress();
+        }
+
         public bool CanTrade => Phase == RunPhase.Ready || Phase == RunPhase.Equipped || Phase == RunPhase.Finished;
         public Rect GameplayViewport => hud != null ? hud.GameplayViewport : new Rect(0.04f, 0.24f, 0.92f, 0.53f);
         public readonly long[] OreCounts = new long[ResourceInventory.SlotCount];
@@ -59,8 +71,8 @@ namespace PickaxeFall
         MineCamera cameraFollow;
         System.Random rouletteRandom;
         int selectedTier;
-        bool initialized, dirty;
-        float nextSave;
+        bool initialized, dirty, skipTrialFrame;
+        float nextSave,lastMinedTime;
 
         public void Configure(GameBalance config, PanelSettings panel, StyleSheet style)
         { balance = config; panelSettings = panel; interfaceStyle = style; }
@@ -68,7 +80,7 @@ namespace PickaxeFall
         void Start()
         {
             if (IsSimulation) return;
-            Application.targetFrameRate = 60; Screen.orientation = ScreenOrientation.Portrait;
+            Application.runInBackground=true; Application.targetFrameRate = 60; Screen.orientation = ScreenOrientation.Portrait;
             Time.fixedDeltaTime = 1f / 60; Physics2D.simulationMode = SimulationMode2D.Script;
             Physics2D.gravity = new Vector2(0, balance.gravity);
             ProfileDirectory = Application.persistentDataPath;
@@ -118,6 +130,9 @@ namespace PickaxeFall
             cameraObject.AddComponent<Camera>(); cameraObject.AddComponent<AudioListener>();
             cameraFollow = cameraObject.AddComponent<MineCamera>(); cameraFollow.Initialize(this);
             var document = gameObject.AddComponent<UIDocument>(); document.panelSettings = panelSettings;
+#if PICKAXEFALL_DEVTOOLS
+            RestoreDeveloperAccess();
+#endif
             hud = new GameHud(this, document.rootVisualElement, interfaceStyle);
             initialized = true;
 #if PICKAXEFALL_DEVTOOLS
@@ -153,11 +168,11 @@ namespace PickaxeFall
             UseOriginalBalance();ApplySelectedMap();World.RestoreTrials(null);Economy.Profile.run=null;
             BenchVisits.Clear(); Depth = BlocksBroken = WorkbenchesUsed = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
             RunToolCount = 1; RescueUsed = false; RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
-            SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); Clock.Reset(); hud?.CancelGesture();
+            SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); Clock.Reset();lastMinedTime=0; hud?.CancelGesture();
             int previousSeed = Seed;
             do { Seed = Guid.NewGuid().GetHashCode() & int.MaxValue; } while (Seed == 0 || Seed == previousSeed);
             World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); Audio?.SetMap(CurrentMap);cameraFollow?.SetMap();cameraFollow?.ResetView();
-            Phase = RunPhase.Ready; hud?.SelectTab(HubTab.Mine); Notify();
+            Phase = RunPhase.Ready; RefreshTimeScale(); hud?.SelectTab(HubTab.Mine); Notify();
         }
         public void Spin()
         {
@@ -211,6 +226,8 @@ namespace PickaxeFall
             #if PICKAXEFALL_DEVTOOLS
             if(DeveloperInfiniteEnergy&&Phase==RunPhase.Mining)Energy.Ensure(Energy.Maximum);
 #endif
+            if(skipTrialFrame)skipTrialFrame=false;
+            else if(!Paused && !SystemSuspended)World.AdvanceTrial(Time.unscaledDeltaTime);
             hud.Tick();
         }
 
@@ -218,14 +235,15 @@ namespace PickaxeFall
         // The player and the lab use the same native physics entry point and ordering.
         public void SimulateMiningStep(Action<GameController> policy = null)
         {
-            if (Phase != RunPhase.Mining || Paused) return;
-            Clock.Advance(); Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
+            if (Phase != RunPhase.Mining || WorldFrozen) return;
+            Clock.Advance(); if(Clock.Now-lastMinedTime>15)Benefits.SlowMiningSeconds+=Clock.Delta; Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
             foreach (var tool in tools) if (tool.IsAlive) tool.PhysicsTick();
+            if(WorldFrozen)return;
             Physics2D.SyncTransforms(); PhysicsScene.Simulate(Clock.Delta);
         }
         public void StepMiningWorld()
         {
-            if (Phase != RunPhase.Mining || Paused) return;
+            if (Phase != RunPhase.Mining || WorldFrozen) return;
             foreach (var tool in tools) if (tool.IsAlive) Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.Body.position.y));
             World.StreamTools(tools);
         }
@@ -256,7 +274,7 @@ namespace PickaxeFall
         }
         public void OnPhysicalHit(FallingPickaxe source, bool strong)
         {
-            if (Phase != RunPhase.Mining || Paused) return;
+            if (Phase != RunPhase.Mining || WorldFrozen) return;
             if (strong) Benefits.StrongHits++;
         }
         // Bonus TNT is detonated by the world after the mined cell has been retired.
@@ -280,7 +298,7 @@ namespace PickaxeFall
             }
             else
             {
-                BlocksBroken++;
+                BlocksBroken++;lastMinedTime=Clock.Now;
                 if (origin == DamageOrigin.Dash || origin == DamageOrigin.Plunge) Benefits.AbilityBlocks++;
                 if (origin == DamageOrigin.Shrapnel) Benefits.ShrapnelBlocks++;
                 if (ResourceInventory.IsMaterial(block.Kind))
@@ -357,7 +375,7 @@ namespace PickaxeFall
         public void TogglePause()
         {
             if (Phase != RunPhase.Mining) return;
-            hud?.CancelGesture(); Paused = !Paused; Time.timeScale = Paused ? 0 : 1; Notify();
+            hud?.CancelGesture(); Paused = !Paused; RefreshTimeScale(); Notify();
             if(Paused)SaveProgress();
         }
         public bool SelectHubTab(HubTab tab) { if (!CanTrade) return false; hud.SelectTab(tab); return true; }
@@ -367,8 +385,11 @@ namespace PickaxeFall
             try { Economy.Profile.run=Phase==RunPhase.Mining?CaptureRun():null;Economy.Save(); Settings?.Save(); dirty = false; nextSave = Time.unscaledTime + 5; }
             catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС"); nextSave = Time.unscaledTime + 10; }
         }
-        void OnApplicationPause(bool pause) { if(IsSimulation || !pause)return;if(Phase==RunPhase.Mining && !Paused)TogglePause();else SaveProgress(); }
-        void OnApplicationFocus(bool focus){if(!focus && initialized && !IsSimulation && TestMode.Length==0 && Phase==RunPhase.Mining && !Paused)TogglePause();}
+        void OnApplicationPause(bool pause) => SetApplicationSuspended(pause);
+        void OnApplicationFocus(bool focus)
+        {
+            if(!focus && initialized && !IsSimulation){hud?.CancelGesture();SaveProgress();}
+        }
         void OnApplicationQuit(){SaveProgress();quitting=true;}
         void OnDestroy() { if (initialized && !quitting) SaveProgress(); Time.timeScale = 1; hud?.Dispose();if(restoredBalance)Destroy(restoredBalance); }
         void Notify() => Changed?.Invoke();
@@ -392,10 +413,11 @@ namespace PickaxeFall
         }
         public void BeginSimulation(int tier, int seed, int[] levels, int team, int rescue,bool dashUnlocked=true,bool plungeUnlocked=true)
         {
+            UseOriginalBalance();World.SetBalance(balance);Paused=false;lastMinedTime=0;
             foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
             Array.Clear(Economy.Profile.resources, 0, ResourceInventory.SlotCount); Array.Copy(levels, Economy.Profile.upgrades, Progression.KeyCount);
             Economy.Profile.dashUnlocked=dashUnlocked;Economy.Profile.plungeUnlocked=plungeUnlocked;
-            Economy.Profile.Validate(); Seed = seed; Clock.Reset(); forcedTeam = team; forcedRescue = rescue;
+            Economy.Profile.Validate(); Seed = seed; Clock.Reset();lastMinedTime=0; forcedTeam = team; forcedRescue = rescue;
             BenchVisits.Clear(); Depth = BlocksBroken = WorkbenchesUsed = 0; RescueUsed = false; Array.Clear(OreCounts, 0, OreCounts.Length); Benefits.Reset();
             World.RestoreTrials(null);World.ResetWorld(seed); selectedTier = tier; Phase = RunPhase.Equipped; StartDrop(0);
         }

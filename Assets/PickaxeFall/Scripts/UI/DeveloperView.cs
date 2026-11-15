@@ -7,6 +7,20 @@ namespace PickaxeFall
     public sealed partial class GameHud
     {
         int developerTaps;float developerTapUntil;bool developerResume;
+        Button developerShortcut;
+        void BuildDeveloperShortcut(VisualElement parent)
+        {
+            developerShortcut=Button(parent,"DEV",()=>{
+                if(game.TrialOpen)return;
+                developerResume=game.Phase==RunPhase.Mining&&!game.Paused;
+                OpenDeveloper();
+            },"stone-button small-button developer-shortcut");developerShortcut.name="open-developer";
+        }
+        void TickDeveloperShortcut()
+        {
+            Display(developerShortcut,game.DeveloperUnlocked);
+            developerShortcut.SetEnabled(!game.TrialOpen);
+        }
         void RegisterDeveloperAccess(VisualElement version)
         {
             version.RegisterCallback<ClickEvent>(_=>{
@@ -21,7 +35,7 @@ namespace PickaxeFall
         }
         void OpenDeveloper()
         {
-            if(!game.DeveloperUnlocked)return;
+            if(!game.DeveloperUnlocked || game.TrialOpen)return;
             if(game.Phase==RunPhase.Mining&&!game.Paused)game.TogglePause();
             var card=OpenModal("PickaxeFall Dev");card.AddToClassList("developer-dialog");Text(card,"Отдельный тестовый профиль. Изменения навыков действуют со следующего спуска.","description");
             var amount=new LongField("Количество"){value=1000};card.Add(amount);
@@ -39,6 +53,8 @@ namespace PickaxeFall
             var tier=new DropdownField("Кирка",new(){"Дерево","Камень","Золото","Железо","Алмаз"},0);card.Add(tier);
             var count=new IntegerField("Кирок"){value=1};var seed=new IntegerField("Сид"){value=8127};var depth=new IntegerField("Глубина"){value=0};card.Add(count);card.Add(seed);card.Add(depth);
             Button(card,"НОВЫЙ ТЕСТОВЫЙ СПУСК",()=>{CloseModal();game.DeveloperRun((MapId)map.index,tier.index,Mathf.Clamp(count.value,1,5),seed.value,depth.value);},"stone-button compact-button");
+            foreach(var scene in new[]{(0,"ОБСИДИАН В ЛАВЕ"),(1,"ГРАНИЦА СЛОЁВ"),(2,"СПАВНЕР")})
+                Button(card,scene.Item2,()=>{CloseModal();game.DeveloperScene(scene.Item1);},"stone-button compact-button");
             DevToggle(card,"Бесконечная прочность",game.DeveloperInfiniteWear,v=>game.DeveloperInfiniteWear=v);DevToggle(card,"Бесконечная энергия",game.DeveloperInfiniteEnergy,v=>game.DeveloperInfiniteEnergy=v);DevToggle(card,"Коллайдеры и контакты",game.DeveloperColliders,v=>game.DeveloperColliders=v);
             Button(card,"ВОССТАНОВИТЬ ПРОЧНОСТЬ И ЭНЕРГИЮ",game.DeveloperRefill,"stone-button compact-button");
             Button(card,"СОХРАНИТЬ КОПИЮ ПРОФИЛЯ",()=>DevResult(game.DeveloperRestore(true)),"stone-button compact-button");

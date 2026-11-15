@@ -49,9 +49,12 @@ namespace PickaxeFall
             var buttons = Box(brand, "header-buttons");
             profileButton=Button(buttons,"УР. 1",OpenProfile,"stone-button small-button profile-button");profileButton.name="open-profile";
             sound = Button(buttons, "НАСТРОЙКИ", OpenSettings, "stone-button small-button settings-button"); sound.name = "open-settings";
-            pause = Button(buttons, "", game.TogglePause, "stone-button small-button"); pause.tooltip = "Пауза";
+            pause = Button(buttons, "", game.TogglePause, "stone-button small-button"); pause.tooltip = "Пауза";pause.name="open-pause";pause.AddToClassList("pause-button");
             var pauseGlyph = Box(pause, "pause-glyph"); pauseGlyph.pickingMode = PickingMode.Ignore;
             Box(pauseGlyph, "pause-bar").pickingMode = PickingMode.Ignore; Box(pauseGlyph, "pause-bar").pickingMode = PickingMode.Ignore;
+#if PICKAXEFALL_DEVTOOLS
+            BuildDeveloperShortcut(buttons);
+#endif
             var stats = Box(header, "stats-row");
             depth = Stat(stats, "ГЛУБИНА", "0 м"); wallet = Stat(stats, "МОНЕТЫ", "0"); best = Stat(stats, "РЕКОРД", "0 м");
             sceneInfo = Box(safe, "scene-info"); Text(sceneInfo, "БЕЗДОННАЯ ШАХТА", "micro light").name="map-heading"; status = Text(sceneInfo, "ПОВЕРХНОСТЬ", "micro light");
@@ -88,13 +91,17 @@ namespace PickaxeFall
             pauseOverlay = Box(root, "pause-overlay"); var pausePanel = Box(pauseOverlay, "modal-card");
             BoldText(pausePanel, "Пауза", "title"); Text(pausePanel, "Добыча и улучшения сохраняются.", "description");
             Button(pausePanel, "ПРОДОЛЖИТЬ", game.TogglePause, "stone-button primary");
+            Button(pausePanel,"НАСТРОЙКИ",OpenSettings,"stone-button secondary").name="pause-settings";
             modal = Box(root, "modal-overlay"); modal.name = "trade-modal"; Display(modal, false);
             BuildCombat(); game.Changed += Refresh; Refresh();
         }
         public void SelectTab(HubTab tab) { CloseModal(); CurrentTab = tab; Refresh(); }
         public void Tick()
         {
-            TickTreasure();TickCombat(); TickPresentation(); TickProfile(); TickTutorial();
+#if PICKAXEFALL_DEVTOOLS
+            TickDeveloperShortcut();
+#endif
+            TickSpawner();TickBlockHealth();TickTreasure();TickCombat(); TickPresentation(); TickProfile(); TickTutorial();
             SetText(depth, game.Depth + " м"); SetText(wallet, Short(game.Wallet)); SetText(best, game.BestDepth + " м");
             string nextOre = "";
             foreach (var kind in game.CurrentMap==MapId.Mine?MilestoneOres:System.Array.Empty<BlockKind>())
@@ -129,7 +136,7 @@ namespace PickaxeFall
             bool active = game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking;
             Display(window, !active); Display(tabs, !active); Display(controls, active); Display(playfield, active);
             Display(mineView, CurrentTab == HubTab.Mine); window.EnableInClassList("mine-window", CurrentTab == HubTab.Mine); Display(inventoryView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Inventory); Display(shopView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Shop);
-            Display(pause, game.Phase == RunPhase.Mining); Display(pauseOverlay, game.Paused);
+            Display(pause, game.Phase == RunPhase.Mining); Display(pauseOverlay, game.Paused); Display(sound,game.CanTrade);
             sound.text = "НАСТРОЙКИ";
             for (int i = 0; i < 3; i++) { tabButtons[i].EnableInClassList("active", (int)CurrentTab == i); tabButtons[i].SetEnabled(game.CanTrade); }
             action.SetEnabled(game.Phase != RunPhase.Spinning);

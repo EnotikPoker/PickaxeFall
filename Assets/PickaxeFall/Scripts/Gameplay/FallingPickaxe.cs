@@ -127,7 +127,7 @@ namespace PickaxeFall
         public void CancelAbility() { remaining = 0; abilityUntil = momentumUntil = 0; }
         public void PhysicsTick()
         {
-            if (game.Phase != RunPhase.Mining || game.Paused || !IsAlive) return;
+            if (game.Phase != RunPhase.Mining || game.WorldFrozen || !IsAlive) return;
             waterImmersion=game.World.Liquids.Immersion(this,BlockKind.Water);lavaImmersion=game.World.Liquids.Immersion(this,BlockKind.Lava);
             InWater=waterImmersion>0.00001f;
             game.Benefits.WaterSeconds+=waterImmersion*game.Clock.Delta;game.Benefits.LavaSeconds+=lavaImmersion*game.Clock.Delta;
@@ -184,7 +184,7 @@ namespace PickaxeFall
         {
             if (!AbilityActive || block.IsBroken) return;
             var kind = block.Kind;
-            if (!ResourceInventory.IsMaterial(kind)) {var specialOrigin=ability==AbilityKind.Dash?DamageOrigin.Dash:DamageOrigin.Plunge;CancelAbility();block.DestroyBlock(this,specialOrigin);if(kind==BlockKind.Spawner)SpendWear();return; }
+            if (!ResourceInventory.IsMaterial(kind)) {var specialOrigin=ability==AbilityKind.Dash?DamageOrigin.Dash:DamageOrigin.Plunge;CancelAbility();if(kind==BlockKind.Spawner)SpendWear();if(IsAlive)block.DestroyBlock(this,specialOrigin);return; }
             var origin = ability == AbilityKind.Dash ? DamageOrigin.Dash : DamageOrigin.Plunge;
             remaining--; block.DestroyBlock(this, origin);
             game.Effects.Impact(point, new Color32(94, 225, 238, 255), 6);
@@ -204,7 +204,7 @@ namespace PickaxeFall
         }
         void Contact(Collision2D collision, bool enter)
         {
-            if (game.Phase != RunPhase.Mining || game.Paused || !IsAlive || collision.contactCount == 0) return;
+            if (game.Phase != RunPhase.Mining || game.WorldFrozen || !IsAlive || collision.contactCount == 0) return;
             var block = collision.collider.GetComponent<MineBlock>(); if (!block || block.IsBroken) return;
             if(block.Kind==BlockKind.Redstone){game.World.ActivateRedstone(block.Column,block.Row,this);if(block.IsBroken)return;}
             var contact = collision.GetContact(0); float approach = -Vector2.Dot(PointVelocity(contact.point), contact.normal);
@@ -228,7 +228,7 @@ namespace PickaxeFall
         }
         void PhysicalHit(MineBlock block, float approach, Vector2 point)
         {
-            if(block.Kind==BlockKind.Spawner && game.Balance.rulesVersion>=3){block.HitHalfUnits(1,this);NaturalStrikes++;SpendWear();return;}
+            if(block.Kind==BlockKind.Spawner && game.Balance.rulesVersion>=3){NaturalStrikes++;SpendWear();if(IsAlive)block.HitHalfUnits(1,this);return;}
             if (!ResourceInventory.IsMaterial(block.Kind)) { block.DestroyBlock(this); return; }
             int x = block.Column, row = block.Row; Color color = block.BaseColor;
             bool strong = approach >= game.Balance.strongImpactSpeed;
@@ -260,6 +260,15 @@ namespace PickaxeFall
             if (outward > game.Balance.maximumReboundSpeed) body.linearVelocity -= normal * (outward - game.Balance.maximumReboundSpeed);
             else if (outward < desired) body.AddForce(normal * ((desired - outward) * body.mass), ForceMode2D.Impulse);
             lastReboundTime = game.Clock.Now; HopCount++;
+        }
+        public void LoseTrialDurability()
+        {
+            int loss=Mathf.CeilToInt(MaxDurability*.3f);
+#if PICKAXEFALL_DEVTOOLS
+            if(game.DeveloperInfiniteWear)return;
+#endif
+            int lost=Mathf.Min(Durability,loss);Durability-=lost;game.Benefits.TrialWear+=lost;
+            if(Durability<=0){CancelAbility();game.OnPickaxeExhausted(this);}
         }
         public void RepairAndUpgrade(int steps = 1)
         {
