@@ -15,6 +15,8 @@ namespace PickaxeFall
         public int EffectiveFrameRate => FrameRate==0 ? Mathf.Clamp(Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value),30,360) : FrameRate;
         public bool ReducedEffects { get; private set; }
         public bool LootMessages { get; private set; }=true;
+        public int ReserveSteps {get;private set;}=3;
+        public int TutorialHints {get;private set;}
         public bool TutorialSeen { get; private set; }
         public static readonly int[] FrameRates={30,60,90,120,144,165,240,0};
         public GameSettings(bool temporary=false,bool applyRuntime=true)
@@ -28,6 +30,8 @@ namespace PickaxeFall
                 ReducedEffects=PlayerPrefs.GetInt(Prefix+"effects",0)==1;
                 LootMessages=PlayerPrefs.GetInt(Prefix+"lootPopups",1)==1;
                 TutorialSeen=PlayerPrefs.GetInt(Prefix+"tutorialSeen",0)==1;
+                int reserve=PlayerPrefs.GetInt(Prefix+"reserveSteps",3);ReserveSteps=reserve is 0 or 1 or 3 or 5?reserve:3;
+                TutorialHints=PlayerPrefs.GetInt(Prefix+"tutorialHints",TutorialSeen?int.MaxValue:0);
             }
             Apply();
         }
@@ -39,6 +43,8 @@ namespace PickaxeFall
         public void SetReducedEffects(bool value){ReducedEffects=value;dirty=true;}
         public void SetLootMessages(bool value){LootMessages=value;dirty=true;}
         public void SetTutorialSeen(bool value){TutorialSeen=value;dirty=true;}
+        public void SetReserveSteps(int value){ReserveSteps=value is 0 or 1 or 3 or 5?value:3;dirty=true;}
+        public void SetTutorialHints(int value){TutorialHints=value;dirty=true;}
         public void Reset(){Volume=.8f;MusicVolume=.25f;EffectsVolume=.8f;FrameRate=60;ReducedEffects=false;LootMessages=true;dirty=true;Apply();}
         public void Save()
         {
@@ -46,6 +52,7 @@ namespace PickaxeFall
             PlayerPrefs.SetFloat(Prefix+"music",MusicVolume);PlayerPrefs.SetFloat(Prefix+"sfx",EffectsVolume);PlayerPrefs.SetFloat(Prefix+"volume",Volume);PlayerPrefs.SetInt("soundMuted",Volume<.001f?1:0);
             PlayerPrefs.SetInt(Prefix+"fps",FrameRate);PlayerPrefs.SetInt(Prefix+"effects",ReducedEffects?1:0);
             PlayerPrefs.SetInt(Prefix+"lootPopups",LootMessages?1:0);PlayerPrefs.SetInt(Prefix+"tutorialSeen",TutorialSeen?1:0);
+            PlayerPrefs.SetInt(Prefix+"reserveSteps",ReserveSteps);PlayerPrefs.SetInt(Prefix+"tutorialHints",TutorialHints);
             PlayerPrefs.Save();dirty=false;
         }
     }

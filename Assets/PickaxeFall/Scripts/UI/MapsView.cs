@@ -30,15 +30,15 @@ namespace PickaxeFall
                 BoldText(project,page==1?"Мост в пустыню":"Портал в ад","map-title");
                 Text(project,complete?(page==1?"Песчанник, кварцит и сокровища храмов.":"Лава, крепости и редчайшие минералы."):"Построй путь к новой карте.","skill-summary");
                 float fraction=page==1?(p.bridgeStone/1000f+p.bridgeIron/50f)*.5f:p.portalObsidian/10f;
-                var progress=Box(project,"map-progress-row");
+                var progress=Box(project,"map-progress-row");Display(progress,!complete);
                 Text(progress,complete?"ПОСТРОЕНО":"ГОТОВНОСТЬ","map-status"+(complete?" cost-enough":""));
                 BoldText(progress,Mathf.RoundToInt(fraction*100)+"%","map-status");
-                var track=Box(project,"profile-progress-track");Box(track,"profile-progress-fill").style.width=Length.Percent(fraction*100);
-                var requirements=Box(project,"map-materials");
+                var track=Box(project,"profile-progress-track");Display(track,!complete);Box(track,"profile-progress-fill").style.width=Length.Percent(fraction*100);
+                var requirements=Box(project,"map-materials");Display(requirements,!complete);
                 if(page==1){RecipeLine(requirements,BlockKind.Stone,p.bridgeStone,1000);RecipeLine(requirements,BlockKind.Iron,p.bridgeIron,50);}
                 else RecipeLine(requirements,BlockKind.Obsidian,p.portalObsidian,10);
                 var pin=PaperPin(project);pin.name="map-goal-pin";Display(pin,!complete&&p.goalKind==kind);
-                if(complete){Button(card,"ВЫБРАТЬ · "+names[page].ToUpperInvariant(),()=>{if(game.SelectMap((MapId)page)){CloseModal();SelectTab(HubTab.Mine);}else Toast("Заверши выбор текущей кирки перед сменой карты");},"stone-button compact-button buy-ready").name="map-enter-"+page;Text(card,"Рекорд: "+p.mapRecords[page]+" м · "+(page==1?"Сложнее шахты":"Высокая опасность лавы"),"profile-note");}
+                if(complete){Text(project,"ПУТЬ ОТКРЫТ","map-status cost-enough");Button(card,"ВЫБРАТЬ · "+names[page].ToUpperInvariant(),()=>{if(game.SelectMap((MapId)page)){CloseModal();SelectTab(HubTab.Mine);}else Toast("Заверши выбор текущей кирки перед сменой карты");},"stone-button compact-button buy-ready").name="map-enter-"+page;Text(card,"Рекорд: "+p.mapRecords[page]+" м · "+(page==1?"Сложнее шахты":"Высокая опасность лавы"),"profile-note");}
                 if(!complete)
                 {
                     CardClick(project,()=>{ToggleCardGoal(kind,0);OpenMaps(page);});
@@ -64,7 +64,7 @@ namespace PickaxeFall
                 CommitProfile(()=>game.Economy.TryContribute(kind),()=>{
                     OpenMaps(page,before.bridgeStone,before.bridgeIron,before.portalObsidian);
                     FlyConstructionMaterials(root.Q("construction-scene"),amounts);
-                    if(ProfileRules.Complete(game.Economy.Profile,kind))Toast(page==1?"МОСТ ПОСТРОЕН!":"ПОРТАЛ ПОСТРОЕН!");
+                    if(ProfileRules.Complete(game.Economy.Profile,kind)){game.Audio?.Ui(UiSound.Construction);Celebrate(page==1?"МОСТ ПОСТРОЕН":"ПОРТАЛ ПОСТРОЕН");}
                 });
             },"stone-button compact-button buy-ready").name="confirm-construction";
             Button(card,"ОТМЕНА",()=>OpenMaps(page),"stone-button compact-button");

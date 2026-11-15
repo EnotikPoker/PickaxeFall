@@ -31,3 +31,6 @@ sysinfo.txt
 .env.*
 !.env.example
 TestResults/
+# Generated only while assembling a private developer build.
+Assets/PickaxeFall/Resources/DeveloperAuth.json
+Assets/PickaxeFall/Resources/DeveloperAuth.json.meta

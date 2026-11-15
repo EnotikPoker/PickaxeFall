@@ -17,13 +17,13 @@ namespace PickaxeFall
     // Independent streams keep unrelated upgrades from shifting each other's rolls.
     public sealed class EffectRolls
     {
-        readonly uint[] streams = new uint[17];
-        public readonly long[] Attempts = new long[17], Successes = new long[17];
-        public readonly int[] Forced = new int[17];
+        readonly uint[] streams = new uint[Progression.KindCount];
+        public readonly long[] Attempts = new long[Progression.KindCount], Successes = new long[Progression.KindCount];
+        public readonly int[] Forced = new int[Progression.KindCount];
         public void Reset(int seed)
         {
-            Array.Clear(Attempts, 0, 17); Array.Clear(Successes, 0, 17);
-            for (int i = 0; i < 17; i++)
+            Array.Clear(Attempts, 0, Progression.KindCount); Array.Clear(Successes, 0, Progression.KindCount);
+            for (int i = 0; i < Progression.KindCount; i++)
             {
                 uint x=unchecked((uint)(seed^((i+1)*73856093)));x^=x>>16;x*=0x7feb352d;x^=x>>15;x*=0x846ca68b;x^=x>>16;
                 streams[i]=x==0?0x9e3779b9:x;Forced[i]=-1;
@@ -38,10 +38,10 @@ namespace PickaxeFall
             if (result) Successes[i]++;
             return result;
         }
-        public int[] Capture(){var result=new int[17];for(int i=0;i<17;i++)result[i]=unchecked((int)streams[i]);return result;}
+        public int[] Capture(){var result=new int[Progression.KindCount];for(int i=0;i<Progression.KindCount;i++)result[i]=unchecked((int)streams[i]);return result;}
         public void Restore(int[] states,long[] attempts,long[] successes)
         {
-            for(int i=0;i<17;i++){streams[i]=unchecked((uint)states[i]);Attempts[i]=attempts[i];Successes[i]=successes[i];Forced[i]=-1;}
+            for(int i=0;i<Progression.KindCount;i++){streams[i]=unchecked((uint)states[i]);Attempts[i]=attempts[i];Successes[i]=successes[i];Forced[i]=-1;}
         }
     }
 }

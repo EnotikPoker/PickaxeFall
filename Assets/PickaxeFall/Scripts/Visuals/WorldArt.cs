@@ -12,6 +12,7 @@ namespace PickaxeFall
             BlockKind.Quartz=>new Color32(240,222,201,255),BlockKind.Sulfur=>new Color32(224,202,53,255),BlockKind.Cinnabar=>new Color32(219,61,49,255),BlockKind.FireOpal=>new Color32(255,144,38,255),BlockKind.AncientDebris=>new Color32(154,102,77,255),BlockKind.SoulCrystal=>new Color32(84,230,237,255),BlockKind.Timber=>new Color32(122,82,45,255),BlockKind.NetherBrick=>new Color32(62,29,43,255),_=>BlockColor(k)};
         public static Sprite WorldBlock(BlockKind kind,int variant,BlockKind host,bool surface=false)
         {
+            var supplied=ImportedWorld(kind,variant,host);if(supplied && !(kind==BlockKind.Sandstone&&variant>=4))return supplied;
             if(kind==BlockKind.Sandstone&&variant>=4)return TempleAccent(variant);
             if(kind<BlockKind.Sand && !(Progression.IsOre(kind)&&host>=BlockKind.Sand))return Block(kind,variant,host==BlockKind.Deepstone,surface);
             if(kind==BlockKind.MinecartChest)return WorldDecoration(kind,variant);

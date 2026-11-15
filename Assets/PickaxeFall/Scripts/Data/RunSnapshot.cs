@@ -6,7 +6,7 @@ namespace PickaxeFall
     // Replaced as a whole at save time; never mutate an already published snapshot.
     [Serializable] public sealed class RunSnapshot
     {
-        public int version=4,seed,ticks,depth,blocks,benches,toolCount,selectedTool,selectedTier;
+        public int version=5,seed,ticks,depth,blocks,benches,toolCount,selectedTool,selectedTier;
         public MapId map;
         public SpawnerState[] spawners;
         public string balanceJson;
@@ -21,9 +21,14 @@ namespace PickaxeFall
         public CellSnapshot[] cells;
         public void Validate()
         {
-            if((version<1 || version>4) || ticks<0 || depth<0 || toolCount<1 || toolCount>5 || selectedTool<0 || selectedTool>=5 || selectedTier<0 || selectedTier>4 ||
-                string.IsNullOrEmpty(balanceJson) || levels==null || levels.Length!=25 || loot==null || loot.Length!=ResourceInventory.SlotCount ||
-                rollStates==null || rollStates.Length!=17 || attempts==null || attempts.Length!=17 || successes==null || successes.Length!=17 ||
+            if(version<=4 && version>=1 && levels?.Length==25 && rollStates?.Length==17 && attempts?.Length==17 && successes?.Length==17)
+            {
+                Array.Resize(ref levels,Progression.KeyCount);var rolls=new EffectRolls();rolls.Reset(seed);var extended=rolls.Capture();Array.Copy(rollStates,extended,17);rollStates=extended;
+                Array.Resize(ref attempts,Progression.KindCount);Array.Resize(ref successes,Progression.KindCount);
+            }
+            if((version<1 || version>5) || ticks<0 || depth<0 || toolCount<1 || toolCount>5 || selectedTool<0 || selectedTool>=5 || selectedTier<0 || selectedTier>4 ||
+                string.IsNullOrEmpty(balanceJson) || levels==null || levels.Length!=Progression.KeyCount || loot==null || loot.Length!=ResourceInventory.SlotCount ||
+                rollStates==null || rollStates.Length!=Progression.KindCount || attempts==null || attempts.Length!=Progression.KindCount || successes==null || successes.Length!=Progression.KindCount ||
                 tools==null || tools.Length!=5 || cells==null || benefits==null || !Finite(energy) || !Finite(energyEarned) || energy<0 || energyEarned<0)
                 throw new InvalidOperationException("Повреждены данные незавершённого спуска.");
             if(!Enum.IsDefined(typeof(MapId),map))throw new InvalidOperationException("Invalid saved world.");
@@ -38,7 +43,7 @@ namespace PickaxeFall
             }
             if(!alive || !tools[selectedTool].alive)throw new InvalidOperationException("В сохранённом спуске нет выбранной живой кирки.");
             foreach(var cell in cells)if(cell==null || cell.row< -2 || !Enum.IsDefined(typeof(BlockKind),cell.kind) || cell.health<0 || !Finite(cell.litUntil))throw new InvalidOperationException("Повреждена шахта сохранённого спуска.");
-            for(int i=0;i<17;i++)if(rollStates[i]==0 || attempts[i]<0 || successes[i]<0 || successes[i]>attempts[i])throw new InvalidOperationException("Повреждена случайность сохранённого спуска.");
+            for(int i=0;i<Progression.KindCount;i++)if(rollStates[i]==0 || attempts[i]<0 || successes[i]<0 || successes[i]>attempts[i])throw new InvalidOperationException("Повреждена случайность сохранённого спуска.");
             if(liquids!=null)foreach(var cell in liquids)if(cell==null || cell.row< -2 || cell.amount<0 || cell.amount>8 || cell.kind!=BlockKind.Water && cell.kind!=BlockKind.Lava)throw new InvalidOperationException("Повреждена жидкость сохранённого спуска.");
             foreach(long count in loot)if(count<0)throw new InvalidOperationException("Повреждена добыча сохранённого спуска.");
         }

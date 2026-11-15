@@ -23,12 +23,12 @@ namespace PickaxeFall
 
     [Serializable] public sealed class RunBenefits
     {
-        public float EnergySpent;
+        public float EnergySpent,LavaWearSaved,WaterSeconds,LavaSeconds;public int TreasureBonuses,BonusEarth;
         public int Chests,Trials,FailedTrials;
         public int BonusOre, SavedWear, AbilityBlocks, ShrapnelBlocks, StrongHits, BonusTnt, DoubleBenches, DoubleBlasts, Rescues, RestoredDurability, Abilities, UpgradeBenches, LavaWear, ObsidianCreated;
-        public void Reset() { Chests=Trials=FailedTrials=0;EnergySpent=0; BonusOre = SavedWear = AbilityBlocks = ShrapnelBlocks = StrongHits = BonusTnt = DoubleBenches = DoubleBlasts = Rescues = RestoredDurability = Abilities = UpgradeBenches = LavaWear = ObsidianCreated = 0; }
+        public void Reset() {WaterSeconds=LavaSeconds=0;LavaWearSaved=0;TreasureBonuses=BonusEarth=0; Chests=Trials=FailedTrials=0;EnergySpent=0; BonusOre = SavedWear = AbilityBlocks = ShrapnelBlocks = StrongHits = BonusTnt = DoubleBenches = DoubleBlasts = Rescues = RestoredDurability = Abilities = UpgradeBenches = LavaWear = ObsidianCreated = 0; }
         public string Summary => $"Пробито: {AbilityBlocks} · Доп. руда: {BonusOre} · Сбережено: {SavedWear}";
-        public string Details(float energy) => $"Активных действий: {Abilities}\nБлоков пробито: {AbilityBlocks}\nДополнительная руда: {BonusOre}\nСбережено прочности: {SavedWear}\nСильных ударов: {StrongHits}\nБлоков добыто осколками: {ShrapnelBlocks}\nВзрывных находок: {BonusTnt}\nДвойных верстаков: {DoubleBenches}\nУсиленных взрывов: {DoubleBlasts}\nСпасений: {Rescues}\nВосстановлено прочности: {RestoredDurability}\nПолучено энергии: {Progression.Number(energy)}";
+        public string Details(float energy) => $"Сбережено в лаве: {Progression.Number(LavaWearSaved)}\nБонусов сундука: {TreasureBonuses}\nБонусов землекопа: {BonusEarth}\nАктивных действий: {Abilities}\nБлоков пробито: {AbilityBlocks}\nДополнительная руда: {BonusOre}\nСбережено прочности: {SavedWear}\nСильных ударов: {StrongHits}\nБлоков добыто осколками: {ShrapnelBlocks}\nВзрывных находок: {BonusTnt}\nДвойных верстаков: {DoubleBenches}\nУсиленных взрывов: {DoubleBlasts}\nСпасений: {Rescues}\nВосстановлено прочности: {RestoredDurability}\nПолучено энергии: {Progression.Number(energy)}";
     }
 
     // One contact episode per cell, independent of elapsed time or collider count.

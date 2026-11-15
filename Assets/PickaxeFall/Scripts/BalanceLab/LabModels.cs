@@ -12,8 +12,8 @@ namespace PickaxeFall.BalanceLab
 {
     [Serializable] public sealed class LabManifest
     {
-        public int schema = 6;
-        public string version, unity, fingerprint, project, builtUtc, policy = "world-progression-v2";
+        public int schema = 7;
+        public string version, unity, fingerprint, project, builtUtc, policy = "world-progression-v3";
         public string balance;
         public double[] roulette;
         public long[] sellPrices;
@@ -24,9 +24,9 @@ namespace PickaxeFall.BalanceLab
         public LabManifest CaptureEconomy()
         {
             var c=string.IsNullOrEmpty(balance)?Progression.Default:JsonUtility.FromJson<BalanceEnvelope>(balance).progression;
-            profileLevelCoins=(long[])ProfileRules.LevelCoins.Clone();profileMiningRequirements=ProfileRules.MiningRequirements.SelectMany(x=>x).ToArray();requiredProfileLevels=Enumerable.Range(0,27).Select(ProfileRules.RequiredLevel).ToArray();
+            profileLevelCoins=(long[])ProfileRules.LevelCoins.Clone();profileMiningRequirements=ProfileRules.MiningRequirements.SelectMany(x=>x).ToArray();requiredProfileLevels=Enumerable.Range(0,Progression.RevealCount).Select(ProfileRules.RequiredLevel).ToArray();
             c??=Progression.Default;c.Validate();sellPrices=(long[])c.sellPrices.Clone();
-            chanceSteps=Enumerable.Range(0,17).Select(i=>Progression.ChanceStep((UpgradeKind)i,c)).ToArray();
+            chanceSteps=Enumerable.Range(0,Progression.KindCount).Select(i=>Progression.ChanceStep((UpgradeKind)i,c)).ToArray();
             var snapshot=new List<LabPrice>();
             foreach(var key in Progression.Keys)
             {
@@ -51,7 +51,7 @@ namespace PickaxeFall.BalanceLab
         public bool[] maps={true,false,false};
         public bool passive = true, active = true, isolated = true, background = true, diagnostic;
         public bool[] tiers = { true, true, true, true, true };
-        public int[] customLevels = new int[25];
+        public int[] customLevels = new int[Progression.KeyCount];
         public int limit => mode==5?21600:mode == 0 || mode==4 ? 600 : 1800;
         public void Validate(bool checkLevels = true)
         {
@@ -60,7 +60,8 @@ namespace PickaxeFall.BalanceLab
                 throw new ArgumentException("Недопустимые параметры запуска.");
             if((mode==4||mode==5||mode==6) && (seconds<=0 || seconds>7200))throw new ArgumentException("Аудит прогрессии ограничен двумя часами; выбери 1–120 минут.");
             if (!passive && !active || !isolated && !background || tiers == null || tiers.Length != 5 || !tiers.Any(x => x)) throw new ArgumentException("Выбери кирку, управление и способ сравнения.");
-            if (customLevels == null || customLevels.Length != 25) throw new ArgumentException("Нужно 25 уровней.");
+            if(customLevels?.Length==25)Array.Resize(ref customLevels,Progression.KeyCount);
+            if (customLevels == null || customLevels.Length != Progression.KeyCount) throw new ArgumentException("Неверное число уровней навыков.");
             if(checkLevels) new PlayerProfile { upgrades = customLevels }.Validate();
         }
     }
@@ -105,8 +106,8 @@ namespace PickaxeFall.BalanceLab
         public string id, scenario, error;
         public int seed, branches, limit;
         public double seconds, depth, value, blocks, strikes, tools, benches, abilities, censored;
-        public double[] resources = new double[ResourceInventory.SlotCount], attempts = new double[17], successes = new double[17];
-        public double chests,trials,failedTrials;
+        public double[] resources = new double[ResourceInventory.SlotCount], attempts = new double[Progression.KindCount], successes = new double[Progression.KindCount];
+        public double chests,trials,failedTrials,waterSeconds,lavaSeconds,lavaWearSaved,treasureBonuses,bonusEarth;
         public double[] mapSeconds=new double[3],mapValues=new double[3],mapRuns=new double[3];
         public double wallSeconds,upgradeBenches,restoredWear,lavaWear,energySpent;
         public LabOutcome[] outcomes;

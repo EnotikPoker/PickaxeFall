@@ -55,7 +55,7 @@ namespace PickaxeFall.BalanceLab
                 {
                     var game = root.AddComponent<GameController>(); game.InitializeSimulation(balance);
                     game.BeginSimulation(job.scenario.tier, job.seed, job.scenario.levels, team, rescue);
-                    if (job.diagnostic) for (int i = 0; i < 17; i++) if (upgrades.Chance((UpgradeKind)i) > 0) game.Rolls.Forced[i] = 1;
+                    if (job.diagnostic) for (int i = 0; i < Progression.KindCount; i++) if (upgrades.Chance((UpgradeKind)i) > 0) game.Rolls.Forced[i] = 1;
                     var policy = new LabPolicy(); int maxTicks = job.limit * 60;
                     while (game.Phase == RunPhase.Mining && game.Clock.Ticks < maxTicks)
                     {
@@ -67,13 +67,14 @@ namespace PickaxeFall.BalanceLab
                     result.value += weight * game.PotentialSaleValue; result.blocks += weight * game.BlocksBroken;
                     result.benches += weight * game.WorkbenchesUsed; result.tools += weight * game.RunToolCount;
                     result.abilities += weight * game.Benefits.Abilities;
+                    result.waterSeconds+=weight*game.Benefits.WaterSeconds;result.lavaSeconds+=weight*game.Benefits.LavaSeconds;result.lavaWearSaved+=weight*game.Benefits.LavaWearSaved;result.treasureBonuses+=weight*game.Benefits.TreasureBonuses;result.bonusEarth+=weight*game.Benefits.BonusEarth;
                     result.chests+=weight*game.Benefits.Chests;result.trials+=weight*game.Benefits.Trials;result.failedTrials+=weight*game.Benefits.FailedTrials;
                     result.upgradeBenches+=weight*game.Benefits.UpgradeBenches;result.restoredWear+=weight*game.Benefits.RestoredDurability;result.lavaWear+=weight*game.Benefits.LavaWear;result.energySpent+=weight*game.Benefits.EnergySpent;
                     foreach(var visit in game.BenchVisits){visit.weight=(float)weight;visit.terminalCensored=!visit.nextReached && game.Phase==RunPhase.Mining && game.Pickaxes[visit.tool].IsAlive;visits.Add(visit);}
                     if (game.Phase == RunPhase.Mining) result.censored += weight;
                     foreach (var tool in game.Pickaxes) result.strikes += weight * tool.TotalStrikes;
                     for (int i = 0; i < ResourceInventory.SlotCount; i++) result.resources[i] += weight * game.OreCounts[i];
-                    for (int i = 0; i < 17; i++) { result.attempts[i] += weight * game.Rolls.Attempts[i]; result.successes[i] += weight * game.Rolls.Successes[i]; }
+                    for (int i = 0; i < Progression.KindCount; i++) { result.attempts[i] += weight * game.Rolls.Attempts[i]; result.successes[i] += weight * game.Rolls.Successes[i]; }
                 }
                 finally { UnityEngine.Object.DestroyImmediate(root); Unload(scene); }
             }

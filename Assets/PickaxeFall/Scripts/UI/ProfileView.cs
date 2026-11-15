@@ -8,11 +8,11 @@ namespace PickaxeFall
     {
         Button profileButton;
         int notifiedProfileLevel;
-        void CommitProfile(Func<bool> operation,Action success=null)
+        void CommitProfile(Func<bool> operation,Action success=null,UiSound cue=UiSound.Tap)
         {
             if(!game.CanTrade)return;
-            if(!operation()){Toast(game.Economy.LastError);return;}
-            game.Audio?.Play("reward");Refresh();success?.Invoke();
+            if(!operation()){game.Audio?.Play("error");Toast(game.Economy.LastError);return;}
+            game.Audio?.Ui(cue);Refresh();success?.Invoke();
         }
         void TickProfile()
         {
@@ -75,10 +75,10 @@ namespace PickaxeFall
                 BoldText(price,Short(p.coins)+" / "+Exact(coins),p.coins>=coins?"profile-skill-count cost-enough":"profile-skill-count cost-short");
                 var unlocks=new Foldout {text="Откроется на уровне "+(p.profileLevel+1),value=false};unlocks.AddToClassList("profile-unlocks");card.Add(unlocks);
                 var chips=Box(unlocks,"profile-unlock-chips");
-                for(int i=10;i<27;i++)if(ProfileRules.RequiredLevel(i)==p.profileLevel+1)
-                    Text(chips,i==25?"Рывок":i==26?"Пробой":Progression.Title(ProfileRules.Key(i).Kind),"profile-unlock-chip");
+                for(int i=10;i<Progression.RevealCount;i++)if(ProfileRules.RequiredLevel(i)==p.profileLevel+1)
+                    Text(chips,i==25?"Рывок":i==26?"Пробой":Progression.Title(ProfileRules.RevealKey(i).Kind),"profile-unlock-chip");
                 bool can=game.Economy.CanLevelUp(out _);
-                var buy=Button(card,"ПОВЫСИТЬ ДО "+(p.profileLevel+1),()=>CommitProfile(game.Economy.TryLevelUp,()=>{OpenProfile();Toast("НОВЫЙ УРОВЕНЬ ПРОФИЛЯ!");}),"stone-button compact-button "+(can?"buy-ready":"buy-blocked"));
+                var buy=Button(card,"ПОВЫСИТЬ ДО "+(p.profileLevel+1),()=>CommitProfile(game.Economy.TryLevelUp,()=>{OpenProfile();Celebrate("УРОВЕНЬ "+game.Economy.Profile.profileLevel);},UiSound.Profile),"stone-button compact-button "+(can?"buy-ready":"buy-blocked"),UiSound.None);
                 buy.name="profile-level-up";buy.SetEnabled(can);
             }
             else Text(card,"Максимальный уровень профиля. Продолжай улучшать навыки и готовить новые маршруты.","description");
@@ -102,7 +102,7 @@ namespace PickaxeFall
         {
             CloseModal();CurrentTab=HubTab.Shop;shopTier=key.Tier;
             shopCategory=key.Kind<=UpgradeKind.Durability?0:
-                key.Kind==UpgradeKind.Fortune||key.Kind==UpgradeKind.TntFind||key.Kind==UpgradeKind.Careful||key.Kind==UpgradeKind.ImpactPower||key.Kind==UpgradeKind.Shrapnel?1:
+                key.Kind==UpgradeKind.Fortune||key.Kind==UpgradeKind.TntFind||key.Kind==UpgradeKind.Careful||key.Kind==UpgradeKind.ImpactPower||key.Kind==UpgradeKind.Shrapnel||key.Kind==UpgradeKind.Underwater||key.Kind==UpgradeKind.HeatShield||key.Kind==UpgradeKind.EarthDigger?1:
                 key.Kind>=UpgradeKind.EnergyCapacity&&key.Kind<=UpgradeKind.PlungeDepth?3:2;
             RebuildShop();Refresh();
             root.schedule.Execute(()=>root.Q<ScrollView>("shop-page-scroll")?.ScrollTo(root.Q("upgrade-"+key.Kind+"-"+key.Tier))).ExecuteLater(50);

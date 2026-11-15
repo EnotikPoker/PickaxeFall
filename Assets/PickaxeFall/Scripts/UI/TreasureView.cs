@@ -26,7 +26,7 @@ namespace PickaxeFall
         }
         void AudioCredits()
         {
-            var card=OpenModal("Звук и музыка");Text(card,"Звуковые эффекты: Kenney и artisticdude · CC0.\n\nМузыка: Kevin MacLeod (incompetech.com)\nDreams Become Real\nEastern Thought\nOssuary 5 — Rest\n\nCreative Commons Attribution 4.0. Громкость и переходы адаптированы для игры.","description");
+            var card=OpenModal("Звук и музыка");Text(card,"Звуковые эффекты: Kenney и artisticdude · CC0.\nИнтерфейс: PickaxeFall · CC0.\n\nМузыка: Kevin MacLeod (incompetech.com)\nDreams Become Real\nEastern Thought\nOssuary 5 — Rest\n\nCreative Commons Attribution 4.0. Громкость и переходы адаптированы для игры.","description");
             Button(card,"ЛИЦЕНЗИЯ CC BY 4.0",()=>Application.OpenURL("https://creativecommons.org/licenses/by/4.0/"),"stone-button compact-button");
             Button(card,"САЙТ АВТОРА",()=>Application.OpenURL("https://incompetech.com/"),"stone-button compact-button");Button(card,"НАЗАД",DrawSettings,"stone-button compact-button");
         }

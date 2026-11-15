@@ -15,18 +15,18 @@ namespace PickaxeFall.BalanceLab
         public static void Validate()
         {
             count = 0;AuditContractChecks.Validate(); var quick = new LabPlan(); var scenarios = LabPlanner.Scenarios(quick);
-            Check(scenarios.Count == 480,"quick matrix with all future reachable tool upgrades");
+            Check(scenarios.Count == 520,"quick matrix with all future reachable tool upgrades");
             Check(scenarios.Select(s=>s.id).Distinct().Count()==scenarios.Count,"unique scenario ids");
             Check(scenarios.All(s=>s.point==0 && s.background==0 && s.order<=2),"quick scope");
-            Check(LabPlanner.Jobs(quick,scenarios).Count()==3840,"quick eight-map count");
+            Check(LabPlanner.Jobs(quick,scenarios).Count()==4160,"quick eight-map count");
             var full = new LabPlan { mode=1, samples=32 }; var pairs = LabPlanner.Scenarios(full);
-            Check(pairs.Count==14160,"pair matrix for 25/23/21/19/17 reachable keys");
+            Check(pairs.Count==19800,"pair matrix for 25/23/21/19/17 reachable keys");
             var triples = LabPlanner.Scenarios(new LabPlan { mode=2 });
-            Check(triples.Count==98760,"triple matrix");
-            Check(triples.Count(s=>s.order==3)==84600,"reachable-key triple count × 3 × 2 × 2");
+            Check(triples.Count==163560,"triple matrix");
+            Check(triples.Count(s=>s.order==3)==143760,"reachable-key triple count × 3 × 2 × 2");
             foreach (var s in scenarios)
             {
-                Check(s.levels.Length==25,"profile length");
+                Check(s.levels.Length==Progression.KeyCount,"profile length");
                 Check(Progression.Keys.Where(k=>k.Kind<=UpgradeKind.Durability && k.Tier<s.tier).All(k=>s.levels[k.Index]==0),"unreachable lower type excluded");
             }
             Check(LabPlanner.Level(UpgradeKind.TeamSize,1)==2 && LabPlanner.Level(UpgradeKind.Fortune,1)==13,"ceil middle levels");
@@ -93,7 +93,7 @@ namespace PickaxeFall.BalanceLab
             var old=Physics2D.simulationMode; Physics2D.simulationMode=SimulationMode2D.Script;
             try
             {
-                var s=new LabScenario { id="repeatability",tier=0,levels=new int[25] };
+                var s=new LabScenario { id="repeatability",tier=0,levels=new int[Progression.KeyCount] };
                 var job=new LabJob { scenario=s,seed=8127,limit=600 };
                 var a=LabWorker.Execute(balance,job); LabWorker.Execute(balance,new LabJob { scenario=s,seed=19073,limit=600 }); var b=LabWorker.Execute(balance,job);
                 var consecutive=LabWorker.Execute(balance,job);
@@ -121,7 +121,7 @@ namespace PickaxeFall.BalanceLab
                 for (int fixture=0;fixture<4;fixture++)
                 {
                     Physics2D.simulationMode=SimulationMode2D.Script;
-                    var scenario=new LabScenario { id="parity-"+fixture,tier=fixture<2?0:fixture==2?1:4,active=fixture==1||fixture==3,levels=new int[25] };
+                    var scenario=new LabScenario { id="parity-"+fixture,tier=fixture<2?0:fixture==2?1:4,active=fixture==1||fixture==3,levels=new int[Progression.KeyCount] };
                     if(fixture==2)scenario.levels[new UpgradeKey(UpgradeKind.Careful).Index]=40;
                     if(fixture==3) { scenario.levels[new UpgradeKey(UpgradeKind.EnergyCharge).Index]=20;scenario.levels[new UpgradeKey(UpgradeKind.PlungeDepth).Index]=3; }
                     var job=new LabJob { scenario=scenario,seed=8127,limit=600 };

@@ -61,7 +61,7 @@ namespace PickaxeFall.Editor
             Check(settings.Volume == 1 && settings.FrameRate == 30 && settings.ReducedEffects, "settings clamp and apply");
             settings.Reset(); Check(settings.Volume == 0.8f && settings.FrameRate == 60 && !settings.ReducedEffects, "settings defaults");
             AudioListener.volume = oldVolume; Application.targetFrameRate = oldFps;
-            foreach (var kind in new[] { UpgradeKind.TeamChance, UpgradeKind.TntFind, UpgradeKind.DoubleBench, UpgradeKind.DoubleBlast, UpgradeKind.Careful, UpgradeKind.LastChance })
+            foreach (var kind in new[] { UpgradeKind.TeamChance, UpgradeKind.TntFind, UpgradeKind.DoubleBench, UpgradeKind.DoubleBlast, UpgradeKind.Careful, UpgradeKind.LastChance, UpgradeKind.TreasureHunter, UpgradeKind.EarthDigger })
             {
                 double chance = maxSnapshot.Chance(kind); var random = new System.Random(8127 + (int)kind); int hits = 0;
                 for (int i = 0; i < 100000; i++) if (random.NextDouble() < chance) hits++;

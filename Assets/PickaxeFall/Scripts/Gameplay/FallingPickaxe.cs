@@ -17,12 +17,15 @@ namespace PickaxeFall
         Vector2 incomingVelocity;
         float incomingAngular, lastReboundTime, abilityUntil, momentumUntil, spawnX, nextTrail;
         int step, remaining;
-        float lavaWear;
+        float lavaWear,waterImmersion,lavaImmersion;
+        Vector2[][] shapePaths;
+        readonly Vector2[] clipA=new Vector2[16],clipB=new Vector2[16];
+        public float OpaqueArea {get;private set;}
         public bool InWater { get; private set; }
         public Bounds HitBounds=>hitbox.bounds;
         public Vector2 ClosestPoint(Vector2 point)=>hitbox.ClosestPoint(point);
         public int RawDamageHalfUnits=>Stats.damage*2+game.RunUpgrades.DamageBonusHalfUnits(Tier);
-        int WetDamage(int value)=>value<=0?0:Mathf.Max(1,Mathf.RoundToInt(value*(InWater?game.Balance.waterDamageMultiplier:1)));
+        int WetDamage(int value)=>value<=0?0:Mathf.Max(1,Mathf.RoundToInt(value*(InWater?game.RunUpgrades.WaterDamageMultiplier(game.Balance.waterDamageMultiplier):1)));
         AbilityKind ability;
         System.Random physicsRandom;
         public int TotalStrikes { get; private set; }
@@ -63,9 +66,8 @@ namespace PickaxeFall
         void SetArt()
         {
             visual.sprite=PixelArt.Pickaxe(Tier);selection.sprite=PixelArt.PickaxeOutline(Tier);
-            int count=visual.sprite.GetPhysicsShapeCount();hitbox.pathCount=count;
-            var path=new System.Collections.Generic.List<Vector2>();
-            for(int i=0;i<count;i++){visual.sprite.GetPhysicsShape(i,path);hitbox.SetPath(i,path);}
+            PickaxeGeometry.Apply(hitbox,visual.sprite);shapePaths=PickaxeGeometry.Paths(visual.sprite);
+            OpaqueArea=0;foreach(var path in shapePaths)OpaqueArea+=Mathf.Abs((path[1].x-path[0].x)*(path[3].y-path[0].y))*PixelArt.PickaxeScale*PixelArt.PickaxeScale;
         }
         public void Equip(int tier, int toolIndex = 0, float x = 0)
         {
@@ -82,6 +84,31 @@ namespace PickaxeFall
             remaining = 0; abilityUntil = momentumUntil = 0; step = 0; impacts.Clear();
             lastReboundTime = game.Clock.Now; incomingVelocity = Vector2.zero; incomingAngular = 0;
             Physics2D.SyncTransforms(); body.interpolation = game.IsSimulation ? RigidbodyInterpolation2D.None : RigidbodyInterpolation2D.Interpolate;
+        }
+        // Clip each opaque rectangle against a liquid cell. This detects tips and
+        // handles entering a shallow surface without filling transparent space.
+        public float LiquidOverlapArea(Rect liquid)
+        {
+            if(shapePaths==null)return 0;float total=0;
+            foreach(var path in shapePaths)
+            {
+                for(int i=0;i<4;i++)clipA[i]=body.position+ImpactGate.Rotate(path[i]*PixelArt.PickaxeScale,body.rotation);
+                int count=4;var from=clipA;var to=clipB;
+                for(int edge=0;edge<4&&count>0;edge++)
+                {
+                    int next=0;float boundary=edge==0?liquid.xMin:edge==1?liquid.xMax:edge==2?liquid.yMin:liquid.yMax;
+                    Vector2 previous=from[count-1];float pv=(edge<2?previous.x:previous.y)-boundary;bool pi=edge%2==0?pv>=0:pv<=0;
+                    for(int i=0;i<count;i++)
+                    {
+                        Vector2 point=from[i];float v=(edge<2?point.x:point.y)-boundary;bool inside=edge%2==0?v>=0:v<=0;
+                        if(inside!=pi)to[next++]=Vector2.LerpUnclamped(previous,point,pv/(pv-v));
+                        if(inside)to[next++]=point;previous=point;pv=v;pi=inside;
+                    }
+                    count=next;var swap=from;from=to;to=swap;
+                }
+                float twice=0;Vector2 origin=count>0?from[0]:Vector2.zero;for(int i=0;i<count;i++){var a=from[i]-origin;var b=from[(i+1)%count]-origin;twice+=a.x*b.y-a.y*b.x;}total+=Mathf.Abs(twice)*.5f;
+            }
+            return total;
         }
         public void Launch()
         {
@@ -101,11 +128,22 @@ namespace PickaxeFall
         public void PhysicsTick()
         {
             if (game.Phase != RunPhase.Mining || game.Paused || !IsAlive) return;
-            InWater=game.World.Liquids.Touches(this,BlockKind.Water);
-            if(game.World.Liquids.Touches(this,BlockKind.Lava))
+            waterImmersion=game.World.Liquids.Immersion(this,BlockKind.Water);lavaImmersion=game.World.Liquids.Immersion(this,BlockKind.Lava);
+            InWater=waterImmersion>0.00001f;
+            game.Benefits.WaterSeconds+=waterImmersion*game.Clock.Delta;game.Benefits.LavaSeconds+=lavaImmersion*game.Clock.Delta;
+            float drag=game.Balance.waterDrag*waterImmersion+game.Balance.lavaDrag*lavaImmersion;
+            body.linearVelocity*=Mathf.Exp(-drag*game.Clock.Delta);
+            body.angularVelocity*=Mathf.Exp(-(game.Balance.waterSpinDrag*waterImmersion+game.Balance.lavaSpinDrag*lavaImmersion)*game.Clock.Delta);
+            material.bounciness=game.Balance.restitution*(1-.35f*waterImmersion-.5f*lavaImmersion);
+            if(lavaImmersion>0.00001f)
             {
-                lavaWear+=game.Balance.lavaWearPerSecond*game.Clock.Delta;
+                float baseWear=game.Balance.lavaWearPerSecond*game.Clock.Delta;
+                game.Benefits.LavaWearSaved+=baseWear*(1-game.RunUpgrades.LavaWearMultiplier);
+                lavaWear+=baseWear*game.RunUpgrades.LavaWearMultiplier;
                 int loss=Mathf.FloorToInt(lavaWear+0.00001f);lavaWear=Mathf.Max(0,lavaWear-loss);
+                #if PICKAXEFALL_DEVTOOLS
+                if(game.DeveloperInfiniteWear)loss=0;
+#endif
                 if(loss>0){int lost=Mathf.Min(loss,Durability);Durability-=lost;game.Benefits.LavaWear+=lost;if(Durability<=0){CancelAbility();game.OnPickaxeExhausted(this);return;}}
             }
             step++;
@@ -119,9 +157,10 @@ namespace PickaxeFall
         }
         void SweepAbility()
         {
-            Vector2 velocity = body.linearVelocity; float distance = velocity.magnitude * game.Clock.Delta + 0.025f;
+            Vector2 velocity = body.linearVelocity; float distance = .002f;
             if (velocity.sqrMagnitude < 0.01f) return;
-            // Cast the whole rigidbody, including the handle, before the solver can bounce it.
+            // Resolve only present contacts. Predicting a full step broke blocks before
+            // the rendered tip reached them; CCD handles motion and Contact restores momentum.
             int count = body.Cast(velocity.normalized, worldFilter, sweepHits, distance);
             System.Array.Sort(sweepHits, 0, count, HitOrder.Instance);
             for (int i = 0; i < count && AbilityActive && IsAlive; i++)
@@ -195,12 +234,18 @@ namespace PickaxeFall
             bool strong = approach >= game.Balance.strongImpactSpeed;
             int damage = WetDamage(RawDamageHalfUnits + (strong ? game.RunUpgrades.StrongBonusHalfUnits : 0));
             game.Audio?.MaterialHit(block.Kind);block.HitHalfUnits(damage, this, DamageOrigin.Physical);
+            #if PICKAXEFALL_DEVTOOLS
+            game.DeveloperContactInfo=$"({point.x:0.00}, {point.y:0.00}) · скорость {approach:0.00} · урон {damage*.5f:0.0}";
+#endif
             NaturalStrikes++; game.OnPhysicalHit(this, strong);
             if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageShrapnelNeighbour(x, row, WetDamage(game.RunUpgrades.ShrapnelHalfUnits), this, NaturalStrikes);
             game.Effects.Impact(point, color, 3); SpendWear();
         }
         void SpendWear()
         {
+            #if PICKAXEFALL_DEVTOOLS
+            if(game.DeveloperInfiniteWear){TotalStrikes++;return;}
+#endif
             if (!game.RollEffect(UpgradeKind.Careful)) Durability--; else game.Benefits.SavedWear++;
             TotalStrikes++;
             if (Durability <= 0) { CancelAbility(); game.OnPickaxeExhausted(this); }
@@ -210,6 +255,7 @@ namespace PickaxeFall
             bool resting = !impact && game.Clock.Now - lastReboundTime > 0.55f && body.linearVelocity.sqrMagnitude < 0.25f;
             if (!resting && (!impact || approach < game.Balance.minimumImpactSpeed)) return;
             float desired = resting ? game.Balance.minimumReboundSpeed : Mathf.Clamp(approach * game.Balance.restitution, game.Balance.minimumReboundSpeed, game.Balance.maximumReboundSpeed);
+            desired*=1-.35f*waterImmersion-.5f*lavaImmersion;
             float outward = Vector2.Dot(body.linearVelocity, normal);
             if (outward > game.Balance.maximumReboundSpeed) body.linearVelocity -= normal * (outward - game.Balance.maximumReboundSpeed);
             else if (outward < desired) body.AddForce(normal * ((desired - outward) * body.mass), ForceMode2D.Impulse);

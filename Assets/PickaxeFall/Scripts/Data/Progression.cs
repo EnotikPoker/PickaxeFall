@@ -4,27 +4,28 @@ using UnityEngine;
 
 namespace PickaxeFall
 {
-    public enum UpgradeKind { Damage, Durability, Fortune, TeamChance, TeamSize, TntFind, DoubleBench, DoubleBlast, Careful, LastChance, EnergyCapacity, EnergyCharge, EnergyEfficiency, DashForce, PlungeDepth, ImpactPower, Shrapnel }
+    public enum UpgradeKind { Damage, Durability, Fortune, TeamChance, TeamSize, TntFind, DoubleBench, DoubleBlast, Careful, LastChance, EnergyCapacity, EnergyCharge, EnergyEfficiency, DashForce, PlungeDepth, ImpactPower, Shrapnel, Underwater, HeatShield, TreasureHunter, EarthDigger }
 
     public readonly struct UpgradeKey
     {
         public readonly UpgradeKind Kind;
         public readonly int Tier;
         public UpgradeKey(UpgradeKind kind, int tier = 0) { Kind = kind; Tier = tier; }
-        public bool IsValid => (int)Kind >= 0 && (int)Kind <= 16 && (Kind > UpgradeKind.Durability || Tier >= 0 && Tier < 5);
+        public bool IsValid => (int)Kind >= 0 && (int)Kind < Progression.KindCount && (Kind > UpgradeKind.Durability || Tier >= 0 && Tier < 5);
+        public int RevealIndex => Index < 25 ? Index : Index + 2;
         public int Index => Kind == UpgradeKind.Damage ? Tier : Kind == UpgradeKind.Durability ? 5 + Tier : 8 + (int)Kind;
     }
 
     [Serializable]
     public sealed class PlayerProfile
     {
-        public int version = 7;
+        public int version = 8;
         public bool[] discovered = new bool[ResourceInventory.SlotCount];
         public MapId selectedMap;
         public int[] mapRecords = new int[3];
         public int profileLevel = 1;
         public long[] lifetimeMined = new long[ResourceInventory.SlotCount];
-        public bool[] revealed = new bool[27];
+        public bool[] revealed = new bool[Progression.RevealCount];
         public int bridgeStone, bridgeIron, portalObsidian;
         public GoalKind goalKind;
         public int goalIndex;
@@ -32,7 +33,7 @@ namespace PickaxeFall
         public long coins;
         public int bestDepth;
         public long[] resources = new long[ResourceInventory.SlotCount];
-        public int[] upgrades = new int[25];
+        public int[] upgrades = new int[Progression.KeyCount];
         public bool dashUnlocked, plungeUnlocked;
         // JsonUtility expands null inline classes into empty objects. Keep the
         // optional snapshot as a JSON string so a finished run stays truly absent.
@@ -45,9 +46,9 @@ namespace PickaxeFall
         public int Level(UpgradeKey key) => key.IsValid ? upgrades[key.Index] : 0;
         public void Validate()
         {
-            if (version != 7 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != 25)
+            if (version != 8 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != Progression.KeyCount)
                 throw new InvalidOperationException("Invalid player profile.");
-            if(profileLevel<1 || profileLevel>5 || lifetimeMined?.Length!=ResourceInventory.SlotCount || revealed?.Length!=27 || bridgeStone<0 || bridgeStone>1000 || bridgeIron<0 || bridgeIron>50 || portalObsidian<0 || portalObsidian>10 || !ProfileRules.ValidGoal(goalKind,goalIndex))throw new InvalidOperationException("Invalid profile progression.");
+            if(profileLevel<1 || profileLevel>5 || lifetimeMined?.Length!=ResourceInventory.SlotCount || revealed?.Length!=Progression.RevealCount || bridgeStone<0 || bridgeStone>1000 || bridgeIron<0 || bridgeIron>50 || portalObsidian<0 || portalObsidian>10 || !ProfileRules.ValidGoal(goalKind,goalIndex))throw new InvalidOperationException("Invalid profile progression.");
             if(discovered?.Length!=ResourceInventory.SlotCount || mapRecords?.Length!=3 || !Enum.IsDefined(typeof(MapId),selectedMap))throw new InvalidOperationException("Invalid world progression.");
             foreach(int n in mapRecords)if(n<0)throw new InvalidOperationException("Invalid world record.");
             foreach(long count in lifetimeMined)if(count<0)throw new InvalidOperationException("Negative lifetime mining.");
@@ -100,6 +101,8 @@ namespace PickaxeFall
         public int PlungeBlocks => 1 + Level(UpgradeKind.PlungeDepth);
         public int StrongBonusHalfUnits => Config.impactStep * Level(UpgradeKind.ImpactPower);
         public int ShrapnelHalfUnits => Config.shrapnelStep * Level(UpgradeKind.Shrapnel);
+        public float WaterDamageMultiplier(float original) => original + (1-original)*Level(UpgradeKind.Underwater)/10f;
+        public float LavaWearMultiplier => 1-.05f*Level(UpgradeKind.HeatShield);
         public int TeamSize => 2 + Level(UpgradeKind.TeamSize);
         public int DamageBonusHalfUnits(int originalTier) => Level(UpgradeKind.Damage, originalTier) * Progression.DamageStepHalfUnits(originalTier,Config);
         public int DurabilityBonus(int originalTier) => Progression.DurabilityStep(originalTier,Config) * Level(UpgradeKind.Durability, originalTier);
@@ -107,6 +110,7 @@ namespace PickaxeFall
 
     public static class Progression
     {
+        public const int KindCount=21, KeyCount=29, RevealCount=31;
         public static readonly UpgradeKey[] Keys = CreateKeys();
         public static readonly ProgressionBalance Default = new();
         public static long[] SellPrices => Default.sellPrices;
@@ -117,7 +121,8 @@ namespace PickaxeFall
             UpgradeKind.DashForce => 5,
             UpgradeKind.EnergyCapacity => 20,
             UpgradeKind.EnergyCharge => 40,
-            UpgradeKind.EnergyEfficiency or UpgradeKind.ImpactPower or UpgradeKind.Shrapnel => 10,
+            UpgradeKind.EnergyEfficiency or UpgradeKind.ImpactPower or UpgradeKind.Shrapnel or UpgradeKind.Underwater or UpgradeKind.HeatShield or UpgradeKind.TreasureHunter => 10,
+            UpgradeKind.EarthDigger => 20,
             UpgradeKind.Fortune or UpgradeKind.DoubleBench or UpgradeKind.DoubleBlast => 25,
             UpgradeKind.LastChance or UpgradeKind.TntFind or UpgradeKind.Careful => 40,
             _ => 20
@@ -144,27 +149,32 @@ namespace PickaxeFall
             UpgradeKind.Careful => "Бережный удар", UpgradeKind.LastChance => "Последний шанс",
             UpgradeKind.EnergyCapacity => "Запас энергии", UpgradeKind.EnergyCharge => "Восстановление энергии",
             UpgradeKind.EnergyEfficiency => "Экономия энергии", UpgradeKind.DashForce => "Сила рывка",
-            UpgradeKind.PlungeDepth => "Глубокий пробой", UpgradeKind.ImpactPower => "Мощный удар", _ => "Осколочный удар"
+            UpgradeKind.PlungeDepth => "Глубокий пробой", UpgradeKind.ImpactPower => "Мощный удар", UpgradeKind.Shrapnel => "Осколочный удар",
+            UpgradeKind.Underwater => "Подводник", UpgradeKind.HeatShield => "Термозащита", UpgradeKind.TreasureHunter => "Искатель сокровищ", _ => "Землекоп"
         };
         public static string Description(UpgradeKind kind, ProgressionBalance config=null) => kind switch
         {
-            UpgradeKind.Damage => "Повышает урон выбранного типа. Редкие кирки получают более сильную прибавку.",
-            UpgradeKind.Durability => "Увеличивает запас выбранного типа. Редкие кирки получают больше прочности.",
-            UpgradeKind.Fortune => "Шанс получить ещё одну единицу руды, в том числе от взрыва. +2 п.п. за уровень, до 50%.",
-            UpgradeKind.TeamChance => "Один бросок шанса даёт весь отряд одинаковых кирок. +0,5 п.п. за уровень.",
-            UpgradeKind.TeamSize => "Увеличивает отряд при удаче. Не повышает шанс его выпадения.",
-            UpgradeKind.TntFind => "После прямой добычи руда иногда взрывается малым взрывом радиусом 1,5 м. Ресурс остаётся в рюкзаке. Максимум 20%.",
-            UpgradeKind.DoubleBench => "Шанс усилить верстак: обычный повышает тип, улучшающий — на две ступени. При достижении алмазной заполняет энергию. +1 п.п. за уровень, до 25%.",
-            UpgradeKind.DoubleBlast => "Взрыв охватывает вдвое большую площадь. +1 п.п. за уровень, до 25%.",
-            UpgradeKind.Careful => "Шанс не потратить прочность при ударе. +0,5 п.п. за уровень, до 20%.",
-            UpgradeKind.LastChance => "Один раз за забег последняя кирка может восстановить 50% прочности и энергию на пробой. +0,5 п.п. за уровень, до 20%.",
-            UpgradeKind.EnergyCapacity => "Запас на три применения. Первые 5 уровней дают прежние +8 энергии, следующие 15 постепенно доводят запас до трёх использований с учётом экономии.",
-            UpgradeKind.EnergyCharge => "Первые 20 уровней дают прежнюю прибавку к восстановлению, следующие 20 усиливают её. Вместе с полной экономией одно применение восстанавливается за 4,5 с.",
-            UpgradeKind.EnergyEfficiency => "Рывок и пробой расходуют на 1% меньше энергии за уровень. Максимум −10%.",
-            UpgradeKind.DashForce => "+0,6 м/с к начальному импульсу рывка. Пробивает один блок при любой прокачке.",
-            UpgradeKind.PlungeDepth => "+1 пробиваемый блок к удару вниз за уровень. От одного до четырёх блоков.",
-            UpgradeKind.ImpactPower => "+0,5 урона при обычном столкновении от 4 м/с. Не влияет на пробитие способностей.",
-            _ => "Сильный обычный удар повреждает один соседний материал: +0,5 урона за уровень. Направления чередуются. Без дополнительного износа."
+            UpgradeKind.Damage => "Повышает урон выбранного вида кирки. Точная прибавка показана на карточке.",
+            UpgradeKind.Durability => "Увеличивает прочность выбранного вида кирки. Верстак восстанавливает весь запас.",
+            UpgradeKind.Fortune => "Шанс получить ещё одну единицу руды. Работает и при добыче взрывом.",
+            UpgradeKind.TeamChance => "Шанс начать спуск с отрядом одинаковых кирок. Их количество увеличивает «Размер отряда».",
+            UpgradeKind.TeamSize => "Добавляет кирку в выпавший отряд. Сам шанс отряда не меняется.",
+            UpgradeKind.TntFind => "Добытая прямым ударом руда может вызвать небольшой взрыв. Добыча остаётся в рюкзаке.",
+            UpgradeKind.DoubleBench => "Шанс дополнительно повысить вид кирки на верстаке. Если кирка уже алмазная, пополняет энергию.",
+            UpgradeKind.DoubleBlast => "Шанс взорвать вдвое большую площадь. Урон и добыча работают как у обычного взрыва.",
+            UpgradeKind.Careful => "Шанс не потратить прочность при ударе. От лавы защищает отдельный навык.",
+            UpgradeKind.LastChance => "Последняя кирка может восстановить половину прочности и энергию на пробой. Одна попытка за спуск.",
+            UpgradeKind.EnergyCapacity => "Увеличивает запас энергии. На полной прокачке помещается три применения приёмов.",
+            UpgradeKind.EnergyCharge => "Ускоряет восстановление энергии. На карточке показано время до одного применения.",
+            UpgradeKind.EnergyEfficiency => "Снижает расход энергии на рывок и пробой.",
+            UpgradeKind.DashForce => "Усиливает толчок рывка. Как и раньше, рывок сразу пробивает один блок.",
+            UpgradeKind.PlungeDepth => "Позволяет пробить больше блоков одним нажатием.",
+            UpgradeKind.ImpactPower => "Увеличивает урон сильного столкновения. На мгновенное пробитие приёмов не влияет.",
+            UpgradeKind.Shrapnel => "Сильный удар повреждает один соседний блок. Дополнительная прочность не тратится.",
+            UpgradeKind.Underwater => "Уменьшает штраф урона в воде. На последнем уровне кирка бьёт так же, как на суше. Сопротивление воды остаётся.",
+            UpgradeKind.HeatShield => "Уменьшает потерю прочности в лаве. Полная прокачка снижает её вдвое.",
+            UpgradeKind.EarthDigger => "Шанс добыть ещё один блок земли или песка прямым ударом. Взрывы и осколки бонус не дают.",
+            _ => "Сундук может дать дополнительную порцию ресурсов. Редчайшие находки и гарантированный обсидиан не дублируются. На спавнер не действует."
         };
 
         public static UpgradeCost Cost(UpgradeKey key, int nextLevel, ProgressionBalance config=null)
@@ -213,9 +223,9 @@ namespace PickaxeFall
 
         static UpgradeKey[] CreateKeys()
         {
-            var keys = new UpgradeKey[25];
+            var keys = new UpgradeKey[KeyCount];
             for (int tier = 0; tier < 5; tier++) { keys[tier] = new(UpgradeKind.Damage, tier); keys[tier + 5] = new(UpgradeKind.Durability, tier); }
-            for (int i = 2; i < 17; i++) keys[i + 8] = new((UpgradeKind)i);
+            for (int i = 2; i < KindCount; i++) keys[i + 8] = new((UpgradeKind)i);
             return keys;
         }
     }

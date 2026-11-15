@@ -9,7 +9,7 @@ namespace PickaxeFall
     {
         public static IEnumerator Run(GameController game,Action<bool,string> check)
         {
-            Array.Clear(game.Economy.Profile.upgrades,0,25);game.BeginProbeRun(1,8127,1);var tool=game.SelectedTool;
+            Array.Clear(game.Economy.Profile.upgrades,0,Progression.KeyCount);game.BeginProbeRun(1,8127,1);var tool=game.SelectedTool;
             var worn=tool.Capture();worn.durability=3;tool.Restore(worn);
             game.World.DebugSetCell(-10,10,BlockKind.Workbench).DestroyBlock(tool);
             check(tool.Tier==1 && tool.Durability==tool.MaxDurability,"ordinary bench fully repairs, no tier increase");
@@ -21,7 +21,7 @@ namespace PickaxeFall
             int seed=RuntimeSmokeTest.EffectSeed(UpgradeKind.DoubleBench,.25);game.BeginProbeRun(0,seed,1);tool=game.SelectedTool;
             game.World.DebugSetCell(-10,10,BlockKind.Workbench).DestroyBlock(tool);check(tool.Tier==1,"double ordinary bench adds one tier");
             game.BeginProbeRun(0,seed,1);tool=game.SelectedTool;game.World.DebugSetCell(-10,10,BlockKind.UpgradeWorkbench).DestroyBlock(tool);check(tool.Tier==2,"double rare bench adds two tiers");
-            Array.Clear(game.Economy.Profile.upgrades,0,25);game.BeginProbeRun(3,8127,1);tool=game.SelectedTool;
+            Array.Clear(game.Economy.Profile.upgrades,0,Progression.KeyCount);game.BeginProbeRun(3,8127,1);tool=game.SelectedTool;
             // A sealed chamber isolates the test from generated lakes and contact wear.
             for(int row=7;row<=14;row++)for(int x=-4;x<=4;x++)game.World.DebugSetCell(x,row,BlockKind.Stone).DestroyBlock(null);
             for(int x=-4;x<=4;x++)game.World.DebugSetCell(x,14,BlockKind.Stone);
@@ -50,7 +50,7 @@ namespace PickaxeFall
             check(tool.Tier==4 && tool.Durability==480,"legacy ordinary bench still upgrades and fully repairs");
             check(game.PreviewDurability(4)==game.ShopBalance.pickaxes[4].durability && game.PreviewDurability(4)!=tool.MaxDurability,"shop previews new balance while old run keeps its frozen stats");
             game.World.DebugSetCell(-10,11,BlockKind.Chest).DestroyBlock(tool);
-            check(game.CaptureRun().version==4 && game.CaptureRun().balanceJson.Contains("rulesVersion"),"resaving old run freezes legacy rules in new snapshot");
+            check(game.CaptureRun().version==5 && game.CaptureRun().balanceJson.Contains("rulesVersion"),"resaving old run freezes legacy rules in new snapshot");
             tool.Body.gravityScale=1;game.FinishRun();yield return new WaitForSeconds(1);game.NewRun();check(game.Balance.rulesVersion==3 && game.RunUpgrades.EnergyPerSecond==3,"next run returns to new rules");
         }
     }

@@ -109,6 +109,7 @@ namespace PickaxeFall
                 message.AddToClassList("fatal-error"); errorDocument.rootVisualElement.Add(message); return;
             }
             if(Economy.Profile.resetNotice){Settings.SetTutorialSeen(false);Settings.Save();}
+            Economy.ReserveSteps=Settings.ReserveSteps;
             Inventory = new ResourceInventory(Economy); RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
             rouletteRandom = new System.Random(Guid.NewGuid().GetHashCode());
             InitializeWorldAndTools();
@@ -119,6 +120,9 @@ namespace PickaxeFall
             var document = gameObject.AddComponent<UIDocument>(); document.panelSettings = panelSettings;
             hud = new GameHud(this, document.rootVisualElement, interfaceStyle);
             initialized = true;
+#if PICKAXEFALL_DEVTOOLS
+            gameObject.AddComponent<DeveloperDiagnostics>().Initialize(this);
+#endif
             if(Economy.Profile.run!=null)RestoreRun(Economy.Profile.run);else NewRun();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (TestMode == "smoke" || Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test")) gameObject.AddComponent<RuntimeSmokeTest>();
@@ -204,6 +208,9 @@ namespace PickaxeFall
             {
                 if (Time.unscaledTime >= nextSave) SaveProgress();
             }
+            #if PICKAXEFALL_DEVTOOLS
+            if(DeveloperInfiniteEnergy&&Phase==RunPhase.Mining)Energy.Ensure(Energy.Maximum);
+#endif
             hud.Tick();
         }
 
@@ -280,7 +287,8 @@ namespace PickaxeFall
                 {
                     Economy.RecordMined(block.Kind);
                     int quantity = Progression.IsOre(block.Kind) && RollEffect(UpgradeKind.Fortune) ? 2 : 1;
-                    Benefits.BonusOre += quantity - 1;GiveResource(ResourceInventory.DropKind(block.Kind),quantity,source,block.transform.position);
+                    if((block.Kind==BlockKind.Dirt||block.Kind==BlockKind.Sand) && origin is DamageOrigin.Physical or DamageOrigin.Dash or DamageOrigin.Plunge && RollEffect(UpgradeKind.EarthDigger)){quantity++;Benefits.BonusEarth++;}
+                    Benefits.BonusOre += Progression.IsOre(block.Kind)?quantity-1:0;GiveResource(ResourceInventory.DropKind(block.Kind),quantity,source,block.transform.position);
                 }
                 else if(block.Kind==BlockKind.Chest || block.Kind==BlockKind.MinecartChest)AwardChest(block.Column,block.Row,source);
                 Effects.Impact(block.transform.position, block.BaseColor, 7);
@@ -334,17 +342,17 @@ namespace PickaxeFall
             if (!CanTrade) return false;
             bool success = Economy.TryBuy(key);
             if (success && Phase == RunPhase.Equipped) { RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression); Pickaxe.Equip(selectedTier); }
-            Audio?.Play(success?"reward":"error");hud.Toast(success ? "УЛУЧШЕНИЕ КУПЛЕНО" : Economy.LastError); Notify(); return success;
+            if(success)Audio?.Ui(UiSound.Skill);else Audio?.Play("error");hud.Toast(success ? "УЛУЧШЕНИЕ КУПЛЕНО" : Economy.LastError); Notify(); return success;
         }
         public bool Sell(BlockKind kind, long quantity)
         {
             if (!CanTrade) return false;
-            bool success = Economy.TrySell(kind, quantity); Audio?.Play(success?"reward":"error");hud.Toast(success ? "РЕСУРСЫ ПРОДАНЫ" : Economy.LastError); Notify(); return success;
+            bool success = Economy.TrySell(kind, quantity); if(success)Audio?.Ui(UiSound.Sale);else Audio?.Play("error");hud.Toast(success ? "РЕСУРСЫ ПРОДАНЫ" : Economy.LastError); Notify(); return success;
         }
         public bool SellAll()
         {
             if (!CanTrade) return false;
-            bool success = Economy.TrySellAll(); Audio?.Play(success?"reward":"error");hud.Toast(success ? "РЮКЗАК ПРОДАН" : Economy.LastError); Notify(); return success;
+            bool success = Economy.TrySellAll(); if(success)Audio?.Ui(UiSound.Sale);else Audio?.Play("error");hud.Toast(success ? "РЮКЗАК ПРОДАН" : Economy.LastError); Notify(); return success;
         }
         public void TogglePause()
         {
@@ -385,7 +393,7 @@ namespace PickaxeFall
         public void BeginSimulation(int tier, int seed, int[] levels, int team, int rescue,bool dashUnlocked=true,bool plungeUnlocked=true)
         {
             foreach (var tool in tools) { tool.Stop(); tool.gameObject.SetActive(false); }
-            Array.Clear(Economy.Profile.resources, 0, ResourceInventory.SlotCount); Array.Copy(levels, Economy.Profile.upgrades, 25);
+            Array.Clear(Economy.Profile.resources, 0, ResourceInventory.SlotCount); Array.Copy(levels, Economy.Profile.upgrades, Progression.KeyCount);
             Economy.Profile.dashUnlocked=dashUnlocked;Economy.Profile.plungeUnlocked=plungeUnlocked;
             Economy.Profile.Validate(); Seed = seed; Clock.Reset(); forcedTeam = team; forcedRescue = rescue;
             BenchVisits.Clear(); Depth = BlocksBroken = WorkbenchesUsed = 0; RescueUsed = false; Array.Clear(OreCounts, 0, OreCounts.Length); Benefits.Reset();

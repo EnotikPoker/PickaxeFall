@@ -37,7 +37,7 @@ MonoBehaviour:
     - 2.3
     - 3.4
     - 5
-    basePrices: 1e000000190000000a00000005000000fa000000060000000800000008000000030000000400000028000000190000001e0000003c000000fa0000001e00000023000000
+    basePrices: 1e000000190000000a00000005000000fa000000060000000800000008000000030000000400000028000000190000001e0000003c000000fa0000001e00000023000000c80000002c0100005e01000023000000
     growth:
     - 1.4
     - 1.38
@@ -56,6 +56,10 @@ MonoBehaviour:
     - 1
     - 1.4
     - 1.4
+    - 1.35
+    - 1.35
+    - 1.4
+    - 1.25
     chanceSteps:
     - 0
     - 0
@@ -74,6 +78,10 @@ MonoBehaviour:
     - 0
     - 0
     - 0
+    - 0
+    - 0
+    - 0.02
+    - 0.01
     teamCoins: fa00000000000000e803000000000000a00f000000000000
     plungeCoins: fa00000000000000b0040000000000008813000000000000
     unlockCoins: c8000000000000005e01000000000000
@@ -106,6 +114,10 @@ MonoBehaviour:
     - 1
     - 1
     - 1
+    - 1
+    - 1
+    - 1
+    - 1
     recipeScale: 1
     dirtGrowth: 1.12
     stoneGrowth: 1.18
@@ -128,6 +140,10 @@ MonoBehaviour:
   lavaMinimumDepth: 35
   lavaWearPerSecond: 8
   waterDamageMultiplier: 0.7
+  waterDrag: 1.6
+  lavaDrag: 2.4
+  waterSpinDrag: 2.8
+  lavaSpinDrag: 3.6
   worldWidth: 41
   rowsAhead: 32
   rowsBehind: 18

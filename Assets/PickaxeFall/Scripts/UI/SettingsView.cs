@@ -14,7 +14,10 @@ namespace PickaxeFall
         void DrawSettings()
         {
             var card=OpenModal("Настройки игры");
-            Text(card,"PickaxeFall · Версия "+GameVersion.Name,"footnote").name="game-version";
+            var version=Text(card,"PickaxeFall · Версия "+GameVersion.Name,"footnote");version.name="game-version";
+#if PICKAXEFALL_DEVTOOLS
+            version.text+=" · DEV";RegisterDeveloperAccess(version);
+#endif
             Button(card,"@gamedevmaxon",()=>Application.OpenURL("https://t.me/gamedevmaxon"),"stone-button channel-button").name="telegram-channel";
             var options=game.Settings;
             var volumeText=BoldText(card,"Громкость: "+Mathf.RoundToInt(options.Volume*100)+"%","section-label");

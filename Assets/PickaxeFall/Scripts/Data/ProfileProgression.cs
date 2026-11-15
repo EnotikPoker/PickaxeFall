@@ -27,13 +27,14 @@ namespace PickaxeFall
         static long[] Materials(params long[] counts){var a=new long[ResourceInventory.SlotCount];Array.Copy(counts,a,counts.Length);return a;}
         public static UpgradeKey Key(int index)=>index<5?new(UpgradeKind.Damage,index):index<10?new(UpgradeKind.Durability,index-5):new((UpgradeKind)(index-8));
         public static int RequiredLevel(int index)=>index switch{
-            <10=>1,25=>2,26=>3,
+            <10=>1,25=>2,26=>3,27=>3,28=>4,29=>3,30=>2,
             10 or 14 or 18 or 21=>2,
             16 or 19 or 22=>3,
             15 or 17 or 23 or 11=>4,
             _=>5};
+        public static UpgradeKey RevealKey(int index)=>Key(index>=27?index-2:index);
         public static bool Revealed(PlayerProfile p,int index)=>index<10 || p.revealed[index];
-        public static bool ValidGoal(GoalKind kind,int index)=>kind switch {GoalKind.None or GoalKind.Bridge or GoalKind.Portal=>index==0,GoalKind.Upgrade=>index>=0&&index<25,GoalKind.Ability=>index==0||index==1,_=>false};
+        public static bool ValidGoal(GoalKind kind,int index)=>kind switch {GoalKind.None or GoalKind.Bridge or GoalKind.Portal=>index==0,GoalKind.Upgrade=>index>=0&&index<Progression.KeyCount,GoalKind.Ability=>index==0||index==1,_=>false};
         public static bool Complete(PlayerProfile p,GoalKind kind)=>kind==GoalKind.Bridge?p.bridgeStone==1000&&p.bridgeIron==50:kind==GoalKind.Portal&&p.portalObsidian==10;
     }
 
@@ -42,7 +43,7 @@ namespace PickaxeFall
         public bool SkillAvailable(int index,out string reason)
         {
             reason=null;
-            if(index<0||index>=27){reason="Неизвестный навык";return false;}
+            if(index<0||index>=Progression.RevealCount){reason="Неизвестный навык";return false;}
             int required=ProfileRules.RequiredLevel(index);
             if(Profile.profileLevel<required){reason="Нужен уровень профиля "+required;return false;}
             if(!ProfileRules.Revealed(Profile,index)){reason="Нажми на замок, чтобы открыть ветвь бесплатно";return false;}
@@ -50,7 +51,7 @@ namespace PickaxeFall
         }
         public bool TryReveal(int index)
         {
-            if(index<10 || index>=27 || Profile.profileLevel<ProfileRules.RequiredLevel(index) || Profile.revealed[index]){LastError="Ветвь ещё недоступна или уже открыта.";return false;}
+            if(index<10 || index>=Progression.RevealCount || Profile.profileLevel<ProfileRules.RequiredLevel(index) || Profile.revealed[index]){LastError="Ветвь ещё недоступна или уже открыта.";return false;}
             var next=Profile.Copy();next.revealed[index]=true;return Commit(next);
         }
         public bool CanLevelUp(out string reason)
@@ -95,10 +96,19 @@ namespace PickaxeFall
         public string GoalTitle=>Profile.goalKind switch{
             GoalKind.Upgrade=>Progression.Title(ProfileRules.Key(Profile.goalIndex).Kind)+(Profile.goalIndex<10?" · "+new[]{"дерево","камень","золото","железо","алмаз"}[ProfileRules.Key(Profile.goalIndex).Tier]:"")+" · ур. "+(Profile.Level(ProfileRules.Key(Profile.goalIndex))+1),
             GoalKind.Ability=>Profile.goalIndex==0?"Покупка рывка":"Покупка пробоя",GoalKind.Bridge=>"Мост в пустыню",GoalKind.Portal=>"Портал в ад",_=>"Цель не выбрана"};
-        public long Reserved(BlockKind kind)=>Math.Min(Profile.resources[(int)kind],GoalCost().Resources[(int)kind]);
+        public int ReserveSteps {get;set;}=3;
+        public UpgradeCost ReservationCost()
+        {
+            if(Profile.goalKind!=GoalKind.Upgrade)return GoalCost();
+            var key=ProfileRules.Key(Profile.goalIndex);int first=Profile.Level(key)+1,max=Progression.MaxLevel(key.Kind);
+            int last=ReserveSteps==0?max:Math.Min(max,first+ReserveSteps-1);var total=new UpgradeCost();
+            checked {for(int n=first;n<=last;n++){var cost=Progression.Cost(key,n,Config);total.Coins+=cost.Coins;for(int i=0;i<total.Resources.Length;i++)total.Resources[i]+=cost.Resources[i];}}
+            return total;
+        }
+        public long Reserved(BlockKind kind)=>Math.Min(Profile.resources[(int)kind],ReservationCost().Resources[(int)kind]);
         public long[] SurplusQuote(out long value)
         {
-            value=0;var quantities=new long[ResourceInventory.SlotCount];var cost=GoalCost();
+            value=0;var quantities=new long[ResourceInventory.SlotCount];var cost=ReservationCost();
             foreach(var kind in ResourceInventory.Materials){int i=(int)kind;quantities[i]=Math.Max(0,Profile.resources[i]-cost.Resources[i]);value=checked(value+checked(quantities[i]*Config.sellPrices[i]));}
             return quantities;
         }

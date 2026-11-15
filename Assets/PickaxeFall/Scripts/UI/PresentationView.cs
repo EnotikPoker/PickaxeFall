@@ -27,7 +27,12 @@ namespace PickaxeFall
             if(!pendingLoot.TryGetValue(key,out var value))pendingLoot[key]=value=new PendingLoot {kind=kind};
             value.position=position;value.count+=quantity;
         }
-        void StartResults(){resultsAt=Time.unscaledTime;runGrid.Update(_=>0,kind=>game.OreCounts[(int)kind]>0);}
+        readonly int[] startingRecords;
+        void Celebrate(string text)
+        {
+            Toast(text);toast.AddToClassList("celebration");toast.schedule.Execute(()=>toast.RemoveFromClassList("celebration")).ExecuteLater(game.Settings.ReducedEffects?100:650);
+        }
+        void StartResults(){if(game.Depth>startingRecords[(int)game.CurrentMap]){game.Audio?.Ui(UiSound.Record);Celebrate("НОВЫЙ РЕКОРД · "+game.Depth+" м");}resultsAt=Time.unscaledTime;runGrid.Update(_=>0,kind=>game.OreCounts[(int)kind]>0);}
         void TickPresentation()
         {
             if(game.Phase==RunPhase.Ready || !game.Settings.LootMessages)

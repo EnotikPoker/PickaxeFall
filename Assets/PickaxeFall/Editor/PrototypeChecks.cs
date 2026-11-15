@@ -13,7 +13,7 @@ namespace PickaxeFall.Editor
         {
             Require(balance.RollChance(2) > balance.RollChance(3), "Gold must be more common than iron.");
             foreach (BlockKind kind in Enum.GetValues(typeof(BlockKind)))
-                if(kind!=BlockKind.AmethystCluster && kind!=BlockKind.Chest && kind!=BlockKind.Water)
+                if(kind!=BlockKind.AmethystCluster && kind!=BlockKind.Chest && kind!=BlockKind.Water && kind!=BlockKind.Rail && kind!=BlockKind.MinecartChest)
                 foreach (bool deep in new[] { false, true })
                     foreach (Color32 pixel in PixelArt.Block(kind, 0, deep).texture.GetPixels32())
                         Require(pixel.a == 255, "Block texture must remain fully opaque: " + kind);

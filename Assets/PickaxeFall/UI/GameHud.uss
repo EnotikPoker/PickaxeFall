@@ -252,3 +252,20 @@ Label { white-space: normal; flex-shrink: 0; }
 .treasure-row { flex-direction: row; align-items: center; margin-top: 4px; }
 .treasure-text { font-size: 20px; color: rgb(240, 239, 224); flex-shrink: 1; }
 .trial-status { font-size: 22px; color: rgb(127, 231, 238); }
+
+/* Short feedback, with stable layout and no input lock. */
+.stone-button { transition-property: scale, background-color; transition-duration: 0.09s; }
+.stone-button:active { scale: 0.97 0.97; }
+.purchase-flash { border-left-color: rgb(143, 212, 119); border-right-color: rgb(143, 212, 119); border-top-color: rgb(143, 212, 119); border-bottom-color: rgb(143, 212, 119); }
+.reserve-options { flex-direction: row; align-items: center; margin-top: 12px; margin-bottom: 8px; }
+.reserve-choice { flex-grow: 1; min-width: 100px; min-height: 62px; font-size: 23px; margin-left: 8px; }
+.reserve-choice.active { background-color: rgb(77, 106, 67); }
+.celebration { border-top-color: rgb(238, 200, 112); border-bottom-color: rgb(238, 200, 112); background-color: rgb(51, 72, 52); }
+.context-hint { position: absolute; left: 4%; right: 4%; bottom: 20%; background-color: rgba(25, 34, 36, 0.96); border-left-width: 5px; border-left-color: rgb(220, 190, 112); padding: 20px; }
+.context-hint-title { color: rgb(244, 219, 157); font-size: 29px; margin-bottom: 8px; }
+.context-hint-body { color: rgb(239, 237, 220); font-size: 27px; white-space: normal; }
+.context-hint .stone-button { min-height: 64px; font-size: 25px; }
+
+.developer-dialog .unity-base-field { min-height: 65px; margin-top: 10px; font-size: 26px; }
+.developer-dialog .unity-base-field__label { min-width: 230px; font-size: 25px; }
+.developer-dialog .unity-base-field__input { min-height: 60px; font-size: 26px; }

@@ -17,7 +17,7 @@ namespace PickaxeFall
         {
             if(!CanTrade)return false;
             bool success=Economy.TryUnlock(kind);if(success)RunUpgrades=new RunUpgrades(Economy.Profile,balance.progression);
-            Audio?.Play(success?"reward":"error");hud?.Toast(success?"СПОСОБНОСТЬ ОТКРЫТА":Economy.LastError);Notify();return success;
+            if(success)Audio?.Ui(UiSound.Ability);else Audio?.Play("error");hud?.Toast(success?"СПОСОБНОСТЬ ОТКРЫТА":Economy.LastError);Notify();return success;
         }
         void GiveResource(BlockKind kind,int count,FallingPickaxe source,Vector2 position,bool popup=true)
         {

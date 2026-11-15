@@ -124,6 +124,7 @@ namespace PickaxeFall
             yield return RuntimeActionChecks.Run(game, root, Check);
             yield return RuntimePresentationChecks.Run(game,root,Check);
             yield return RuntimeProgressionChecks.Run(game,Check);
+            yield return RuntimePolishChecks.Run(game,root,Check);
             Debug.Log("PICKAXEFALL_SMOKE_OK: " + assertions + " checks; trading, half damage, opaque cracks, stronger hops, group lifecycle, streaming, camera, workbench and rescue.");
             Application.Quit(0);
         }

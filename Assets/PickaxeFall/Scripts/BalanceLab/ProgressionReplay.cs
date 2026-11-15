@@ -18,9 +18,9 @@ namespace PickaxeFall.BalanceLab
     {
         static UpgradeKey K(UpgradeKind kind,int tier=0)=>new(kind,tier);
         static readonly UpgradeKey[][] Strategies={
-            new[] {K(UpgradeKind.Damage),K(UpgradeKind.Durability),K(UpgradeKind.Damage,1),K(UpgradeKind.Durability,1),K(UpgradeKind.Damage,2),K(UpgradeKind.Durability,2),K(UpgradeKind.Damage,3),K(UpgradeKind.Durability,3),K(UpgradeKind.Damage,4),K(UpgradeKind.Durability,4),K(UpgradeKind.Careful),K(UpgradeKind.DoubleBench)},
-            new[] {K(UpgradeKind.Damage),K(UpgradeKind.Durability),K(UpgradeKind.Damage,1),K(UpgradeKind.Durability,1),K(UpgradeKind.EnergyCharge),K(UpgradeKind.EnergyEfficiency),K(UpgradeKind.PlungeDepth),K(UpgradeKind.EnergyCapacity),K(UpgradeKind.DashForce)},
-            new[] {K(UpgradeKind.Damage),K(UpgradeKind.Durability),K(UpgradeKind.Damage,1),K(UpgradeKind.Durability,1),K(UpgradeKind.Fortune),K(UpgradeKind.TntFind),K(UpgradeKind.DoubleBlast),K(UpgradeKind.Shrapnel),K(UpgradeKind.ImpactPower)}
+            new[] {K(UpgradeKind.Damage),K(UpgradeKind.Durability),K(UpgradeKind.Damage,1),K(UpgradeKind.Durability,1),K(UpgradeKind.Damage,2),K(UpgradeKind.Durability,2),K(UpgradeKind.Damage,3),K(UpgradeKind.Durability,3),K(UpgradeKind.Damage,4),K(UpgradeKind.Durability,4),K(UpgradeKind.Careful),K(UpgradeKind.DoubleBench),K(UpgradeKind.HeatShield),K(UpgradeKind.Underwater)},
+            new[] {K(UpgradeKind.Damage),K(UpgradeKind.Durability),K(UpgradeKind.Damage,1),K(UpgradeKind.Durability,1),K(UpgradeKind.EnergyCharge),K(UpgradeKind.EnergyEfficiency),K(UpgradeKind.PlungeDepth),K(UpgradeKind.EnergyCapacity),K(UpgradeKind.DashForce),K(UpgradeKind.Underwater),K(UpgradeKind.HeatShield)},
+            new[] {K(UpgradeKind.Damage),K(UpgradeKind.Durability),K(UpgradeKind.Damage,1),K(UpgradeKind.Durability,1),K(UpgradeKind.Fortune),K(UpgradeKind.TntFind),K(UpgradeKind.DoubleBlast),K(UpgradeKind.Shrapnel),K(UpgradeKind.ImpactPower),K(UpgradeKind.EarthDigger),K(UpgradeKind.TreasureHunter)}
         };
         public static LabResult Execute(GameBalance balance,LabJob job,Func<bool> cancelled)
         {
@@ -41,9 +41,9 @@ namespace PickaxeFall.BalanceLab
                     while(game.Phase==RunPhase.Mining && game.Clock.Ticks<ticks)
                     {if(game.Clock.Ticks%120==0 && cancelled?.Invoke()==true)throw new OperationCanceledException();LabWorker.Step(game,policy);}
                     finished=game.Phase!=RunPhase.Mining;segment=game.Clock.Now+8;elapsed+=segment;result.depth=Math.Max(result.depth,game.Depth);result.runCount++;
-                    result.mapSeconds[(int)balance.map]+=segment;result.mapValues[(int)balance.map]+=game.PotentialSaleValue;result.mapRuns[(int)balance.map]++;result.chests+=game.Benefits.Chests;result.trials+=game.Benefits.Trials;result.failedTrials+=game.Benefits.FailedTrials;
+                    result.mapSeconds[(int)balance.map]+=segment;result.mapValues[(int)balance.map]+=game.PotentialSaleValue;result.mapRuns[(int)balance.map]++;result.waterSeconds+=game.Benefits.WaterSeconds;result.lavaSeconds+=game.Benefits.LavaSeconds;result.lavaWearSaved+=game.Benefits.LavaWearSaved;result.treasureBonuses+=game.Benefits.TreasureBonuses;result.bonusEarth+=game.Benefits.BonusEarth;result.chests+=game.Benefits.Chests;result.trials+=game.Benefits.Trials;result.failedTrials+=game.Benefits.FailedTrials;
                     result.value+=game.PotentialSaleValue;result.blocks+=game.BlocksBroken;result.benches+=game.WorkbenchesUsed;result.abilities+=game.Benefits.Abilities;result.upgradeBenches+=game.Benefits.UpgradeBenches;result.lavaWear+=game.Benefits.LavaWear;result.restoredWear+=game.Benefits.RestoredDurability;result.energySpent+=game.Benefits.EnergySpent;result.tools+=game.RunToolCount;
-                    for(int i=0;i<17;i++){result.attempts[i]+=game.Rolls.Attempts[i];result.successes[i]+=game.Rolls.Successes[i];}
+                    for(int i=0;i<Progression.KindCount;i++){result.attempts[i]+=game.Rolls.Attempts[i];result.successes[i]+=game.Rolls.Successes[i];}
                     foreach(var tool in game.Pickaxes)result.strikes+=tool.TotalStrikes;
                     foreach(var kind in ResourceInventory.Materials){int i=(int)kind;result.resources[i]+=game.OreCounts[i];bank.Collect(kind,game.OreCounts[i]);bank.Profile.lifetimeMined[i]=checked(bank.Profile.lifetimeMined[i]+game.Economy.Profile.lifetimeMined[i]);}
                     if(!finished)result.censored=1;
@@ -77,7 +77,7 @@ namespace PickaxeFall.BalanceLab
                 }
                 for(int purchase=0;purchase<3;purchase++)
                 {
-                    for(int i=10;i<27;i++)if(!bank.Profile.revealed[i]&&bank.Profile.profileLevel>=ProfileRules.RequiredLevel(i))
+                    for(int i=10;i<Progression.RevealCount;i++)if(!bank.Profile.revealed[i]&&bank.Profile.profileLevel>=ProfileRules.RequiredLevel(i))
                         if(!bank.TryReveal(i))throw new InvalidOperationException(bank.LastError);
                     bool missingSkills=false,missingMining=false;UpgradeKey? mandatory=null;
                     if(bank.Profile.profileLevel<5)
@@ -115,7 +115,7 @@ namespace PickaxeFall.BalanceLab
                         for(int attempt=0;attempt<targets.Length;attempt++)
                         {
                             var key=targets[cursor++%targets.Length];
-                            if(bank.Profile.Level(key)>=Progression.MaxLevel(key.Kind)||!bank.SkillAvailable(key.Index,out _)||
+                            if(bank.Profile.Level(key)>=Progression.MaxLevel(key.Kind)||!bank.SkillAvailable(key.RevealIndex,out _)||
                                key.Kind==UpgradeKind.DashForce&&!bank.Profile.dashUnlocked||key.Kind==UpgradeKind.PlungeDepth&&!bank.Profile.plungeUnlocked||
                                key.Kind>=UpgradeKind.EnergyCapacity&&key.Kind<=UpgradeKind.EnergyEfficiency&&!bank.Profile.dashUnlocked&&!bank.Profile.plungeUnlocked)continue;
                             desired=key;break;
