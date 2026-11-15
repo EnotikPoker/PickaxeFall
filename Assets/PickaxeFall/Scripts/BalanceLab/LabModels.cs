@@ -12,8 +12,8 @@ namespace PickaxeFall.BalanceLab
 {
     [Serializable] public sealed class LabManifest
     {
-        public int schema = 7;
-        public string version, unity, fingerprint, project, builtUtc, policy = "world-progression-v3";
+        public int schema = 8;
+        public string version, unity, fingerprint, project, builtUtc, policy = "tap-trials-v4";
         public string balance;
         public double[] roulette;
         public long[] sellPrices;
@@ -107,6 +107,7 @@ namespace PickaxeFall.BalanceLab
         public int seed, branches, limit;
         public double seconds, depth, value, blocks, strikes, tools, benches, abilities, censored;
         public double[] resources = new double[ResourceInventory.SlotCount], attempts = new double[Progression.KindCount], successes = new double[Progression.KindCount];
+        public double trialSeconds,trialWear,slowMiningSeconds;
         public double chests,trials,failedTrials,waterSeconds,lavaSeconds,lavaWearSaved,treasureBonuses,bonusEarth;
         public double[] mapSeconds=new double[3],mapValues=new double[3],mapRuns=new double[3];
         public double wallSeconds,upgradeBenches,restoredWear,lavaWear,energySpent;

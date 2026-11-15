@@ -76,6 +76,12 @@ namespace PickaxeFall.Editor
         [MenuItem("PickaxeFall/Validate game balance")]
         public static void ValidateBalance()
         {
+            var simulation=Physics2D.simulationMode;float scale=Time.timeScale;
+            try{ValidateBalanceCore();}
+            finally{Physics2D.simulationMode=simulation;Time.timeScale=scale;}
+        }
+        static void ValidateBalanceCore()
+        {
             ImportedSpriteChecks.Validate();
             ProgressionChecks.Validate();
             var balance = AssetDatabase.LoadAssetAtPath<GameBalance>(DataPath);
@@ -127,7 +133,7 @@ namespace PickaxeFall.Editor
             }
             PrototypeChecks.Validate(balance);
             VeinChecks.Validate(balance);
-            WorldFeatureChecks.Validate(balance);WorldReleaseChecks.Validate(balance);PolishReleaseChecks.Validate(balance);
+            WorldFeatureChecks.Validate(balance);WorldReleaseChecks.Validate(balance);PolishReleaseChecks.Validate(balance);PatchReleaseChecks.Validate(balance);
             Debug.Log("PICKAXEFALL_BALANCE_OK: 100000 roulette rolls; deterministic generation and ore depth gates.");
         }
 

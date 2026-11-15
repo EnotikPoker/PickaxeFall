@@ -91,8 +91,9 @@ Label { white-space: normal; flex-shrink: 0; }
 .soon-panel { padding: 24px; background-color: rgb(178, 185, 155); }
 .fatal-error { flex-grow: 1; background-color: rgb(35, 36, 27); color: rgb(255, 244, 210); font-size: 48px; padding: 80px 40px; white-space: normal; }
 .settings-button { min-width: 240px; font-size: 32px; }
-.pause-glyph { width: 44px; height: 52px; flex-direction: row; justify-content: space-between; align-self: center; }
-.pause-bar { width: 14px; height: 52px; background-color: rgb(255, 255, 239); }
+.pause-button { flex-direction: row; justify-content: center; align-items: center; padding: 0; }
+.pause-glyph { flex-shrink: 0; margin: 0; padding: 0; width: 44px; height: 52px; flex-direction: row; justify-content: space-between; align-self: center; }
+.pause-bar { flex-shrink: 0; margin: 0; padding: 0; width: 14px; height: 52px; background-color: rgb(255, 255, 239); }
 .mine-window { background-color: transparent; padding: 0; justify-content: flex-end; }
 .mine-panel { flex-shrink: 0; border-width: 6px; border-top-color: rgb(246, 249, 218); border-left-color: rgb(230, 238, 193); border-right-color: rgb(77, 90, 47); border-bottom-color: rgb(45, 61, 25); }
 .mine-panel .title { font-size: 44px; margin-bottom: 12px; }
@@ -269,3 +270,13 @@ Label { white-space: normal; flex-shrink: 0; }
 .developer-dialog .unity-base-field { min-height: 65px; margin-top: 10px; font-size: 26px; }
 .developer-dialog .unity-base-field__label { min-width: 230px; font-size: 25px; }
 .developer-dialog .unity-base-field__input { min-height: 60px; font-size: 26px; }
+
+.developer-shortcut { min-width: 100px; font-size: 28px; }
+.spawner-overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(9, 14, 20, 0.9); align-items: center; justify-content: center; padding: 32px; }
+.spawner-card { width: 94%; max-width: 900px; align-items: center; }
+.spawner-target { width: 480px; height: 480px; padding: 24px; margin: 20px; align-items: center; justify-content: center; }
+.spawner-image { width: 100%; height: 100%; }
+.spawner-cracks { position: absolute; left: 24px; right: 24px; top: 24px; bottom: 24px; }
+.spawner-count { font-size: 60px; margin: 12px; }
+.spawner-help { font-size: 34px; white-space: normal; -unity-text-align: middle-center; }
+.block-health-hint { position: absolute; left: 23%; right: 23%; top: 24%; font-size: 28px; -unity-text-align: middle-center; color: rgb(255, 255, 239); background-color: rgba(20, 20, 30, 0.8); padding: 8px; }

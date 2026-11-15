@@ -7,13 +7,13 @@ namespace PickaxeFall
     [Serializable] public sealed class LiquidCellSnapshot
     {
         public int x,row,amount;
-        public BlockKind kind;
+        public BlockKind kind;public bool cooling;
     }
     // Finite-volume grid simulation, 10 Hz of game time. No extra physics world,
     // source blocks or offline advancement. Sorted traversal makes worker order irrelevant.
     public sealed class LiquidSimulation
     {
-        struct Cell { public BlockKind kind;public int amount; }
+        struct Cell { public BlockKind kind;public int amount;public bool cooling; }
         readonly MiningWorld world;
         readonly GameController game;
         readonly Dictionary<Vector2Int,Cell> cells=new();
@@ -24,17 +24,18 @@ namespace PickaxeFall
         public void Reset(LiquidCellSnapshot[] saved)
         {
             cells.Clear();foreach(var pair in visuals){pair.Value.gameObject.SetActive(false);pool.Push(pair.Value);}visuals.Clear();
-            if(saved!=null)foreach(var item in saved)cells[new Vector2Int(item.x,item.row)]=new Cell {kind=item.kind,amount=item.amount};
+            if(saved!=null)foreach(var item in saved)cells[new Vector2Int(item.x,item.row)]=new Cell {kind=item.kind,amount=item.amount,cooling=item.cooling};
         }
         public void Register(int x,int row,BlockKind kind)
         {
             var key=new Vector2Int(x,row);if(!cells.ContainsKey(key))cells[key]=new Cell {kind=kind,amount=8};
         }
+        public bool IsCooling(int x,int row)=>cells.TryGetValue(new Vector2Int(x,row),out var cell)&&cell.cooling;
         public int Amount(int x,int row)=>cells.TryGetValue(new Vector2Int(x,row),out var c)?c.amount:0;
         public BlockKind KindAt(int x,int row)=>cells.TryGetValue(new Vector2Int(x,row),out var c)&&c.amount>0?c.kind:(BlockKind)(-1);
         public LiquidCellSnapshot[] Capture()
         {
-            var list=new List<LiquidCellSnapshot>();foreach(var pair in cells)list.Add(new LiquidCellSnapshot {x=pair.Key.x,row=pair.Key.y,kind=pair.Value.kind,amount=pair.Value.amount});
+            var list=new List<LiquidCellSnapshot>();foreach(var pair in cells)list.Add(new LiquidCellSnapshot {x=pair.Key.x,row=pair.Key.y,kind=pair.Value.kind,amount=pair.Value.amount,cooling=pair.Value.cooling});
             list.Sort((a,b)=>a.row==b.row?a.x.CompareTo(b.x):a.row.CompareTo(b.row));return list.ToArray();
         }
         public bool Touches(FallingPickaxe tool,BlockKind kind)=>Immersion(tool,kind)>0.00001f;
@@ -54,11 +55,13 @@ namespace PickaxeFall
             if(game.Balance.rulesVersion<2)return;
             if(game.Clock.Ticks%6==0)
             {
-                ordered.Clear();foreach(var pair in cells)if(pair.Value.amount>0 && world.IsRowLoaded(pair.Key.y))ordered.Add(pair.Key);
+                ordered.Clear();foreach(var pair in cells)if((pair.Value.amount>0 || pair.Value.cooling) && world.IsRowLoaded(pair.Key.y))ordered.Add(pair.Key);
                 ordered.Sort((a,b)=>a.y==b.y?a.x.CompareTo(b.x):b.y.CompareTo(a.y));
                 foreach(var key in ordered)
                 {
-                    if(!cells.TryGetValue(key,out var c)||c.amount<=0)continue;
+                    if(!cells.TryGetValue(key,out var c))continue;
+                    if(c.cooling){if(world.PlaceObsidian(key.x,key.y)){c.cooling=false;cells[key]=c;game.Benefits.ObsidianCreated++;}continue;}
+                    if(c.amount<=0)continue;
                     foreach(var d in Neighbors)Mix(key,key+d);
                     if(!cells.TryGetValue(key,out c)||c.amount<=0)continue;
                     Transfer(key,key+Vector2Int.up,8);
@@ -73,9 +76,9 @@ namespace PickaxeFall
         {
             if(!world.IsRowLoaded(b.y)||!cells.TryGetValue(a,out var ca)||ca.amount<=0||!cells.TryGetValue(b,out var cb)||cb.amount<=0||ca.kind==cb.kind)return;
             var lava=ca.kind==BlockKind.Lava?a:b;var water=ca.kind==BlockKind.Water?a:b;
-            if(!world.PlaceObsidian(lava.x,lava.y))return;
-            var l=cells[lava];l.amount=0;cells[lava]=l;var w=cells[water];w.amount--;cells[water]=w;
-            game.Benefits.ObsidianCreated++;
+            bool placed=world.PlaceObsidian(lava.x,lava.y);
+            var l=cells[lava];l.amount=0;l.cooling=!placed;cells[lava]=l;var w=cells[water];w.amount--;cells[water]=w;
+            if(placed)game.Benefits.ObsidianCreated++;
         }
         void Spread(Vector2Int from,Vector2Int to)
         {
@@ -93,20 +96,20 @@ namespace PickaxeFall
         public void RefreshVisuals(){if(!game.IsSimulation)Draw();}
         void Draw()
         {
-            retired.Clear();foreach(var pair in visuals)if(!world.IsRowLoaded(pair.Key.y)||!cells.TryGetValue(pair.Key,out var c)||c.amount<=0)retired.Add(pair.Key);
+            retired.Clear();foreach(var pair in visuals)if(!world.IsRowLoaded(pair.Key.y)||!cells.TryGetValue(pair.Key,out var c)||c.amount<=0&&!c.cooling)retired.Add(pair.Key);
             foreach(var key in retired){var visual=visuals[key];visual.gameObject.SetActive(false);pool.Push(visual);visuals.Remove(key);}
             foreach(var pair in cells)
             {
-                var key=pair.Key;var c=pair.Value;if(c.amount<=0||!world.IsRowLoaded(key.y))continue;
+                var key=pair.Key;var c=pair.Value;if(c.amount<=0&&!c.cooling||!world.IsRowLoaded(key.y))continue;
                 if(!visuals.TryGetValue(key,out var visual))
                 {
                     if(pool.Count>0)visual=pool.Pop();else {var obj=new GameObject("Finite liquid");obj.transform.SetParent(world.transform);visual=obj.AddComponent<SpriteRenderer>();visual.sortingOrder=5;}
                     visuals[key]=visual;visual.gameObject.SetActive(true);
                 }
-                float height=c.amount/8f;visual.sprite=PixelArt.Block(c.kind,0);visual.transform.position=new Vector3(key.x,-key.y-1+height*.5f,0);visual.transform.localScale=new Vector3(1,height,1);
+                float height=c.cooling?1:c.amount/8f;visual.sprite=PixelArt.Block(c.cooling?BlockKind.Obsidian:c.kind,0);visual.transform.position=new Vector3(key.x,-key.y-1+height*.5f,0);visual.transform.localScale=new Vector3(1,height,1);
             }
         }
-#if UNITY_EDITOR || DEVELOPMENT_BUILD || BALANCE_LAB
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || BALANCE_LAB || PICKAXEFALL_DEVTOOLS
         public void DebugSet(int x,int row,BlockKind kind,int amount=8)=>cells[new Vector2Int(x,row)]=new Cell {kind=kind,amount=amount};
 #endif
     }

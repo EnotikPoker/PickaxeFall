@@ -12,13 +12,28 @@ namespace PickaxeFall
         public bool DeveloperUnlocked {get;private set;}
         [NonSerialized] public bool DeveloperInfiniteWear,DeveloperInfiniteEnergy,DeveloperColliders;
         [Serializable] sealed class AccessData {public string salt,hash;}
+        const string DeveloperConsent="pickaxefall.dev.consent";
+        string DeveloperAccessIdentity()
+        {
+            var asset=Resources.Load<TextAsset>("DeveloperAuth");if(!asset)return "";
+            var access=JsonUtility.FromJson<AccessData>(asset.text);
+            using var sha=SHA256.Create();return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes("device-consent:"+access.salt+access.hash))).Replace("-","");
+        }
+        void RestoreDeveloperAccess()
+        {
+            if(TestMode.Length>0)return;
+            string identity=DeveloperAccessIdentity();DeveloperUnlocked=identity.Length>0 && PlayerPrefs.GetString(DeveloperConsent,"")==identity;
+        }
         public bool DeveloperAuthenticate(string code)
         {
             var asset=Resources.Load<TextAsset>("DeveloperAuth");if(!asset)return false;
             var access=JsonUtility.FromJson<AccessData>(asset.text);using var sha=SHA256.Create();
             string actual=BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(access.salt+code.Trim()))).Replace("-","").ToLowerInvariant();
             int difference=actual.Length^access.hash.Length;for(int i=0;i<Math.Min(actual.Length,access.hash.Length);i++)difference|=actual[i]^access.hash[i];
-            DeveloperUnlocked=difference==0;return DeveloperUnlocked;
+            if(difference!=0)return false;
+            DeveloperUnlocked=true;
+            if(TestMode.Length==0){PlayerPrefs.SetString(DeveloperConsent,DeveloperAccessIdentity());PlayerPrefs.Save();}
+            Notify();return true;
         }
         public bool DeveloperEdit(Action<PlayerProfile> edit)
         {
@@ -44,6 +59,21 @@ namespace PickaxeFall
             Seed=Math.Max(1,seed);World.ResetWorld(Seed);selectedTier=Mathf.Clamp(tier,0,4);Phase=RunPhase.Equipped;StartDrop(count);
             if(depth>0){foreach(var tool in tools)if(tool.IsAlive){var pos=tool.Body.position;pos.y=-Mathf.Clamp(depth,0,2000)+3;tool.Body.position=pos;tool.transform.position=pos;}World.StreamTools(tools);for(int x=-6;x<=6;x++)for(int row=depth-5;row<=depth-1;row++)World.DeveloperClear(x,row);Physics2D.SyncTransforms();cameraFollow?.SnapToTools();}
             TogglePause();SaveProgress();Notify();
+        }
+        public void DeveloperScene(int scene)
+        {
+            if(!DeveloperUnlocked || TrialOpen)return;
+            DeveloperRun(scene==1?MapId.Desert:MapId.Mine,4,1,8127,scene==1?4:72);
+            int row=scene==1?4:72;
+            if(scene!=1)
+            {
+                for(int x=-3;x<=3;x++)for(int y=row-3;y<=row+2;y++)World.DeveloperClear(x,y);
+                if(scene==0){for(int x=-2;x<=2;x++)World.DebugSetCell(x,row+1,BlockKind.Obsidian);World.Liquids.DebugSet(0,row,BlockKind.Lava);}
+                else World.DebugSetCell(0,row+1,BlockKind.Spawner);
+                var pos=new Vector2(0,-row+1);Pickaxe.Body.position=pos;Pickaxe.transform.position=pos;Pickaxe.Body.linearVelocity=Vector2.down*2;
+                Physics2D.SyncTransforms();World.Liquids.RefreshVisuals();cameraFollow?.SnapToTools();
+            }
+            SaveProgress();Notify();
         }
         public void DeveloperRefill()
         {

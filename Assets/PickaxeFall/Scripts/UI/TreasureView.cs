@@ -21,8 +21,7 @@ namespace PickaxeFall
         {
             if(treasurePanel!=null){float left=treasureUntil-Time.unscaledTime;Display(treasurePanel,left>0);treasurePanel.style.opacity=Mathf.Clamp01(left*2);}
             if(trialLabel==null){trialLabel=BoldText(sceneInfo,"","trial-status");trialLabel.name="trial-status";}
-            string text="";foreach(var trial in game.World.Trials)if(!trial.done){text="СПАВНЕР "+new string('●',trial.hits)+new string('○',4-trial.hits)+" · "+Mathf.CeilToInt(trial.until-game.Clock.Now)+" С";break;}
-            SetText(trialLabel,text);Display(trialLabel,text.Length>0 && game.Phase==RunPhase.Mining);
+            SetText(trialLabel,"");Display(trialLabel,false);
         }
         void AudioCredits()
         {

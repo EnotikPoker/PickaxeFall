@@ -62,9 +62,9 @@ namespace PickaxeFall
             restoredBalance.progression.Validate();balance=restoredBalance;World.SetBalance(balance);Physics2D.gravity=new Vector2(0,balance.gravity);
             RunUpgrades=new RunUpgrades(new PlayerProfile {upgrades=(int[])saved.levels.Clone(),dashUnlocked=saved.dashUnlocked,plungeUnlocked=saved.plungeUnlocked},balance.progression);
             BenchVisits.Clear();if(saved.benchVisits!=null)BenchVisits.AddRange(saved.benchVisits);
-            Seed=saved.seed;Clock.Restore(saved.ticks);Depth=saved.depth;BlocksBroken=saved.blocks;WorkbenchesUsed=saved.benches;RunToolCount=saved.toolCount;selectedTier=saved.selectedTier;RescueUsed=saved.rescueUsed;
+            Seed=saved.seed;Clock.Restore(saved.ticks);lastMinedTime=Clock.Now;Depth=saved.depth;BlocksBroken=saved.blocks;WorkbenchesUsed=saved.benches;RunToolCount=saved.toolCount;selectedTier=saved.selectedTier;RescueUsed=saved.rescueUsed;
             Array.Copy(saved.loot,OreCounts,OreCounts.Length);Rolls.Restore(saved.rollStates,saved.attempts,saved.successes);Energy.Reset(RunUpgrades);Energy.Restore(saved.energy,saved.energyEarned);
-            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(saved.benefits),Benefits);World.ResetWorld(Seed,saved.cells,saved.liquids);World.RestoreTrials(saved.spawners);Audio?.SetMap(CurrentMap);cameraFollow?.SetMap();
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(saved.benefits),Benefits);World.ResetWorld(Seed,saved.cells,saved.liquids);World.RestoreTrials(saved.spawners,saved.version<6,saved.selectedTool);Audio?.SetMap(CurrentMap);cameraFollow?.SetMap();
             for(int i=0;i<tools.Count;i++)tools[i].Restore(saved.tools[i]);
             Phase=RunPhase.Mining;Paused=true;Time.timeScale=0;SelectTool(saved.selectedTool);World.StreamTools(tools);World.Liquids.RefreshVisuals();Physics2D.SyncTransforms();cameraFollow?.SnapToTools();
             hud?.SelectTab(HubTab.Mine);hud?.CancelGesture();nextSave=Time.unscaledTime+5;Notify();hud?.Toast("СПУСК ВОССТАНОВЛЕН · НАЖМИ «ПРОДОЛЖИТЬ»");
