@@ -72,7 +72,8 @@ namespace PickaxeFall
             var info = Box(hero, "hero-info"); heroName = BoldText(info, "Пять видов кирок", "hero-name"); heroDetail = Text(info, "", "hero-detail");
             resultArea = Box(mineView, "result-area"); result = Text(resultArea, "", "result");
             runGrid = new ResourceGrid(resultArea, "run-resources", true);
-            action = Button(mineView, "КРУТИТЬ РУЛЕТКУ", MainAction, "stone-button primary"); action.name = "main-action";
+            action = Button(mineView, "КРУТИТЬ РУЛЕТКУ", MainAction, "stone-button primary"); action.name = "main-action";action.AddToClassList("reliable-button");
+            reliablePresses.Add(new ReliablePress(action,()=>{game.Audio?.Ui(UiSound.Tap);MainAction();},false));
             Button(mineView,"КАРТЫ",()=>OpenMaps(0),"stone-button secondary").name="open-maps";
             Text(mineView, "Приёмы — в магазине. Верстак чинит, улучшающий повышает тип.", "footnote");
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
@@ -129,6 +130,7 @@ namespace PickaxeFall
             root.Q<Label>("map-heading").text=WorldCatalog.Name(game.CurrentMap).ToUpperInvariant();
             title.text="Спуск · "+WorldCatalog.Name(game.CurrentMap);
             if(game.Phase is RunPhase.Ready or RunPhase.Equipped)startingRecords[(int)game.CurrentMap]=game.BestDepth;
+            if(presentedPhase!=game.Phase)CancelUiPresses();
             bool newResults=game.Phase==RunPhase.Finished && presentedPhase!=RunPhase.Finished;
             presentedPhase=game.Phase;
             if(newResults)StartResults();
@@ -176,9 +178,9 @@ namespace PickaxeFall
             heroDetail.text = $"Урон {Progression.Number(damage * 0.5)} · Прочность {durability}";
         }
         public void Toast(string message) { toast.text = message; toastUntil = Time.unscaledTime + 2.3f; Display(toast, true); }
-        public bool CloseModal() { if(tutorialOpen){EndTutorial();return true;} if (modal == null || modal.style.display == DisplayStyle.None) return false; Display(modal, false); modal.Clear(); FinishSettings(); return true; }
+        public bool CloseModal() { CancelUiPresses();if(tutorialOpen){EndTutorial();return true;} if (modal == null || modal.style.display == DisplayStyle.None) return false; Display(modal, false); modal.Clear(); FinishSettings(); return true; }
         void MainAction() { if (game.Phase == RunPhase.Ready) game.Spin(); else if (game.Phase == RunPhase.Equipped) game.Drop(); else if (game.Phase == RunPhase.Finished) game.NewRun(); }
-        public void Dispose() { CancelGesture(); game.Changed -= Refresh; }
+        public void Dispose() { CancelUiPresses(); game.Changed -= Refresh; }
         static void Display(VisualElement element, bool visible) => element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         static void SetText(Label label, string value) { if (label.text != value) label.text = value; }
         static VisualElement Box(VisualElement parent, string classes) { var item = new VisualElement(); AddClasses(item, classes); parent.Add(item); return item; }

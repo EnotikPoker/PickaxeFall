@@ -11,6 +11,7 @@ namespace PickaxeFall
         public float Volume { get; private set; }=.8f;
         public float MusicVolume {get;private set;}=.25f;
         public float EffectsVolume {get;private set;}=.8f;
+        public float MineBrightness {get;private set;}=1;
         public int FrameRate { get; private set; }=60;
         public int EffectiveFrameRate => FrameRate==0 ? Mathf.Clamp(Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value),30,360) : FrameRate;
         public bool ReducedEffects { get; private set; }
@@ -24,6 +25,7 @@ namespace PickaxeFall
             this.temporary=temporary;this.applyRuntime=applyRuntime;
             if(!temporary)
             {
+                MineBrightness=BrightnessValue(PlayerPrefs.GetFloat(Prefix+"mineBrightness",1));
                 MusicVolume=Mathf.Clamp01(PlayerPrefs.GetFloat(Prefix+"music",.25f));EffectsVolume=Mathf.Clamp01(PlayerPrefs.GetFloat(Prefix+"sfx",.8f));
                 Volume=Mathf.Clamp01(PlayerPrefs.GetFloat(Prefix+"volume",PlayerPrefs.GetInt("soundMuted",0)==1 ? 0 : .8f));
                 int saved=PlayerPrefs.GetInt(Prefix+"fps",60);FrameRate=Array.IndexOf(FrameRates,saved)>=0?saved:60;
@@ -36,6 +38,8 @@ namespace PickaxeFall
             Apply();
         }
         void Apply(){if(applyRuntime){AudioListener.volume=Volume;QualitySettings.vSyncCount=0;Application.targetFrameRate=EffectiveFrameRate;}}
+        static float BrightnessValue(float value)=>float.IsNaN(value)||float.IsInfinity(value)?1:Mathf.Clamp(value,1,1.3f);
+        public void SetMineBrightness(float value){MineBrightness=BrightnessValue(value);dirty=true;}
         public void SetVolume(float value){Volume=Mathf.Clamp01(value);dirty=true;Apply();}
         public void SetMusicVolume(float value){MusicVolume=Mathf.Clamp01(value);dirty=true;}
         public void SetEffectsVolume(float value){EffectsVolume=Mathf.Clamp01(value);dirty=true;}
@@ -45,11 +49,11 @@ namespace PickaxeFall
         public void SetTutorialSeen(bool value){TutorialSeen=value;dirty=true;}
         public void SetReserveSteps(int value){ReserveSteps=value is 0 or 1 or 3 or 5?value:3;dirty=true;}
         public void SetTutorialHints(int value){TutorialHints=value;dirty=true;}
-        public void Reset(){Volume=.8f;MusicVolume=.25f;EffectsVolume=.8f;FrameRate=60;ReducedEffects=false;LootMessages=true;dirty=true;Apply();}
+        public void Reset(){MineBrightness=1;Volume=.8f;MusicVolume=.25f;EffectsVolume=.8f;FrameRate=60;ReducedEffects=false;LootMessages=true;dirty=true;Apply();}
         public void Save()
         {
             if(!dirty || temporary)return;
-            PlayerPrefs.SetFloat(Prefix+"music",MusicVolume);PlayerPrefs.SetFloat(Prefix+"sfx",EffectsVolume);PlayerPrefs.SetFloat(Prefix+"volume",Volume);PlayerPrefs.SetInt("soundMuted",Volume<.001f?1:0);
+            PlayerPrefs.SetFloat(Prefix+"mineBrightness",MineBrightness);PlayerPrefs.SetFloat(Prefix+"music",MusicVolume);PlayerPrefs.SetFloat(Prefix+"sfx",EffectsVolume);PlayerPrefs.SetFloat(Prefix+"volume",Volume);PlayerPrefs.SetInt("soundMuted",Volume<.001f?1:0);
             PlayerPrefs.SetInt(Prefix+"fps",FrameRate);PlayerPrefs.SetInt(Prefix+"effects",ReducedEffects?1:0);
             PlayerPrefs.SetInt(Prefix+"lootPopups",LootMessages?1:0);PlayerPrefs.SetInt(Prefix+"tutorialSeen",TutorialSeen?1:0);
             PlayerPrefs.SetInt(Prefix+"reserveSteps",ReserveSteps);PlayerPrefs.SetInt(Prefix+"tutorialHints",TutorialHints);

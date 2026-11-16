@@ -14,7 +14,7 @@ namespace PickaxeFall
         public void Initialize(GameController owner)
         {
             game=owner;var shader=Resources.Load<Shader>("Lighting/MineLight");
-            material=new Material(shader);var renderer=gameObject.AddComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.sortingOrder=30;
+            material=new Material(shader);var renderer=gameObject.AddComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.sortingOrder=6;
             mesh=new Mesh {name="Mine illumination quad"};mesh.vertices=new[] {new Vector3(-.5f,-.5f),new Vector3(.5f,-.5f),new Vector3(.5f,.5f),new Vector3(-.5f,.5f)};
             mesh.uv=new[] {Vector2.zero,Vector2.right,Vector2.one,Vector2.up};mesh.triangles=new[] {0,1,2,0,2,3};mesh.RecalculateBounds();
             gameObject.AddComponent<MeshFilter>().sharedMesh=mesh;
@@ -38,8 +38,8 @@ namespace PickaxeFall
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)
             {
                 int row=row0+y*step,i=y*width+x;float depth=Mathf.Clamp01(row/45f);
-                Color ambient=game.CurrentMap==MapId.Desert?new Color(.44f,.37f,.27f,1):game.CurrentMap==MapId.Nether?new Color(.4f,.25f,.3f,1):new Color(.34f,.38f,.46f,1);
-                field[i]=Color.Lerp(Color.white,ambient,depth);solid[i]=game.World.BlocksLight(x0+x*step,row);
+                solid[i]=game.World.BlocksLight(x0+x*step,row);
+                field[i]=Ambient(game.CurrentMap,depth,solid[i]);
             }
             foreach(var tool in game.Pickaxes)if(tool.IsAlive)Light(tool.Body.position,7,new Color(1,.94f,.82f));
             int sources=0;
@@ -53,8 +53,19 @@ namespace PickaxeFall
                 else if(block.Kind==BlockKind.Spawner)Light(block.transform.position,2.5f,new Color(.48f,.78f,.94f));
             }
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)if(game.World.Liquids.KindAt(x0+x*step,row0+y*step)==BlockKind.Lava)Light(new Vector2(x0+x*step,-row0-y*step-.5f),3,new Color(1,.46f,.1f));
-            for(int y=0;y<height;y++)for(int x=0;x<width;x++)pixels[(height-1-y)*width+x]=field[y*width+x];
+            for(int y=0;y<height;y++)for(int x=0;x<width;x++)pixels[(height-1-y)*width+x]=Readable(field[y*width+x],game.Settings.MineBrightness);
             texture.SetPixels32(pixels);texture.Apply(false,false);
+        }
+        public static Color Ambient(MapId map,float depth,bool solid)
+        {
+            Color tint=map==MapId.Desert?new Color(.86f,.83f,.8f):map==MapId.Nether?new Color(.85f,.8f,.81f):new Color(.8f,.83f,.86f);
+            if(solid)tint*=.96f;
+            return Color.Lerp(Color.white,tint,Mathf.Clamp01(depth));
+        }
+        public static Color32 Readable(Color32 value,float brightness)
+        {
+            float gain=float.IsNaN(brightness)||float.IsInfinity(brightness)?1:Mathf.Clamp(brightness,1,1.3f);
+            return new Color(Mathf.Clamp01(Mathf.Max(.75f,value.r/255f)*gain),Mathf.Clamp01(Mathf.Max(.75f,value.g/255f)*gain),Mathf.Clamp01(Mathf.Max(.75f,value.b/255f)*gain),1);
         }
         void Light(Vector2 position,float radius,Color color)
         {

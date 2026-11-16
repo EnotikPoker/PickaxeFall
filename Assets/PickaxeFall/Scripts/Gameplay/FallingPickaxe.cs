@@ -207,10 +207,10 @@ namespace PickaxeFall
             if (game.Phase != RunPhase.Mining || game.WorldFrozen || !IsAlive || collision.contactCount == 0) return;
             var block = collision.collider.GetComponent<MineBlock>(); if (!block || block.IsBroken) return;
             if(block.Kind==BlockKind.Redstone){game.World.ActivateRedstone(block.Column,block.Row,this);if(block.IsBroken)return;}
-            var contact = collision.GetContact(0); float approach = -Vector2.Dot(PointVelocity(contact.point), contact.normal);
+            var contact = collision.GetContact(0);Vector2 supportNormal=contact.normal; float approach = -Vector2.Dot(PointVelocity(contact.point), contact.normal);
             for (int i = 1; i < collision.contactCount; i++)
             {
-                var candidate = collision.GetContact(i); float speed = -Vector2.Dot(PointVelocity(candidate.point), candidate.normal);
+                var candidate = collision.GetContact(i);if(candidate.normal.y>supportNormal.y)supportNormal=candidate.normal; float speed = -Vector2.Dot(PointVelocity(candidate.point), candidate.normal);
                 if (speed > approach) { approach = speed; contact = candidate; }
             }
             if (AbilityActive)
@@ -224,7 +224,7 @@ namespace PickaxeFall
             var key = new Vector2Int(block.Column, block.Row);
             if (impacts.TryHit(key, step, approach, game.Balance.minimumImpactSpeed, contact.normal, ImpactGate.Rotate(contact.point-body.position,-body.rotation)))
                 PhysicalHit(block, approach, contact.point);
-            if (IsAlive) Rebound(contact.normal, approach, enter);
+            if (IsAlive) Rebound(!enter&&approach<game.Balance.minimumImpactSpeed?supportNormal:contact.normal, approach, enter);
         }
         void PhysicalHit(MineBlock block, float approach, Vector2 point)
         {
@@ -252,10 +252,14 @@ namespace PickaxeFall
         }
         void Rebound(Vector2 normal, float approach, bool impact)
         {
-            bool resting = !impact && game.Clock.Now - lastReboundTime > 0.55f && body.linearVelocity.sqrMagnitude < 0.25f;
+            float normalSpeed=Vector2.Dot(body.linearVelocity,normal);
+            bool resting=!impact && normal.y>.35f && game.Clock.Now-lastReboundTime>.55f && Mathf.Abs(normalSpeed)<.35f;
             if (!resting && (!impact || approach < game.Balance.minimumImpactSpeed)) return;
             float desired = resting ? game.Balance.minimumReboundSpeed : Mathf.Clamp(approach * game.Balance.restitution, game.Balance.minimumReboundSpeed, game.Balance.maximumReboundSpeed);
             desired*=1-.35f*waterImmersion-.5f*lavaImmersion;
+            // Keep a real separation/re-approach possible after viscous damping.
+            float contactFloor=game.Balance.minimumReboundSpeed*(1-waterImmersion-lavaImmersion)+2.4f*waterImmersion+2.1f*lavaImmersion;
+            desired=Mathf.Max(desired,contactFloor);
             float outward = Vector2.Dot(body.linearVelocity, normal);
             if (outward > game.Balance.maximumReboundSpeed) body.linearVelocity -= normal * (outward - game.Balance.maximumReboundSpeed);
             else if (outward < desired) body.AddForce(normal * ((desired - outward) * body.mass), ForceMode2D.Impulse);

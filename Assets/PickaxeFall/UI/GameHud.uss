@@ -280,3 +280,10 @@ Label { white-space: normal; flex-shrink: 0; }
 .spawner-count { font-size: 60px; margin: 12px; }
 .spawner-help { font-size: 34px; white-space: normal; -unity-text-align: middle-center; }
 .block-health-hint { position: absolute; left: 23%; right: 23%; top: 24%; font-size: 28px; -unity-text-align: middle-center; color: rgb(255, 255, 239); background-color: rgba(20, 20, 30, 0.8); padding: 8px; }
+
+.reliable-button:active { scale: 1 1; }
+.reliable-button.press-held { scale: 0.97 0.97; }
+.spawner-target:active { scale: 1 1; }
+.spawner-hit { scale: 0.96 0.96; }
+.spawner-image { transition-property: scale; transition-duration: 0.05s; }
+.spawner-image .spawner-cracks { left: 0; right: 0; top: 0; bottom: 0; }
