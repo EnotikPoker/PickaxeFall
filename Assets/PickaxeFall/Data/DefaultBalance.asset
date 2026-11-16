@@ -165,8 +165,8 @@ MonoBehaviour:
   launchAngularSpeed: 260
   maximumAngularSpeed: 540
   restitution: 0.78
-  minimumReboundSpeed: 2.8
-  maximumReboundSpeed: 6.2
+  minimumReboundSpeed: 3
+  maximumReboundSpeed: 6.4
   hardnessStartDepth: 60
   hardnessDoublingDepth: 70
   dungeonChance: 0.12

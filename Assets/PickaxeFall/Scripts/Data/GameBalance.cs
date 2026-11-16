@@ -88,8 +88,8 @@ namespace PickaxeFall
         public float launchAngularSpeed = 260;
         public float maximumAngularSpeed = 540;
         [Range(0, 1)] public float restitution = 0.78f;
-        [Min(0)] public float minimumReboundSpeed = 2.8f;
-        [Min(0)] public float maximumReboundSpeed = 6.2f;
+        [Min(0)] public float minimumReboundSpeed = 3f;
+        [Min(0)] public float maximumReboundSpeed = 6.4f;
         [Header("Depth hardness")]
         [Min(0)] public int hardnessStartDepth = 60;
         [Min(20)] public int hardnessDoublingDepth = 70;

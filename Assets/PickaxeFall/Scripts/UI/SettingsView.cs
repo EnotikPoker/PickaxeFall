@@ -23,6 +23,10 @@ namespace PickaxeFall
             var volumeText=BoldText(card,"Громкость: "+Mathf.RoundToInt(options.Volume*100)+"%","section-label");
             var volume=new Slider(0,1){value=options.Volume,name="settings-volume"};volume.AddToClassList("volume-slider");card.Add(volume);
             volume.RegisterValueChangedCallback(e=>{options.SetVolume(e.newValue);volumeText.text="Громкость: "+Mathf.RoundToInt(options.Volume*100)+"%";});
+            var brightnessLabel=BoldText(card,"Яркость шахты: "+Mathf.RoundToInt(options.MineBrightness*100)+"%","section-label");
+            var brightness=new Slider(1,1.3f){value=options.MineBrightness,name="settings-mine-brightness"};brightness.AddToClassList("volume-slider");card.Add(brightness);
+            brightness.RegisterValueChangedCallback(e=>{options.SetMineBrightness(e.newValue);brightnessLabel.text="Яркость шахты: "+Mathf.RoundToInt(options.MineBrightness*100)+"%";});
+            Text(card,"Осветляет блоки в шахте. Яркость экрана и интерфейса не меняется.","footnote");
             AudioSlider(card,"Музыка",options.MusicVolume,options.SetMusicVolume,"settings-music");AudioSlider(card,"Эффекты",options.EffectsVolume,options.SetEffectsVolume,"settings-sfx");
             Button(card,"АВТОРЫ ЗВУКА И МУЗЫКИ",AudioCredits,"stone-button compact-button");
             BoldText(card,"Частота кадров","section-label");var fps=Box(card,"settings-row fps-options");

@@ -56,11 +56,11 @@ namespace PickaxeFall
         public bool WorldFrozen => Paused || SystemSuspended || TrialOpen;
         public float SessionSeconds => Clock.Now + Benefits.TrialSeconds;
         void RefreshTimeScale() { if(!IsSimulation)Time.timeScale=WorldFrozen?0:1; }
-        internal void TrialChanged() { hud?.CancelGesture(); RefreshTimeScale(); Notify(); SaveProgress(); }
+        internal void TrialChanged() { trialFrameDelta=0;hud?.CancelUiPresses(); RefreshTimeScale(); Notify(); SaveProgress(); }
         public void SetApplicationSuspended(bool value)
         {
             if(!initialized || IsSimulation)return;
-            hud?.CancelGesture();SystemSuspended=value;if(!value)skipTrialFrame=true;RefreshTimeScale();if(value)SaveProgress();
+            hud?.CancelUiPresses();SystemSuspended=value;if(!value)skipTrialFrame=true;RefreshTimeScale();if(value)SaveProgress();
         }
 
         public bool CanTrade => Phase == RunPhase.Ready || Phase == RunPhase.Equipped || Phase == RunPhase.Finished;
@@ -72,7 +72,7 @@ namespace PickaxeFall
         System.Random rouletteRandom;
         int selectedTier;
         bool initialized, dirty, skipTrialFrame;
-        float nextSave,lastMinedTime;
+        float nextSave,lastMinedTime,trialFrameDelta;
 
         public void Configure(GameBalance config, PanelSettings panel, StyleSheet style)
         { balance = config; panelSettings = panel; interfaceStyle = style; }
@@ -96,9 +96,10 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned", "desert", "nether", "temple", "fortress", "mineshaft", "treasure" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "touch", "touch-edge", "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned", "desert", "nether", "temple", "fortress", "mineshaft", "treasure" }, TestMode) < 0) TestMode = "";
             bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
             if (probe) TestMode = "probe";
+            if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--input-checks"))TestMode="input";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
             foreach(string mode in new[] {"savewrite","saveread","savefinished"})if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--"+mode+"-check"))TestMode=mode;
             if (TestMode.Length > 0) { Application.runInBackground=true; ProfileDirectory = Path.Combine(Application.temporaryCachePath, "verification", Guid.NewGuid().ToString("N")); }
@@ -141,8 +142,10 @@ namespace PickaxeFall
             if(Economy.Profile.run!=null)RestoreRun(Economy.Profile.run);else NewRun();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (TestMode == "smoke" || Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test")) gameObject.AddComponent<RuntimeSmokeTest>();
+            if(TestMode.StartsWith("touch",StringComparison.Ordinal))gameObject.AddComponent<RuntimeTouchProbe>();
+            if(TestMode=="input")gameObject.AddComponent<RuntimeInputLightingChecks>();
             if(TestMode.StartsWith("save",StringComparison.Ordinal))gameObject.AddComponent<RuntimeResumeCheck>();
-            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe") gameObject.AddComponent<RuntimePreview>();
+            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe" || arg == "--economy-probe")) gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
@@ -168,30 +171,37 @@ namespace PickaxeFall
             UseOriginalBalance();ApplySelectedMap();World.RestoreTrials(null);Economy.Profile.run=null;
             BenchVisits.Clear(); Depth = BlocksBroken = WorkbenchesUsed = 0; Array.Clear(OreCounts, 0, OreCounts.Length);
             RunToolCount = 1; RescueUsed = false; RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
-            SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); Clock.Reset();lastMinedTime=0; hud?.CancelGesture();
+            SelectedToolIndex = 0; Benefits.Reset(); Energy.Reset(RunUpgrades); Clock.Reset();lastMinedTime=0; hud?.CancelUiPresses();
             int previousSeed = Seed;
             do { Seed = Guid.NewGuid().GetHashCode() & int.MaxValue; } while (Seed == 0 || Seed == previousSeed);
             World.ResetWorld(Seed); Pickaxe.Equip(0); Pickaxe.gameObject.SetActive(false); Audio?.SetMap(CurrentMap);cameraFollow?.SetMap();cameraFollow?.ResetView();
             Phase = RunPhase.Ready; RefreshTimeScale(); hud?.SelectTab(HubTab.Mine); Notify();
         }
+        const float SpinDuration=2.2f;
+        float spinElapsed;int spinFrame=-1;
+        System.Random spinPresentation;
         public void Spin()
         {
-            if (Phase != RunPhase.Ready) return;
-            Phase = RunPhase.Spinning; selectedTier = balance.Roll(rouletteRandom); Notify(); StartCoroutine(SpinRoutine());
+            if(Phase!=RunPhase.Ready)return;
+            hud?.CancelUiPresses();selectedTier=balance.Roll(rouletteRandom);
+            spinElapsed=0;spinFrame=-1;spinPresentation=new System.Random(Guid.NewGuid().GetHashCode());
+            Phase=RunPhase.Spinning;Notify();AdvanceRoulette(0);
         }
-        IEnumerator SpinRoutine()
+        internal void AdvanceRoulette(float seconds)
         {
-            const int ticks = 24;
-            var animationRandom = new System.Random(Guid.NewGuid().GetHashCode());
-            for (int i = 0; i < ticks; i++)
-            {
-                Audio?.Play(i==ticks-1?"reward":"roll");
-                hud.ShowRouletteTier(i == ticks - 1 ? selectedTier : balance.Roll(animationRandom));
-                float progress = (float)i / (ticks - 1);
-                yield return new WaitForSecondsRealtime(Mathf.Lerp(0.035f, 0.20f, progress * progress));
-            }
-            RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
-            Pickaxe.Equip(selectedTier); Phase = RunPhase.Equipped; Notify();
+            if(Phase!=RunPhase.Spinning || SystemSuspended || seconds<0 || float.IsNaN(seconds)||float.IsInfinity(seconds))return;
+            spinElapsed+=seconds;
+            if(spinElapsed>=SpinDuration){CompleteRoulette();return;}
+            int frame=Mathf.Min(22,Mathf.FloorToInt(Mathf.Sqrt(spinElapsed/SpinDuration)*23));
+            if(frame==spinFrame)return;spinFrame=frame;Audio?.Play("roll");
+            hud?.ShowRouletteTier(balance.Roll(spinPresentation));
+        }
+        void CompleteRoulette()
+        {
+            if(Phase!=RunPhase.Spinning)return;
+            // Always present the original draw, including recovery from interruption.
+            RunUpgrades=new RunUpgrades(Economy.Profile,balance.progression);Pickaxe.Equip(selectedTier);
+            Phase=RunPhase.Equipped;hud?.CancelUiPresses();Audio?.Play("reward");Notify();
         }
         public void Drop() => StartDrop(0);
         void StartDrop(int forcedCount)
@@ -226,11 +236,22 @@ namespace PickaxeFall
             #if PICKAXEFALL_DEVTOOLS
             if(DeveloperInfiniteEnergy&&Phase==RunPhase.Mining)Energy.Ensure(Energy.Maximum);
 #endif
+            trialFrameDelta=0;
             if(skipTrialFrame)skipTrialFrame=false;
-            else if(!Paused && !SystemSuspended)World.AdvanceTrial(Time.unscaledDeltaTime);
+            else
+            {
+                AdvanceRoulette(Time.unscaledDeltaTime);
+                if(!Paused&&!SystemSuspended)trialFrameDelta=Time.unscaledDeltaTime;
+            }
             hud.Tick();
         }
 
+        void LateUpdate()
+        {
+            // Complete this frame's input before deciding that the tap timer expired.
+            if(initialized&&!IsSimulation&&!Paused&&!SystemSuspended&&trialFrameDelta>0)World.AdvanceTrial(trialFrameDelta);
+            trialFrameDelta=0;
+        }
         void FixedUpdate() { if (initialized && !IsSimulation) SimulateMiningStep(); }
         // The player and the lab use the same native physics entry point and ordering.
         public void SimulateMiningStep(Action<GameController> policy = null)
@@ -251,7 +272,7 @@ namespace PickaxeFall
         public bool SelectTool(int index)
         {
             if (index < 0 || index >= tools.Count || !tools[index].IsAlive) return false;
-            if (SelectedToolIndex != index) hud?.CancelGesture();
+            if (SelectedToolIndex != index) hud?.CancelUiPresses();
             SelectedToolIndex = index;
             foreach (var tool in tools) tool.SetSelected(tool.ToolIndex == index);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -342,7 +363,7 @@ namespace PickaxeFall
             {
                 if (tool.IsAlive) { Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.transform.position.y)); tool.BreakApart(); }
             }
-            hud.CancelGesture();
+            hud.CancelUiPresses();
             Phase = RunPhase.Breaking; Paused = false; Time.timeScale = 1;
             Economy.Profile.mapRecords[(int)CurrentMap]=Mathf.Max(BestDepth,Depth);if(CurrentMap==MapId.Mine)Economy.Profile.bestDepth=Economy.Profile.mapRecords[0]; SaveProgress();
             Notify(); StartCoroutine(FinishAnimation());
@@ -375,7 +396,7 @@ namespace PickaxeFall
         public void TogglePause()
         {
             if (Phase != RunPhase.Mining) return;
-            hud?.CancelGesture(); Paused = !Paused; RefreshTimeScale(); Notify();
+            hud?.CancelUiPresses(); Paused = !Paused; RefreshTimeScale(); Notify();
             if(Paused)SaveProgress();
         }
         public bool SelectHubTab(HubTab tab) { if (!CanTrade) return false; hud.SelectTab(tab); return true; }
@@ -388,7 +409,7 @@ namespace PickaxeFall
         void OnApplicationPause(bool pause) => SetApplicationSuspended(pause);
         void OnApplicationFocus(bool focus)
         {
-            if(!focus && initialized && !IsSimulation){hud?.CancelGesture();SaveProgress();}
+            if(!focus && initialized && !IsSimulation){hud?.CancelUiPresses();SaveProgress();}
         }
         void OnApplicationQuit(){SaveProgress();quitting=true;}
         void OnDestroy() { if (initialized && !quitting) SaveProgress(); Time.timeScale = 1; hud?.Dispose();if(restoredBalance)Destroy(restoredBalance); }

@@ -71,7 +71,7 @@ namespace PickaxeFall
         }
         VisualElement OpenModal(string heading)
         {
-            DismissHint();modal.Clear(); Display(modal, true);
+            CancelUiPresses();DismissHint();modal.Clear(); Display(modal, true);
             var scroll = new ScrollView(ScrollViewMode.Vertical); scroll.AddToClassList("modal-scroll"); modal.Add(scroll);
             var card = Box(scroll.contentContainer, "modal-card"); BoldText(card, heading, "title"); return card;
         }
