@@ -235,7 +235,7 @@ namespace PickaxeFall
             int damage = WetDamage(RawDamageHalfUnits + (strong ? game.RunUpgrades.StrongBonusHalfUnits : 0));
             game.Audio?.MaterialHit(block.Kind);block.HitHalfUnits(damage, this, DamageOrigin.Physical);
             #if PICKAXEFALL_DEVTOOLS
-            game.DeveloperContactInfo=$"({point.x:0.00}, {point.y:0.00}) · скорость {approach:0.00} · урон {damage*.5f:0.0}";
+            game.DeveloperContactInfo=L.F("({0:0.00}, {1:0.00}) · скорость {2:0.00} · урон {3:0.0}", (point.x), (point.y), (approach), (damage*.5f));
 #endif
             NaturalStrikes++; game.OnPhysicalHit(this, strong);
             if (strong && game.RunUpgrades.ShrapnelHalfUnits > 0) game.World.DamageShrapnelNeighbour(x, row, WetDamage(game.RunUpgrades.ShrapnelHalfUnits), this, NaturalStrikes);

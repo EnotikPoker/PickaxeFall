@@ -17,7 +17,7 @@ namespace PickaxeFall
         {
             if(!CanTrade)return false;
             bool success=Economy.TryUnlock(kind);if(success)RunUpgrades=new RunUpgrades(Economy.Profile,balance.progression);
-            if(success)Audio?.Ui(UiSound.Ability);else Audio?.Play("error");hud?.Toast(success?"СПОСОБНОСТЬ ОТКРЫТА":Economy.LastError);Notify();return success;
+            if(success)Audio?.Ui(UiSound.Ability);else Audio?.Play("error");hud?.Toast(success?L.T("СПОСОБНОСТЬ ОТКРЫТА"):Economy.LastError);Notify();return success;
         }
         void GiveResource(BlockKind kind,int count,FallingPickaxe source,Vector2 position,bool popup=true)
         {
@@ -41,7 +41,7 @@ namespace PickaxeFall
                     GiveResource(kind,amount,source,new Vector2(x,-row-.5f));break;
                 }
             }
-            hud?.Toast("СУНДУК · РЕСУРСЫ В РЮКЗАКЕ");
+            hud?.Toast(L.T("СУНДУК · РЕСУРСЫ В РЮКЗАКЕ"));
         }
         public RunSnapshot CaptureRun()
         {
@@ -67,7 +67,7 @@ namespace PickaxeFall
             JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(saved.benefits),Benefits);World.ResetWorld(Seed,saved.cells,saved.liquids);World.RestoreTrials(saved.spawners,saved.version<6,saved.selectedTool);Audio?.SetMap(CurrentMap);cameraFollow?.SetMap();
             for(int i=0;i<tools.Count;i++)tools[i].Restore(saved.tools[i]);
             Phase=RunPhase.Mining;Paused=true;Time.timeScale=0;SelectTool(saved.selectedTool);World.StreamTools(tools);World.Liquids.RefreshVisuals();Physics2D.SyncTransforms();cameraFollow?.SnapToTools();
-            hud?.SelectTab(HubTab.Mine);hud?.CancelGesture();nextSave=Time.unscaledTime+5;Notify();hud?.Toast("СПУСК ВОССТАНОВЛЕН · НАЖМИ «ПРОДОЛЖИТЬ»");
+            hud?.SelectTab(HubTab.Mine);hud?.CancelGesture();nextSave=Time.unscaledTime+5;Notify();hud?.Toast(L.T("СПУСК ВОССТАНОВЛЕН · НАЖМИ «ПРОДОЛЖИТЬ»"));
         }
     }
 }

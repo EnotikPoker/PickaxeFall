@@ -1,0 +1,13 @@
+// Minimal browser driver using Chromium's public DevTools protocol (Node 22+).
+class Cdp {
+ constructor(socket){this.socket=socket;this.next=0;this.pending=new Map();this.events=[];socket.addEventListener('message',e=>{const value=JSON.parse(e.data);if(value.id){const p=this.pending.get(value.id);this.pending.delete(value.id);value.error?p?.reject(Error(JSON.stringify(value.error))):p?.resolve(value.result);}else this.events.push(value);});}
+ static async connect(port=9223){const pages=await(await fetch(`http://127.0.0.1:${port}/json/list`)).json();const socket=new WebSocket(pages.find(p=>p.type==='page').webSocketDebuggerUrl);await new Promise((r,j)=>{socket.addEventListener('open',r,{once:true});socket.addEventListener('error',j,{once:true});});const c=new Cdp(socket);await c.call('Runtime.enable');await c.call('Page.enable');return c;}
+ call(method,params={}){return new Promise((resolve,reject)=>{const id=++this.next;this.pending.set(id,{resolve,reject});this.socket.send(JSON.stringify({id,method,params}));});}
+ async eval(expression){const r=await this.call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.text+' '+JSON.stringify(r.exceptionDetails.exception));return r.result.value;}
+ async wait(expression,seconds=90){const end=Date.now()+seconds*1000;while(Date.now()<end){try{const value=await this.eval(expression);if(value)return value;}catch(_){}await new Promise(r=>setTimeout(r,100));}throw Error('Browser wait timed out: '+expression);}
+ async probe(command='state'){await this.eval(`window.pickaxeProbe=null;pickaxeInstance.SendMessage('PickaxeFall','WebProbe',${JSON.stringify(command)})`);return this.wait('window.pickaxeProbe',10);}
+ async tap(name){const state=await this.probe(),b=state.buttons.find(x=>x.name===name);if(!b)throw Error('No button: '+name);const rect=await this.eval("(()=>{const r=document.querySelector('canvas').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}})()");const x=rect.x+b.x*rect.width,y=rect.y+b.y*rect.height;await this.call('Input.dispatchMouseEvent',{type:'mouseMoved',x,y});await new Promise(r=>setTimeout(r,50));await this.call('Input.dispatchMouseEvent',{type:'mousePressed',x,y,button:'left',buttons:1,clickCount:1});await new Promise(r=>setTimeout(r,120));await this.call('Input.dispatchMouseEvent',{type:'mouseReleased',x,y,button:'left',buttons:0,clickCount:1});await new Promise(r=>setTimeout(r,250));}
+ async screenshot(path){const r=await this.call('Page.captureScreenshot',{format:'png'});require('node:fs').writeFileSync(path,Buffer.from(r.data,'base64'));}
+ close(){this.socket.close();}
+}
+module.exports=Cdp;

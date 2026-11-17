@@ -6,50 +6,60 @@ namespace PickaxeFall
     public sealed partial class GameHud
     {
         bool settingsOpen,resumeAfterSettings;
-        void OpenSettings()
+        Label cloudStatusLabel;
+        public void OpenSettings()
         {
-            if(settingsOpen)return;settingsOpen=true;resumeAfterSettings=game.Phase==RunPhase.Mining && !game.Paused;
+            if(settingsOpen||game.PlatformFrozen)return;settingsOpen=true;resumeAfterSettings=game.Phase==RunPhase.Mining && !game.Paused;
             if(resumeAfterSettings)game.TogglePause();DrawSettings();
         }
         void DrawSettings()
         {
-            var card=OpenModal("Настройки игры");
-            var version=Text(card,"PickaxeFall · Версия "+GameVersion.Name,"footnote");version.name="game-version";
+            var card=OpenModal(L.T("Настройки игры"));
+            var version=Text(card,L.T("PickaxeFall · Версия ")+GameVersion.Name,"footnote");version.name="game-version";
 #if PICKAXEFALL_DEVTOOLS
             version.text+=" · DEV";RegisterDeveloperAccess(version);
 #endif
-            Button(card,"@gamedevmaxon",()=>Application.OpenURL("https://t.me/gamedevmaxon"),"stone-button channel-button").name="telegram-channel";
+            if(game.Platform==null||!game.Platform.IsYandex)Button(card,"@gamedevmaxon",()=>Application.OpenURL("https://t.me/gamedevmaxon"),"stone-button channel-button").name="telegram-channel";
+            BoldText(card,L.T("Язык"),"section-label");var languages=Box(card,"settings-row");
+            Button(languages,"Русский",()=>game.ChangeLanguage("ru"),"stone-button compact-button").name="language-ru";
+            Button(languages,"English",()=>game.ChangeLanguage("en"),"stone-button compact-button").name="language-en";
+            if(game.Platform!=null&&game.Platform.IsYandex)
+            {
+                Text(card,L.T("Вход сохраняет прогресс между устройствами. Текущий спуск остаётся в этом браузере."),"footnote");
+                if(!game.Platform.Authorized)Button(card,L.T("Войти в Яндекс"),game.Platform.Login,"stone-button compact-button").name="yandex-login";
+                cloudStatusLabel=Text(card,game.Platform.CloudStatus,"footnote");
+            }
             var options=game.Settings;
-            var volumeText=BoldText(card,"Громкость: "+Mathf.RoundToInt(options.Volume*100)+"%","section-label");
+            var volumeText=BoldText(card,L.T("Громкость: ")+Mathf.RoundToInt(options.Volume*100)+"%","section-label");
             var volume=new Slider(0,1){value=options.Volume,name="settings-volume"};volume.AddToClassList("volume-slider");card.Add(volume);
-            volume.RegisterValueChangedCallback(e=>{options.SetVolume(e.newValue);volumeText.text="Громкость: "+Mathf.RoundToInt(options.Volume*100)+"%";});
-            var brightnessLabel=BoldText(card,"Яркость шахты: "+Mathf.RoundToInt(options.MineBrightness*100)+"%","section-label");
+            volume.RegisterValueChangedCallback(e=>{options.SetVolume(e.newValue);volumeText.text=L.T("Громкость: ")+Mathf.RoundToInt(options.Volume*100)+"%";});
+            var brightnessLabel=BoldText(card,L.T("Яркость шахты: ")+Mathf.RoundToInt(options.MineBrightness*100)+"%","section-label");
             var brightness=new Slider(1,1.3f){value=options.MineBrightness,name="settings-mine-brightness"};brightness.AddToClassList("volume-slider");card.Add(brightness);
-            brightness.RegisterValueChangedCallback(e=>{options.SetMineBrightness(e.newValue);brightnessLabel.text="Яркость шахты: "+Mathf.RoundToInt(options.MineBrightness*100)+"%";});
-            Text(card,"Осветляет блоки в шахте. Яркость экрана и интерфейса не меняется.","footnote");
-            AudioSlider(card,"Музыка",options.MusicVolume,options.SetMusicVolume,"settings-music");AudioSlider(card,"Эффекты",options.EffectsVolume,options.SetEffectsVolume,"settings-sfx");
-            Button(card,"АВТОРЫ ЗВУКА И МУЗЫКИ",AudioCredits,"stone-button compact-button");
-            BoldText(card,"Частота кадров","section-label");var fps=Box(card,"settings-row fps-options");
+            brightness.RegisterValueChangedCallback(e=>{options.SetMineBrightness(e.newValue);brightnessLabel.text=L.T("Яркость шахты: ")+Mathf.RoundToInt(options.MineBrightness*100)+"%";});
+            Text(card,L.T("Осветляет блоки в шахте. Яркость экрана и интерфейса не меняется."),"footnote");
+            AudioSlider(card,L.T("Музыка"),options.MusicVolume,options.SetMusicVolume,"settings-music");AudioSlider(card,L.T("Эффекты"),options.EffectsVolume,options.SetEffectsVolume,"settings-sfx");
+            Button(card,L.T("АВТОРЫ ЗВУКА И МУЗЫКИ"),AudioCredits,"stone-button compact-button");
+            BoldText(card,L.T("Частота кадров"),"section-label");var fps=Box(card,"settings-row fps-options");
             foreach(int value in GameSettings.FrameRates)
-                Button(fps,value==0?"ПО ЭКРАНУ":value+" FPS",()=>{options.SetFrameRate(value);DrawSettings();},"stone-button settings-choice"+(options.FrameRate==value?" active":"")).name="settings-fps-"+value;
-            Text(card,"Выше частота — плавнее движение и больше расход батареи. «По экрану» использует текущую частоту дисплея.","footnote");
-            Button(card,"МЕНЬШЕ ЧАСТИЦ: "+(options.ReducedEffects?"ВКЛ":"ВЫКЛ"),()=>{options.SetReducedEffects(!options.ReducedEffects);DrawSettings();},"stone-button settings-switch"+(options.ReducedEffects?" active":"")).name="settings-effects";
-            Button(card,"ПОДСКАЗКИ ДОБЫЧИ: "+(options.LootMessages?"ВКЛ":"ВЫКЛ"),()=>{options.SetLootMessages(!options.LootMessages);DrawSettings();},"stone-button settings-switch"+(options.LootMessages?" active":"")).name="settings-loot";
-            Text(card,"У кирки появляются +количество и значок ресурса. Одновременная добыча одного вида объединяется, чтобы не закрывать шахту.","footnote");
-            Button(card,"ПОВТОРИТЬ ОБУЧЕНИЕ",BeginTutorial,"stone-button settings-switch").name="settings-tutorial";
-            Button(card,"НАСТРОЙКИ ПО УМОЛЧАНИЮ",()=>{options.Reset();DrawSettings();},"stone-button settings-switch").name="settings-reset";
-            Button(card,"СБРОСИТЬ ПРОГРЕСС",ConfirmProgressReset,"stone-button settings-switch buy-blocked").name="settings-reset-progress";
-            Button(card,"ГОТОВО",()=>CloseModal(),"stone-button primary").name="settings-close";
+                Button(fps,value==0?L.T("ПО ЭКРАНУ"):value+" FPS",()=>{options.SetFrameRate(value);DrawSettings();},"stone-button settings-choice"+(options.FrameRate==value?" active":"")).name="settings-fps-"+value;
+            Text(card,L.T("Выше частота — плавнее движение и больше расход батареи. «По экрану» использует текущую частоту дисплея."),"footnote");
+            Button(card,L.T("МЕНЬШЕ ЧАСТИЦ: ")+(options.ReducedEffects?L.T("ВКЛ"):L.T("ВЫКЛ")),()=>{options.SetReducedEffects(!options.ReducedEffects);DrawSettings();},"stone-button settings-switch"+(options.ReducedEffects?" active":"")).name="settings-effects";
+            Button(card,L.T("ПОДСКАЗКИ ДОБЫЧИ: ")+(options.LootMessages?L.T("ВКЛ"):L.T("ВЫКЛ")),()=>{options.SetLootMessages(!options.LootMessages);DrawSettings();},"stone-button settings-switch"+(options.LootMessages?" active":"")).name="settings-loot";
+            Text(card,L.T("У кирки появляются +количество и значок ресурса. Одновременная добыча одного вида объединяется, чтобы не закрывать шахту."),"footnote");
+            Button(card,L.T("ПОВТОРИТЬ ОБУЧЕНИЕ"),BeginTutorial,"stone-button settings-switch").name="settings-tutorial";
+            Button(card,L.T("НАСТРОЙКИ ПО УМОЛЧАНИЮ"),()=>{options.Reset();DrawSettings();},"stone-button settings-switch").name="settings-reset";
+            Button(card,L.T("СБРОСИТЬ ПРОГРЕСС"),ConfirmProgressReset,"stone-button settings-switch buy-blocked").name="settings-reset-progress";
+            Button(card,L.T("ГОТОВО"),()=>CloseModal(),"stone-button primary").name="settings-close";
         }
-        void AudioSlider(VisualElement card,string name,float value,System.Action<float> setter,string id){var label=BoldText(card,name+": "+Mathf.RoundToInt(value*100)+"%","section-label");var slider=new Slider(0,1){value=value,name=id};slider.AddToClassList("volume-slider");card.Add(slider);slider.RegisterValueChangedCallback(e=>{setter(e.newValue);label.text=name+": "+Mathf.RoundToInt(e.newValue*100)+"%";});}
+        void AudioSlider(VisualElement card,string name,float value,System.Action<float> setter,string id){var label=BoldText(card,name+": "+Mathf.RoundToInt(value*100)+"%","section-label");var slider=new Slider(0,1){value=value,name=id};slider.AddToClassList("volume-slider");card.Add(slider);slider.RegisterValueChangedCallback(e=>{setter(e.newValue);label.text= L.T(name+": "+Mathf.RoundToInt(e.newValue*100)+"%");});}
         void ConfirmProgressReset()
         {
-            var card=OpenModal("Сбросить весь прогресс?");
-            Text(card,"Будут удалены монеты, ресурсы, все улучшения и рекорд глубины. Текущий забег завершится. Настройки останутся. Отменить сброс нельзя.\n\nДля подтверждения введи СБРОС:","description");
+            var card=OpenModal(L.T("Сбросить весь прогресс?"));
+            Text(card,L.T("Будут удалены монеты, ресурсы, все улучшения и рекорд глубины. Текущий забег завершится. Настройки останутся. Отменить сброс нельзя.\n\nДля подтверждения введи СБРОС:"),"description");
             var input=new TextField{name="progress-reset-input",maxLength=5};input.AddToClassList("quantity-input");card.Add(input);
-            var confirm=Button(card,"УДАЛИТЬ ПРОГРЕСС",()=>{if(input.value.Trim().ToUpperInvariant()=="СБРОС")game.ResetProgress();},"stone-button primary buy-blocked");confirm.name="progress-reset-confirm";confirm.SetEnabled(false);
-            input.RegisterValueChangedCallback(e=>confirm.SetEnabled(e.newValue.Trim().ToUpperInvariant()=="СБРОС"));
-            Button(card,"ОТМЕНА",DrawSettings,"stone-button secondary").name="progress-reset-cancel";
+            var confirm=Button(card,L.T("УДАЛИТЬ ПРОГРЕСС"),()=>{if(input.value.Trim().ToUpperInvariant()==L.T("СБРОС"))game.ResetProgress();},"stone-button primary buy-blocked");confirm.name="progress-reset-confirm";confirm.SetEnabled(false);
+            input.RegisterValueChangedCallback(e=>confirm.SetEnabled(e.newValue.Trim().ToUpperInvariant()==L.T("СБРОС")));
+            Button(card,L.T("ОТМЕНА"),DrawSettings,"stone-button secondary").name="progress-reset-cancel";
         }
         void FinishSettings()
         {

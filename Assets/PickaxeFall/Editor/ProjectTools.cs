@@ -133,7 +133,7 @@ namespace PickaxeFall.Editor
             }
             PrototypeChecks.Validate(balance);
             VeinChecks.Validate(balance);
-            WorldFeatureChecks.Validate(balance);WorldReleaseChecks.Validate(balance);PolishReleaseChecks.Validate(balance);PatchReleaseChecks.Validate(balance);InputLightingReleaseChecks.Validate(balance);
+            WorldFeatureChecks.Validate(balance);WorldReleaseChecks.Validate(balance);PolishReleaseChecks.Validate(balance);PatchReleaseChecks.Validate(balance);InputLightingReleaseChecks.Validate(balance);PlatformReleaseChecks.Validate();
             Debug.Log("PICKAXEFALL_BALANCE_OK: 100000 roulette rolls; deterministic generation and ore depth gates.");
         }
 

@@ -33,7 +33,7 @@ namespace PickaxeFall
                 if (recognized && game.ControlsAvailable && game.AbilityUnlocked(kind) && playfield.worldBound.Contains(e.position))
                 {
                     bool accepted = game.TryUseAbility(kind, direction);
-                    if (!accepted) Toast(game.Energy.CanSpend(game.AbilityCost(kind)) ? "ДОЖДИСЬ ОКОНЧАНИЯ ПРОБИТИЯ" : "НУЖНО БОЛЬШЕ ЭНЕРГИИ");
+                    if (!accepted) Toast(game.Energy.CanSpend(game.AbilityCost(kind)) ? L.T("ДОЖДИСЬ ОКОНЧАНИЯ ПРОБИТИЯ") : L.T("НУЖНО БОЛЬШЕ ЭНЕРГИИ"));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     Debug.Log($"PICKAXEFALL_GESTURE: {kind}; accepted={accepted}; selected={game.SelectedToolIndex}; energy={game.Energy.Value}");
 #endif
@@ -47,7 +47,7 @@ namespace PickaxeFall
             energyFill = Box(Box(energy, "energy-track"), "energy-fill");
             abilityPrices = Text(energy, "", "ability-help");
             runBenefits = Text(resultArea, "", "benefit-summary");
-            Button(resultArea, "ПОЛЬЗА УЛУЧШЕНИЙ", ShowBenefits, "stone-button benefits-button").name = "show-benefits";
+            Button(resultArea, L.T("ПОЛЬЗА УЛУЧШЕНИЙ"), ShowBenefits, "stone-button benefits-button").name = "show-benefits";
         }
         public void CancelGesture()
         {
@@ -62,22 +62,22 @@ namespace PickaxeFall
             if (shownEnergy != value || shownMaximum != maximum || shownSelection != game.SelectedToolIndex)
             {
                 shownEnergy = value; shownMaximum = maximum; shownSelection = game.SelectedToolIndex;
-                SetText(energyLabel, $"ЭНЕРГИЯ {Progression.Number(game.Energy.Value)} / {Progression.Number(game.Energy.Maximum)}");
+                SetText(energyLabel, L.F("ЭНЕРГИЯ {0} / {1}", (Progression.Number(game.Energy.Value)), (Progression.Number(game.Energy.Maximum))));
                 energyFill.style.width = Length.Percent(game.Energy.Maximum > 0 ? 100 * game.Energy.Value / game.Energy.Maximum : 0);
             }
             if (shownUpgrades != game.RunUpgrades)
             {
                 shownUpgrades = game.RunUpgrades;
-                string dash=game.AbilityUnlocked(AbilityKind.Dash)?Progression.Number(game.AbilityCost(AbilityKind.Dash)):"в магазине";
-                string plunge=game.AbilityUnlocked(AbilityKind.Plunge)?Progression.Number(game.AbilityCost(AbilityKind.Plunge)):"в магазине";
-                SetText(abilityPrices,(game.AbilityUnlocked(AbilityKind.Dash)?"Свайп: "+dash:"")+(game.AbilityUnlocked(AbilityKind.Dash)&&game.AbilityUnlocked(AbilityKind.Plunge)?" · ":"")+(game.AbilityUnlocked(AbilityKind.Plunge)?"Нажатие: "+plunge:"")+" · +"+Progression.Number(game.RunUpgrades.EnergyPerSecond)+"/с");
+                string dash=game.AbilityUnlocked(AbilityKind.Dash)?Progression.Number(game.AbilityCost(AbilityKind.Dash)):L.T("в магазине");
+                string plunge=game.AbilityUnlocked(AbilityKind.Plunge)?Progression.Number(game.AbilityCost(AbilityKind.Plunge)):L.T("в магазине");
+                SetText(abilityPrices,(game.AbilityUnlocked(AbilityKind.Dash)?L.T("Свайп: ")+dash:"")+(game.AbilityUnlocked(AbilityKind.Dash)&&game.AbilityUnlocked(AbilityKind.Plunge)?" · ":"")+(game.AbilityUnlocked(AbilityKind.Plunge)?L.T("Нажатие: ")+plunge:"")+" · +"+Progression.Number(game.RunUpgrades.EnergyPerSecond)+L.T("/с"));
             }
         }
         void ShowBenefits()
         {
             if (game.Phase != RunPhase.Finished) return;
-            var card = OpenModal("Польза улучшений"); Text(card, game.Benefits.Details(game.Energy.Earned), "description");
-            Button(card, "ГОТОВО", () => CloseModal(), "stone-button primary");
+            var card = OpenModal(L.T("Польза улучшений")); Text(card, game.Benefits.Details(game.Energy.Earned), "description");
+            Button(card, L.T("ГОТОВО"), () => CloseModal(), "stone-button primary");
         }
     }
 }

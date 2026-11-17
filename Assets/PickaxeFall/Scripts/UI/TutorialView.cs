@@ -9,22 +9,22 @@ namespace PickaxeFall
         int tutorialStep,pendingHints,contextHintIndex;
         HubTab tutorialReturnTab;
         VisualElement tutorialOverlay,tutorialFocus,contextHint;
-        static readonly string[] TutorialTitles={"Кирка выбирается рулеткой","Всё добытое — твоё","Рюкзак и продажа","Запас на улучшения","Улучшения кирок","Уровень профиля","Рывок и пробой","Верстаки","Вода и лава","Сундуки","Спавнер","Другие локации","Навыки для локаций","Сохранение"};
+        static readonly string[] TutorialTitles={L.T("Кирка выбирается рулеткой"),L.T("Всё добытое — твоё"),L.T("Рюкзак и продажа"),L.T("Запас на улучшения"),L.T("Улучшения кирок"),L.T("Уровень профиля"),L.T("Рывок и пробой"),L.T("Верстаки"),L.T("Вода и лава"),L.T("Сундуки"),L.T("Спавнер"),L.T("Другие локации"),L.T("Навыки для локаций"),L.T("Сохранение")};
         string TutorialBody(int index)=>index switch {
-            0=>"Крути рулетку. Шанс каждой кирки указан под её значком. После выбора нажми «Начать спуск».",
-            1=>"Кирка падает и разбивает блоки. Удары тратят прочность. Когда сломается последняя кирка, добыча останется в рюкзаке.",
-            2=>"Нажми на ресурс в рюкзаке, чтобы продать нужное количество. Внизу можно продать весь рюкзак с подтверждением.",
-            3=>"Нажми на карточку навыка: красная кнопка отметит цель. «Продать лишнее» сохранит материалы на выбранное число будущих ступеней.",
-            4=>"У каждого вида кирки свои урон и прочность. На карточке видно, что даст покупка. Зелёным отмечено то, на что уже хватает ресурсов.",
-            5=>"Для нового уровня нужны монеты, добытые за всё время блоки и указанные навыки. Счётчик добычи не расходуется.",
-            6=>"Рывок покупается на втором уровне профиля, пробой — на третьем. Свайп толкает выбранную кирку в сторону, нажатие пробивает блоки вниз. Энергия восстанавливается сама.",
-            7=>"Любой верстак полностью чинит кирку. Улучшающий верстак ещё и повышает её вид. Купленные улучшения получившегося вида сохраняются.",
-            8=>"Вода замедляет кирку и снижает её урон. Лава тоже замедляет, но ещё тратит прочность — даже при касании кончиком. Встреча воды и лавы даёт обсидиан.",
-            9=>"Разбей сундук, чтобы забрать находки. Содержимое появится сбоку и сразу попадёт в рюкзак. Награды зависят от карты и глубины.",
-            10=>"Коснись спавнера киркой: спуск остановится. Сделай 30 нажатий за 8 секунд и получи награду. Не успеешь — кирка потеряет 30% максимальной прочности. Пауза сохраняет время и нажатия.",
-            11=>"В разделе «Карты» внеси материалы в мост или портал. Можно строить частями. Готовая локация остаётся открытой навсегда.",
-            12=>"«Землекоп» даёт больше земли и песка. «Подводник» уменьшает штраф воды, «Термозащита» — износ в лаве. «Искатель сокровищ» добавляет добычу из сундуков.",
-            _=>"Игра сохраняет прогресс сама. Незавершённый спуск после запуска ждёт на паузе. Повторить обучение и изменить эффекты можно в настройках."
+            0=>L.T("Крути рулетку. Шанс каждой кирки указан под её значком. После выбора нажми «Начать спуск»."),
+            1=>L.T("Кирка падает и разбивает блоки. Удары тратят прочность. Когда сломается последняя кирка, добыча останется в рюкзаке."),
+            2=>L.T("Нажми на ресурс в рюкзаке, чтобы продать нужное количество. Внизу можно продать весь рюкзак с подтверждением."),
+            3=>L.T("Нажми на карточку навыка: красная кнопка отметит цель. «Продать лишнее» сохранит материалы на выбранное число будущих ступеней."),
+            4=>L.T("У каждого вида кирки свои урон и прочность. На карточке видно, что даст покупка. Зелёным отмечено то, на что уже хватает ресурсов."),
+            5=>L.T("Для нового уровня нужны монеты, добытые за всё время блоки и указанные навыки. Счётчик добычи не расходуется."),
+            6=>L.T("Рывок покупается на втором уровне профиля, пробой — на третьем. Свайп толкает выбранную кирку в сторону, нажатие пробивает блоки вниз. Энергия восстанавливается сама."),
+            7=>L.T("Любой верстак полностью чинит кирку. Улучшающий верстак ещё и повышает её вид. Купленные улучшения получившегося вида сохраняются."),
+            8=>L.T("Вода замедляет кирку и снижает её урон. Лава тоже замедляет, но ещё тратит прочность — даже при касании кончиком. Встреча воды и лавы даёт обсидиан."),
+            9=>L.T("Разбей сундук, чтобы забрать находки. Содержимое появится сбоку и сразу попадёт в рюкзак. Награды зависят от карты и глубины."),
+            10=>L.T("Коснись спавнера киркой: спуск остановится. Сделай 30 нажатий за 8 секунд и получи награду. Не успеешь — кирка потеряет 30% максимальной прочности. Пауза сохраняет время и нажатия."),
+            11=>L.T("В разделе «Карты» внеси материалы в мост или портал. Можно строить частями. Готовая локация остаётся открытой навсегда."),
+            12=>L.T("«Землекоп» даёт больше земли и песка. «Подводник» уменьшает штраф воды, «Термозащита» — износ в лаве. «Искатель сокровищ» добавляет добычу из сундуков."),
+            _=>L.T("Игра сохраняет прогресс сама. Незавершённый спуск после запуска ждёт на паузе. Повторить обучение и изменить эффекты можно в настройках.")
         };
         void TickTutorial()
         {
@@ -53,8 +53,8 @@ namespace PickaxeFall
             contextHint=Box(root,"context-hint");contextHint.name="context-hint";
             BoldText(contextHint,TutorialTitles[index],"context-hint-title");Text(contextHint,TutorialBody(index),"context-hint-body");
             var row=Box(contextHint,"settings-row");
-            Button(row,"ПОНЯТНО",DismissHint,"stone-button compact-button");
-            Button(row,"БЕЗ ПОДСКАЗОК",()=>{game.Settings.SetTutorialHints(int.MaxValue);game.Settings.Save();DismissHint();},"stone-button compact-button");
+            Button(row,L.T("ПОНЯТНО"),DismissHint,"stone-button compact-button");
+            Button(row,L.T("БЕЗ ПОДСКАЗОК"),()=>{game.Settings.SetTutorialHints(int.MaxValue);game.Settings.Save();DismissHint();},"stone-button compact-button");
         }
         void DismissHint(){contextHint?.RemoveFromHierarchy();contextHint=null;}
         void BeginTutorial()
@@ -74,12 +74,12 @@ namespace PickaxeFall
             tutorialOverlay.Clear();Display(tutorialOverlay,true);tutorialOverlay.BringToFront();int count=tutorialLibrary?TutorialTitles.Length:2;
             var scroll=new ScrollView(ScrollViewMode.Vertical);scroll.AddToClassList("tutorial-scroll");tutorialOverlay.Add(scroll);
             var card=Box(scroll.contentContainer,"modal-card tutorial-card");
-            Text(card,$"ОБУЧЕНИЕ · {tutorialStep+1} / {count}","section-label");BoldText(card,TutorialTitles[tutorialStep],"title");
+            Text(card,L.F("ОБУЧЕНИЕ · {0} / {1}", (tutorialStep+1), (count)),"section-label");BoldText(card,TutorialTitles[tutorialStep],"title");
             var art=Box(card,"tutorial-art");Icon(art,PixelArt.Pickaxe(tutorialStep==0?3:0),"tutorial-icon");
             Text(card,TutorialBody(tutorialStep),"tutorial-body");var row=Box(card,"tutorial-actions");
-            var back=Button(row,"НАЗАД",()=>{tutorialStep--;DrawTutorial();},"stone-button tutorial-nav");back.SetEnabled(tutorialStep>0);back.name="tutorial-back";
-            Button(row,tutorialStep==count-1?"ИГРАТЬ":"ДАЛЕЕ",()=>{if(tutorialStep==count-1)EndTutorial();else{tutorialStep++;DrawTutorial();}},"stone-button primary tutorial-nav").name="tutorial-next";
-            Button(card,"ПРОПУСТИТЬ",()=>{game.Settings.SetTutorialHints(int.MaxValue);EndTutorial();},"stone-button tutorial-skip").name="tutorial-skip";
+            var back=Button(row,L.T("НАЗАД"),()=>{tutorialStep--;DrawTutorial();},"stone-button tutorial-nav");back.SetEnabled(tutorialStep>0);back.name="tutorial-back";
+            Button(row,tutorialStep==count-1?L.T("ИГРАТЬ"):L.T("ДАЛЕЕ"),()=>{if(tutorialStep==count-1)EndTutorial();else{tutorialStep++;DrawTutorial();}},"stone-button primary tutorial-nav").name="tutorial-next";
+            Button(card,L.T("ПРОПУСТИТЬ"),()=>{game.Settings.SetTutorialHints(int.MaxValue);EndTutorial();},"stone-button tutorial-skip").name="tutorial-skip";
         }
         void EndTutorial()
         {
@@ -87,6 +87,6 @@ namespace PickaxeFall
             if(game.CanTrade)CurrentTab=tutorialReturnTab;
             if(tutorialResume&&game.Phase==RunPhase.Mining&&game.Paused)game.TogglePause();tutorialResume=false;Refresh();
         }
-        public void ProgressReset(){DismissHint();game.Settings.SetTutorialHints(0);tutorialChecked=false;CloseModal();Toast("ПРОГРЕСС СБРОШЕН");}
+        public void ProgressReset(){DismissHint();game.Settings.SetTutorialHints(0);tutorialChecked=false;CloseModal();Toast(L.T("ПРОГРЕСС СБРОШЕН"));}
     }
 }

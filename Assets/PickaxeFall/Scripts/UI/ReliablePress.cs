@@ -10,13 +10,13 @@ namespace PickaxeFall
     {
         readonly VisualElement target;
         readonly Action command;
-        readonly bool onDown;
+        readonly bool onDown,ignoreTouches;
         readonly Action<bool> visual;
         readonly HashSet<int> held=new();
         bool keyHeld;Rect pressBounds;
-        public ReliablePress(VisualElement target,Action command,bool onDown,Action<bool> visual=null)
+        public ReliablePress(VisualElement target,Action command,bool onDown,Action<bool> visual=null,bool ignoreTouches=false)
         {
-            this.target=target;this.command=command;this.onDown=onDown;
+            this.target=target;this.command=command;this.onDown=onDown;this.ignoreTouches=ignoreTouches;
             this.visual=visual??(value=>target.EnableInClassList("press-held",value));
             if(target is Button button)button.clickable=null;
             target.RegisterCallback<PointerDownEvent>(Down);
@@ -35,6 +35,7 @@ namespace PickaxeFall
         bool Inside(Vector3 position)=>target.worldBound.Contains(new Vector2(position.x,position.y));
         void Down(PointerDownEvent e)
         {
+            if(ignoreTouches&&(e.pointerType==UnityEngine.UIElements.PointerType.touch||Input.touchCount>0))return;
             if(!target.enabledInHierarchy || (e.pointerType!=UnityEngine.UIElements.PointerType.touch&&e.button!=0) || !Inside(e.position) || held.Contains(e.pointerId) || !onDown&&held.Count>0)return;
             pressBounds=target.worldBound;held.Add(e.pointerId);target.CapturePointer(e.pointerId);visual(true);e.StopPropagation();
             if(onDown)command();

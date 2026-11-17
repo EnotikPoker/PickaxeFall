@@ -287,3 +287,6 @@ Label { white-space: normal; flex-shrink: 0; }
 .spawner-hit { scale: 0.96 0.96; }
 .spawner-image { transition-property: scale; transition-duration: 0.05s; }
 .spawner-image .spawner-cracks { left: 0; right: 0; top: 0; bottom: 0; }
+
+.platform-choice { position: absolute; left: 6%; right: 6%; top: 15%; padding: 30px; background-color: rgb(40,50,60); }
+.ad-countdown { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(10,18,25,0.95); color: white; font-size: 48px; -unity-text-align: middle-center; }

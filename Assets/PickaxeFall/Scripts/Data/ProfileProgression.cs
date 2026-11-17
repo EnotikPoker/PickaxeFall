@@ -43,24 +43,24 @@ namespace PickaxeFall
         public bool SkillAvailable(int index,out string reason)
         {
             reason=null;
-            if(index<0||index>=Progression.RevealCount){reason="Неизвестный навык";return false;}
+            if(index<0||index>=Progression.RevealCount){reason=L.T("Неизвестный навык");return false;}
             int required=ProfileRules.RequiredLevel(index);
-            if(Profile.profileLevel<required){reason="Нужен уровень профиля "+required;return false;}
-            if(!ProfileRules.Revealed(Profile,index)){reason="Нажми на замок, чтобы открыть ветвь бесплатно";return false;}
+            if(Profile.profileLevel<required){reason=L.T("Нужен уровень профиля ")+required;return false;}
+            if(!ProfileRules.Revealed(Profile,index)){reason=L.T("Нажми на замок, чтобы открыть ветвь бесплатно");return false;}
             return true;
         }
         public bool TryReveal(int index)
         {
-            if(index<10 || index>=Progression.RevealCount || Profile.profileLevel<ProfileRules.RequiredLevel(index) || Profile.revealed[index]){LastError="Ветвь ещё недоступна или уже открыта.";return false;}
+            if(index<10 || index>=Progression.RevealCount || Profile.profileLevel<ProfileRules.RequiredLevel(index) || Profile.revealed[index]){LastError=L.T("Ветвь ещё недоступна или уже открыта.");return false;}
             var next=Profile.Copy();next.revealed[index]=true;return Commit(next);
         }
         public bool CanLevelUp(out string reason)
         {
-            reason=null;if(Profile.profileLevel>=5){reason="Максимальный уровень профиля";return false;}
+            reason=null;if(Profile.profileLevel>=5){reason=L.T("Максимальный уровень профиля");return false;}
             int i=Profile.profileLevel-1;
-            foreach(var r in ProfileRules.Skills[i])if(!r.Met(Profile)){reason="Нужен навык «"+Progression.Title(r.Kind)+"» уровня "+r.Level;return false;}
-            foreach(var kind in ResourceInventory.Materials)if(Profile.lifetimeMined[(int)kind]<ProfileRules.MiningRequirements[i][(int)kind]){reason="Недостаточно добыто: "+GameBalance.BlockName(kind);return false;}
-            if(Profile.coins<ProfileRules.LevelCoins[i]){reason="Не хватает монет";return false;}return true;
+            foreach(var r in ProfileRules.Skills[i])if(!r.Met(Profile)){reason=L.T("Нужен навык «")+Progression.Title(r.Kind)+L.T("» уровня ")+r.Level;return false;}
+            foreach(var kind in ResourceInventory.Materials)if(Profile.lifetimeMined[(int)kind]<ProfileRules.MiningRequirements[i][(int)kind]){reason=L.T("Недостаточно добыто: ")+GameBalance.BlockName(kind);return false;}
+            if(Profile.coins<ProfileRules.LevelCoins[i]){reason=L.T("Не хватает монет");return false;}return true;
         }
         public bool TryLevelUp()
         {
@@ -74,7 +74,7 @@ namespace PickaxeFall
         }
         public bool TrySetGoal(GoalKind kind,int index=0)
         {
-            if(!ProfileRules.ValidGoal(kind,index)){LastError="Некорректная цель";return false;}
+            if(!ProfileRules.ValidGoal(kind,index)){LastError=L.T("Некорректная цель");return false;}
             var next=Profile.Copy();next.goalKind=kind;next.goalIndex=index;AdvanceGoal(next);return Commit(next);
         }
         static void AdvanceGoal(PlayerProfile p)
@@ -94,8 +94,8 @@ namespace PickaxeFall
             return cost;
         }
         public string GoalTitle=>Profile.goalKind switch{
-            GoalKind.Upgrade=>Progression.Title(ProfileRules.Key(Profile.goalIndex).Kind)+(Profile.goalIndex<10?" · "+new[]{"дерево","камень","золото","железо","алмаз"}[ProfileRules.Key(Profile.goalIndex).Tier]:"")+" · ур. "+(Profile.Level(ProfileRules.Key(Profile.goalIndex))+1),
-            GoalKind.Ability=>Profile.goalIndex==0?"Покупка рывка":"Покупка пробоя",GoalKind.Bridge=>"Мост в пустыню",GoalKind.Portal=>"Портал в ад",_=>"Цель не выбрана"};
+            GoalKind.Upgrade=>Progression.Title(ProfileRules.Key(Profile.goalIndex).Kind)+(Profile.goalIndex<10?" · "+new[]{L.T("дерево"),L.T("камень"),L.T("золото"),L.T("железо"),L.T("алмаз")}[ProfileRules.Key(Profile.goalIndex).Tier]:"")+L.T(" · ур. ")+(Profile.Level(ProfileRules.Key(Profile.goalIndex))+1),
+            GoalKind.Ability=>Profile.goalIndex==0?L.T("Покупка рывка"):L.T("Покупка пробоя"),GoalKind.Bridge=>L.T("Мост в пустыню"),GoalKind.Portal=>L.T("Портал в ад"),_=>L.T("Цель не выбрана")};
         public int ReserveSteps {get;set;}=3;
         public UpgradeCost ReservationCost()
         {
@@ -114,12 +114,12 @@ namespace PickaxeFall
         }
         public bool TrySellSurplus()
         {
-            if(Profile.goalKind==GoalKind.None){LastError="Сначала выбери цель.";return false;}
+            if(Profile.goalKind==GoalKind.None){LastError=L.T("Сначала выбери цель.");return false;}
             try{
-                var amounts=SurplusQuote(out long value);if(value==0){LastError="Лишних ресурсов пока нет.";return false;}
+                var amounts=SurplusQuote(out long value);if(value==0){LastError=L.T("Лишних ресурсов пока нет.");return false;}
                 var next=Profile.Copy();next.coins=checked(next.coins+value);
                 foreach(var kind in ResourceInventory.Materials)next.resources[(int)kind]-=amounts[(int)kind];return Commit(next);
-            }catch(OverflowException){LastError="Слишком большая сумма.";return false;}
+            }catch(OverflowException){LastError=L.T("Слишком большая сумма.");return false;}
         }
         public long[] ConstructionQuote(GoalKind kind)
         {
@@ -130,7 +130,7 @@ namespace PickaxeFall
         public bool TryContribute(GoalKind kind)
         {
             var amounts=ConstructionQuote(kind);long total=0;foreach(long amount in amounts)total+=amount;
-            if(total==0){LastError="Нет материалов для строительства.";return false;}
+            if(total==0){LastError=L.T("Нет материалов для строительства.");return false;}
             var next=Profile.Copy();foreach(var material in ResourceInventory.Materials)next.resources[(int)material]-=amounts[(int)material];
             if(kind==GoalKind.Bridge){next.bridgeStone+=(int)amounts[(int)BlockKind.Stone];next.bridgeIron+=(int)amounts[(int)BlockKind.Iron];}
             else next.portalObsidian+=(int)amounts[(int)BlockKind.Obsidian];

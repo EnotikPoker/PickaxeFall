@@ -8,20 +8,20 @@ namespace PickaxeFall
         Label spawnerCount,spawnerTime,spawnerHelp,blockHealthHint;
         VisualElement spawnerTarget,spawnerImage;Button spawnerStart;
         float healthHintUntil;
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_WEBGL) && !UNITY_EDITOR
         readonly System.Collections.Generic.HashSet<int> trialFingers=new();
         int touchFrame=-1;
 #endif
         void CancelSpawnerTouches()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_WEBGL) && !UNITY_EDITOR
             trialFingers.Clear();touchFrame=-1;
 #endif
             spawnerImage?.RemoveFromClassList("spawner-hit");
         }
         void ReadSpawnerTouches()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_WEBGL) && !UNITY_EDITOR
             if(touchFrame==Time.frameCount)return;touchFrame=Time.frameCount;
             for(int index=0;index<Input.touchCount;index++)
             {
@@ -41,20 +41,20 @@ namespace PickaxeFall
         {
             spawnerOverlay=Box(root,"spawner-overlay");spawnerOverlay.name="spawner-overlay";
             var card=Box(spawnerOverlay,"modal-card spawner-card");
-            BoldText(card,"Сломай спавнер","title");
-            spawnerHelp=Text(card,"30 нажатий за 8 секунд. Не успеешь — потеряешь 30% максимальной прочности этой кирки.","spawner-help");
-            spawnerTime=BoldText(card,"8,0 с","spawner-count");spawnerTime.name="spawner-time";
+            BoldText(card,L.T("Сломай спавнер"),"title");
+            spawnerHelp=Text(card,L.T("30 нажатий за 8 секунд. Не успеешь — потеряешь 30% максимальной прочности этой кирки."),"spawner-help");
+            spawnerTime=BoldText(card,L.T("8,0 с"),"spawner-count");spawnerTime.name="spawner-time";
             spawnerTarget=Box(card,"stone-button spawner-target");spawnerTarget.name="spawner-target";
             spawnerImage=Icon(spawnerTarget,PixelArt.Block(BlockKind.Spawner,0),"spawner-image");spawnerImage.pickingMode=PickingMode.Ignore;
             spawnerCracks=Box(spawnerImage,"spawner-cracks");spawnerCracks.pickingMode=PickingMode.Ignore;
 #if !UNITY_ANDROID || UNITY_EDITOR
             reliablePresses.Add(new ReliablePress(spawnerTarget,()=>{
                 if(game.World.TapTrial())game.Audio?.MaterialHit(BlockKind.Stone);
-            },true,value=>spawnerImage.EnableInClassList("spawner-hit",value)));
+            },true,value=>spawnerImage.EnableInClassList("spawner-hit",value),Application.platform==RuntimePlatform.WebGLPlayer));
 #endif
             spawnerCount=BoldText(card,"0 / 30","spawner-count");spawnerCount.name="spawner-count";
-            spawnerStart=Button(card,"НАЧАТЬ",()=>game.World.StartTrial(),"stone-button primary");spawnerStart.name="spawner-start";
-            Button(card,"ПАУЗА",game.TogglePause,"stone-button secondary").name="spawner-pause";
+            spawnerStart=Button(card,L.T("НАЧАТЬ"),()=>game.World.StartTrial(),"stone-button primary");spawnerStart.name="spawner-start";
+            Button(card,L.T("ПАУЗА"),game.TogglePause,"stone-button secondary").name="spawner-pause";
         }
         void TickSpawner()
         {
@@ -63,8 +63,8 @@ namespace PickaxeFall
             if(spawnerOverlay.style.display!=DisplayStyle.None&&!show)CancelUiPresses();
             Display(spawnerOverlay,show);if(!show)return;
             SetText(spawnerCount,state.hits+" / "+SpawnerState.RequiredTaps);
-            SetText(spawnerTime,state.done?(state.won?"ГОТОВО!":"ВРЕМЯ ВЫШЛО"):state.remaining.ToString("0.0")+" с");
-            SetText(spawnerHelp,state.done?(state.won?"Награда в рюкзаке.":"Кирка потеряла 30% максимальной прочности."):"30 нажатий за 8 секунд. Не успеешь — потеряешь 30% максимальной прочности этой кирки.");
+            SetText(spawnerTime,state.done?(state.won?L.T("ГОТОВО!"):L.T("ВРЕМЯ ВЫШЛО")):state.remaining.ToString("0.0")+L.T(" с"));
+            SetText(spawnerHelp,state.done?(state.won?L.T("Награда в рюкзаке."):L.T("Кирка потеряла 30% максимальной прочности.")):L.T("30 нажатий за 8 секунд. Не успеешь — потеряешь 30% максимальной прочности этой кирки."));
             Display(spawnerStart,!state.started&&!state.done);if(spawnerTarget.enabledSelf&&(!state.started||state.done))CancelUiPresses();spawnerTarget.SetEnabled(state.started&&!state.done);
             if(state.started&&!state.done&&!game.SystemSuspended)ReadSpawnerTouches();
             int stage=Mathf.Clamp(Mathf.CeilToInt(state.hits/(float)SpawnerState.RequiredTaps*8),0,8);
@@ -73,7 +73,7 @@ namespace PickaxeFall
         public void ShowBlockHealth(MineBlock block)
         {
             if(blockHealthHint==null){blockHealthHint=BoldText(root,"","block-health-hint");blockHealthHint.name="block-health-hint";blockHealthHint.pickingMode=PickingMode.Ignore;}
-            blockHealthHint.text="Обсидиан · "+Progression.Number(block.Health)+" / "+Progression.Number(block.MaxHealthHalfUnits*.5f);
+            blockHealthHint.text=L.T("Обсидиан · ")+Progression.Number(block.Health)+" / "+Progression.Number(block.MaxHealthHalfUnits*.5f);
             healthHintUntil=Time.unscaledTime+1.4f;Display(blockHealthHint,true);
         }
         void TickBlockHealth(){if(blockHealthHint!=null)Display(blockHealthHint,Time.unscaledTime<healthHintUntil && !game.WorldFrozen && game.Phase==RunPhase.Mining);}
