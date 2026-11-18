@@ -142,39 +142,39 @@ namespace PickaxeFall
         }
         public static string Title(UpgradeKind kind) => kind switch
         {
-            UpgradeKind.Damage => "Острота", UpgradeKind.Durability => "Крепкая рукоять",
-            UpgradeKind.Fortune => "Богатая жила", UpgradeKind.TeamChance => "Отряд шахтёров",
-            UpgradeKind.TeamSize => "Размер отряда", UpgradeKind.TntFind => "Взрывная находка",
-            UpgradeKind.DoubleBench => "Двойной верстак", UpgradeKind.DoubleBlast => "Усиленный TNT",
-            UpgradeKind.Careful => "Бережный удар", UpgradeKind.LastChance => "Последний шанс",
-            UpgradeKind.EnergyCapacity => "Запас энергии", UpgradeKind.EnergyCharge => "Восстановление энергии",
-            UpgradeKind.EnergyEfficiency => "Экономия энергии", UpgradeKind.DashForce => "Сила рывка",
-            UpgradeKind.PlungeDepth => "Глубокий пробой", UpgradeKind.ImpactPower => "Мощный удар", UpgradeKind.Shrapnel => "Осколочный удар",
-            UpgradeKind.Underwater => "Подводник", UpgradeKind.HeatShield => "Термозащита", UpgradeKind.TreasureHunter => "Искатель сокровищ", _ => "Землекоп"
+            UpgradeKind.Damage => L.T("Острота"), UpgradeKind.Durability => L.T("Крепкая рукоять"),
+            UpgradeKind.Fortune => L.T("Богатая жила"), UpgradeKind.TeamChance => L.T("Отряд шахтёров"),
+            UpgradeKind.TeamSize => L.T("Размер отряда"), UpgradeKind.TntFind => L.T("Взрывная находка"),
+            UpgradeKind.DoubleBench => L.T("Двойной верстак"), UpgradeKind.DoubleBlast => L.T("Усиленный TNT"),
+            UpgradeKind.Careful => L.T("Бережный удар"), UpgradeKind.LastChance => L.T("Последний шанс"),
+            UpgradeKind.EnergyCapacity => L.T("Запас энергии"), UpgradeKind.EnergyCharge => L.T("Восстановление энергии"),
+            UpgradeKind.EnergyEfficiency => L.T("Экономия энергии"), UpgradeKind.DashForce => L.T("Сила рывка"),
+            UpgradeKind.PlungeDepth => L.T("Глубокий пробой"), UpgradeKind.ImpactPower => L.T("Мощный удар"), UpgradeKind.Shrapnel => L.T("Осколочный удар"),
+            UpgradeKind.Underwater => L.T("Подводник"), UpgradeKind.HeatShield => L.T("Термозащита"), UpgradeKind.TreasureHunter => L.T("Искатель сокровищ"), _ => L.T("Землекоп")
         };
         public static string Description(UpgradeKind kind, ProgressionBalance config=null) => kind switch
         {
-            UpgradeKind.Damage => "Повышает урон выбранного вида кирки. Точная прибавка показана на карточке.",
-            UpgradeKind.Durability => "Увеличивает прочность выбранного вида кирки. Верстак восстанавливает весь запас.",
-            UpgradeKind.Fortune => "Шанс получить ещё одну единицу руды. Работает и при добыче взрывом.",
-            UpgradeKind.TeamChance => "Шанс начать спуск с отрядом одинаковых кирок. Их количество увеличивает «Размер отряда».",
-            UpgradeKind.TeamSize => "Добавляет кирку в выпавший отряд. Сам шанс отряда не меняется.",
-            UpgradeKind.TntFind => "Добытая прямым ударом руда может вызвать небольшой взрыв. Добыча остаётся в рюкзаке.",
-            UpgradeKind.DoubleBench => "Шанс дополнительно повысить вид кирки на верстаке. Если кирка уже алмазная, пополняет энергию.",
-            UpgradeKind.DoubleBlast => "Шанс взорвать вдвое большую площадь. Урон и добыча работают как у обычного взрыва.",
-            UpgradeKind.Careful => "Шанс не потратить прочность при ударе. От лавы защищает отдельный навык.",
-            UpgradeKind.LastChance => "Последняя кирка может восстановить половину прочности и энергию на пробой. Одна попытка за спуск.",
-            UpgradeKind.EnergyCapacity => "Увеличивает запас энергии. На полной прокачке помещается три применения приёмов.",
-            UpgradeKind.EnergyCharge => "Ускоряет восстановление энергии. На карточке показано время до одного применения.",
-            UpgradeKind.EnergyEfficiency => "Снижает расход энергии на рывок и пробой.",
-            UpgradeKind.DashForce => "Усиливает толчок рывка. Как и раньше, рывок сразу пробивает один блок.",
-            UpgradeKind.PlungeDepth => "Позволяет пробить больше блоков одним нажатием.",
-            UpgradeKind.ImpactPower => "Увеличивает урон сильного столкновения. На мгновенное пробитие приёмов не влияет.",
-            UpgradeKind.Shrapnel => "Сильный удар повреждает один соседний блок. Дополнительная прочность не тратится.",
-            UpgradeKind.Underwater => "Уменьшает штраф урона в воде. На последнем уровне кирка бьёт так же, как на суше. Сопротивление воды остаётся.",
-            UpgradeKind.HeatShield => "Уменьшает потерю прочности в лаве. Полная прокачка снижает её вдвое.",
-            UpgradeKind.EarthDigger => "Шанс добыть ещё один блок земли или песка прямым ударом. Взрывы и осколки бонус не дают.",
-            _ => "Сундук может дать дополнительную порцию ресурсов. Редчайшие находки и гарантированный обсидиан не дублируются. На спавнер не действует."
+            UpgradeKind.Damage => L.T("Повышает урон выбранного вида кирки. Точная прибавка показана на карточке."),
+            UpgradeKind.Durability => L.T("Увеличивает прочность выбранного вида кирки. Верстак восстанавливает весь запас."),
+            UpgradeKind.Fortune => L.T("Шанс получить ещё одну единицу руды. Работает и при добыче взрывом."),
+            UpgradeKind.TeamChance => L.T("Шанс начать спуск с отрядом одинаковых кирок. Их количество увеличивает «Размер отряда»."),
+            UpgradeKind.TeamSize => L.T("Добавляет кирку в выпавший отряд. Сам шанс отряда не меняется."),
+            UpgradeKind.TntFind => L.T("Добытая прямым ударом руда может вызвать небольшой взрыв. Добыча остаётся в рюкзаке."),
+            UpgradeKind.DoubleBench => L.T("Шанс дополнительно повысить вид кирки на верстаке. Если кирка уже алмазная, пополняет энергию."),
+            UpgradeKind.DoubleBlast => L.T("Шанс взорвать вдвое большую площадь. Урон и добыча работают как у обычного взрыва."),
+            UpgradeKind.Careful => L.T("Шанс не потратить прочность при ударе. От лавы защищает отдельный навык."),
+            UpgradeKind.LastChance => L.T("Последняя кирка может восстановить половину прочности и энергию на пробой. Одна попытка за спуск."),
+            UpgradeKind.EnergyCapacity => L.T("Увеличивает запас энергии. На полной прокачке помещается три применения приёмов."),
+            UpgradeKind.EnergyCharge => L.T("Ускоряет восстановление энергии. На карточке показано время до одного применения."),
+            UpgradeKind.EnergyEfficiency => L.T("Снижает расход энергии на рывок и пробой."),
+            UpgradeKind.DashForce => L.T("Усиливает толчок рывка. Как и раньше, рывок сразу пробивает один блок."),
+            UpgradeKind.PlungeDepth => L.T("Позволяет пробить больше блоков одним нажатием."),
+            UpgradeKind.ImpactPower => L.T("Увеличивает урон сильного столкновения. На мгновенное пробитие приёмов не влияет."),
+            UpgradeKind.Shrapnel => L.T("Сильный удар повреждает один соседний блок. Дополнительная прочность не тратится."),
+            UpgradeKind.Underwater => L.T("Уменьшает штраф урона в воде. На последнем уровне кирка бьёт так же, как на суше. Сопротивление воды остаётся."),
+            UpgradeKind.HeatShield => L.T("Уменьшает потерю прочности в лаве. Полная прокачка снижает её вдвое."),
+            UpgradeKind.EarthDigger => L.T("Шанс добыть ещё один блок земли или песка прямым ударом. Взрывы и осколки бонус не дают."),
+            _ => L.T("Сундук может дать дополнительную порцию ресурсов. Редчайшие находки и гарантированный обсидиан не дублируются. На спавнер не действует.")
         };
 
         public static UpgradeCost Cost(UpgradeKey key, int nextLevel, ProgressionBalance config=null)

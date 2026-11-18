@@ -5,7 +5,7 @@ namespace PickaxeFall
     public enum MapId { Mine, Desert, Nether }
     public static class WorldCatalog
     {
-        public static string Name(MapId map)=>map==MapId.Desert?"Пустыня":map==MapId.Nether?"Ад":"Бездонная шахта";
+        public static string Name(MapId map)=>map==MapId.Desert?L.T("Пустыня"):map==MapId.Nether?L.T("Ад"):L.T("Бездонная шахта");
         public static bool Open(PlayerProfile p,MapId map)=>map==MapId.Mine || map==MapId.Desert && ProfileRules.Complete(p,GoalKind.Bridge) || map==MapId.Nether && ProfileRules.Complete(p,GoalKind.Portal);
         public static int Deep(MapId map)=>map==MapId.Desert?90:map==MapId.Nether?110:75;
         public static BlockKind Terrain(MapId map,int row,int surface=0)=>map==MapId.Desert?(row<surface+5?BlockKind.Sand:row<90?BlockKind.Sandstone:BlockKind.DarkQuartzite):map==MapId.Nether?(row<35?BlockKind.Netherrack:row<110?BlockKind.Basalt:BlockKind.Blackstone):(row<surface+3?BlockKind.Dirt:row<75?BlockKind.Stone:BlockKind.Deepstone);
@@ -24,7 +24,7 @@ namespace PickaxeFall
             BlockKind.Netherrack=>8,BlockKind.Basalt=>16,BlockKind.Blackstone=>24,BlockKind.Quartz=>12,BlockKind.Sulfur=>13,BlockKind.Cinnabar=>22,BlockKind.FireOpal=>30,BlockKind.AncientDebris=>65,BlockKind.SoulCrystal=>80,
             BlockKind.Copper=>14,BlockKind.Gold=>24,BlockKind.Amethyst=>20,BlockKind.NetherBrick=>16,BlockKind.Timber=>2,_=>1};
         public static long Price(BlockKind k)=>k switch{BlockKind.Sand=>2,BlockKind.Sandstone=>4,BlockKind.DarkQuartzite=>6,BlockKind.Malachite=>24,BlockKind.Turquoise=>40,BlockKind.Garnet=>160,BlockKind.SmokyQuartz=>110,BlockKind.Netherrack=>4,BlockKind.Basalt=>7,BlockKind.Blackstone=>10,BlockKind.Quartz=>24,BlockKind.Sulfur=>20,BlockKind.Cinnabar=>80,BlockKind.FireOpal=>180,BlockKind.AncientDebris=>400,BlockKind.SoulCrystal=>800,_=>0};
-        public static string FoundIn(BlockKind k)=>k>=BlockKind.Netherrack&&k<=BlockKind.SoulCrystal?"Ад":k>=BlockKind.Sand&&k<=BlockKind.SmokyQuartz?"Пустыня":"Шахта";
+        public static string FoundIn(BlockKind k)=>k>=BlockKind.Netherrack&&k<=BlockKind.SoulCrystal?L.T("Ад"):k>=BlockKind.Sand&&k<=BlockKind.SmokyQuartz?L.T("Пустыня"):L.T("Шахта");
         public static void AddRecipe(UpgradeCost cost,UpgradeKey key,int level)
         {
             int max=Progression.MaxLevel(key.Kind);float p=level/(float)max;

@@ -15,7 +15,7 @@ namespace PickaxeFall
             if(IsSimulation)return;
             restoredBalance=Instantiate(originalBalance);balance=restoredBalance;balance.map=Economy.Profile.selectedMap;World.SetBalance(balance);
         }
-        public void TrialEvent(bool failed){if(failed)Benefits.FailedTrials++;Audio?.Play(failed?"error":"trial");hud?.Toast(failed?"СПАВНЕР СЛОМАН · −30% МАКС. ПРОЧНОСТИ":"СПАВНЕР · 30 НАЖАТИЙ ЗА 8 СЕКУНД");}
+        public void TrialEvent(bool failed){if(failed)Benefits.FailedTrials++;Audio?.Play(failed?"error":"trial");hud?.Toast(failed?L.T("СПАВНЕР СЛОМАН · −30% МАКС. ПРОЧНОСТИ"):L.T("СПАВНЕР · 30 НАЖАТИЙ ЗА 8 СЕКУНД"));}
         internal void ReportHardBlock(MineBlock block)=>hud?.ShowBlockHealth(block);
         public void AwardTrial(int x,int row,FallingPickaxe source)=>AwardTreasure(x,row,source,true);
         void AwardTreasure(int x,int row,FallingPickaxe source,bool trial=false)
@@ -25,11 +25,11 @@ namespace PickaxeFall
             bool extra=!trial && RollEffect(UpgradeKind.TreasureHunter);if(extra)Benefits.TreasureBonuses++;
             var loot=ChestLoot.Roll(balance,Seed,x,row,trial,temple,extra);
             foreach(var item in loot)GiveResource(item.kind,item.count,source,new Vector2(x,-row-.5f),false);
-            Audio?.Play(trial?"reward":"chest");hud?.ShowTreasure(loot,trial?"ИСПЫТАНИЕ ПРОЙДЕНО":"СУНДУК ОТКРЫТ");
+            Audio?.Play(trial?"reward":"chest");hud?.ShowTreasure(loot,trial?L.T("ИСПЫТАНИЕ ПРОЙДЕНО"):L.T("СУНДУК ОТКРЫТ"));
         }
     }
     public sealed partial class EconomyService
     {
-        public bool TrySelectMap(MapId map){if(!System.Enum.IsDefined(typeof(MapId),map)||!WorldCatalog.Open(Profile,map)){LastError="Сначала построй маршрут.";return false;}var p=Profile.Copy();p.selectedMap=map;return Commit(p);}
+        public bool TrySelectMap(MapId map){if(!System.Enum.IsDefined(typeof(MapId),map)||!WorldCatalog.Open(Profile,map)){LastError=L.T("Сначала построй маршрут.");return false;}var p=Profile.Copy();p.selectedMap=map;return Commit(p);}
     }
 }

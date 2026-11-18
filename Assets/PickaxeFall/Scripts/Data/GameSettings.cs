@@ -8,6 +8,7 @@ namespace PickaxeFall
         const string Prefix="settings.v1.";
         readonly bool temporary, applyRuntime;
         bool dirty;
+        public string Language {get;private set;}="ru";
         public float Volume { get; private set; }=.8f;
         public float MusicVolume {get;private set;}=.25f;
         public float EffectsVolume {get;private set;}=.8f;
@@ -35,10 +36,11 @@ namespace PickaxeFall
                 int reserve=PlayerPrefs.GetInt(Prefix+"reserveSteps",3);ReserveSteps=reserve is 0 or 1 or 3 or 5?reserve:3;
                 TutorialHints=PlayerPrefs.GetInt(Prefix+"tutorialHints",TutorialSeen?int.MaxValue:0);
             }
-            Apply();
+            Language=temporary?"ru":PlayerPrefs.GetString(Prefix+"language",L.Language);L.SetLanguage(Language);Language=L.Language;Apply();
         }
         void Apply(){if(applyRuntime){AudioListener.volume=Volume;QualitySettings.vSyncCount=0;Application.targetFrameRate=EffectiveFrameRate;}}
         static float BrightnessValue(float value)=>float.IsNaN(value)||float.IsInfinity(value)?1:Mathf.Clamp(value,1,1.3f);
+        public void SetLanguage(string value){Language=value=="ru"?"ru":"en";L.SetLanguage(Language);dirty=true;}
         public void SetMineBrightness(float value){MineBrightness=BrightnessValue(value);dirty=true;}
         public void SetVolume(float value){Volume=Mathf.Clamp01(value);dirty=true;Apply();}
         public void SetMusicVolume(float value){MusicVolume=Mathf.Clamp01(value);dirty=true;}
@@ -53,7 +55,7 @@ namespace PickaxeFall
         public void Save()
         {
             if(!dirty || temporary)return;
-            PlayerPrefs.SetFloat(Prefix+"mineBrightness",MineBrightness);PlayerPrefs.SetFloat(Prefix+"music",MusicVolume);PlayerPrefs.SetFloat(Prefix+"sfx",EffectsVolume);PlayerPrefs.SetFloat(Prefix+"volume",Volume);PlayerPrefs.SetInt("soundMuted",Volume<.001f?1:0);
+            PlayerPrefs.SetString(Prefix+"language",Language);PlayerPrefs.SetFloat(Prefix+"mineBrightness",MineBrightness);PlayerPrefs.SetFloat(Prefix+"music",MusicVolume);PlayerPrefs.SetFloat(Prefix+"sfx",EffectsVolume);PlayerPrefs.SetFloat(Prefix+"volume",Volume);PlayerPrefs.SetInt("soundMuted",Volume<.001f?1:0);
             PlayerPrefs.SetInt(Prefix+"fps",FrameRate);PlayerPrefs.SetInt(Prefix+"effects",ReducedEffects?1:0);
             PlayerPrefs.SetInt(Prefix+"lootPopups",LootMessages?1:0);PlayerPrefs.SetInt(Prefix+"tutorialSeen",TutorialSeen?1:0);
             PlayerPrefs.SetInt(Prefix+"reserveSteps",ReserveSteps);PlayerPrefs.SetInt(Prefix+"tutorialHints",TutorialHints);

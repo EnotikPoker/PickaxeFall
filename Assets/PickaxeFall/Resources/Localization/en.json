@@ -1,0 +1,1936 @@
+{
+  "entries": [
+    {
+      "ru": "\nВыручка: ",
+      "en": "\nProceeds: "
+    },
+    {
+      "ru": "\nЗапас: ",
+      "en": "\nReserve: "
+    },
+    {
+      "ru": "\nКамень ",
+      "en": "\nStone "
+    },
+    {
+      "ru": "\nНа покупки: ",
+      "en": "\nPurchases: "
+    },
+    {
+      "ru": " · Алмаз ",
+      "en": " · Diamond "
+    },
+    {
+      "ru": " · Железо ",
+      "en": " · Iron "
+    },
+    {
+      "ru": " · МАКС.",
+      "en": " · MAX"
+    },
+    {
+      "ru": " · Медь ",
+      "en": " · Copper "
+    },
+    {
+      "ru": " · ПОЛНЫЙ РЕМОНТ",
+      "en": " · FULL REPAIR"
+    },
+    {
+      "ru": " · запас на ур. ",
+      "en": " · reserve for level "
+    },
+    {
+      "ru": " · любой тип",
+      "en": " · any type"
+    },
+    {
+      "ru": " · ур. ",
+      "en": " · lv. "
+    },
+    {
+      "ru": " И ПОВЫШЕНИЕ",
+      "en": " AND UPGRADE"
+    },
+    {
+      "ru": " М",
+      "en": " M"
+    },
+    {
+      "ru": " МОН.",
+      "en": " COINS"
+    },
+    {
+      "ru": " РАССЫПАЛАСЬ",
+      "en": " SHATTERED"
+    },
+    {
+      "ru": " УР.",
+      "en": " LV."
+    },
+    {
+      "ru": " блоков",
+      "en": " blocks"
+    },
+    {
+      "ru": " за ",
+      "en": " for "
+    },
+    {
+      "ru": " кирки",
+      "en": " pickaxes"
+    },
+    {
+      "ru": " м",
+      "en": " m"
+    },
+    {
+      "ru": " м · ",
+      "en": " m · "
+    },
+    {
+      "ru": " м/с",
+      "en": " m/s"
+    },
+    {
+      "ru": " млн",
+      "en": " M"
+    },
+    {
+      "ru": " млрд",
+      "en": " B"
+    },
+    {
+      "ru": " мон.",
+      "en": " coins"
+    },
+    {
+      "ru": " мон. за шт.",
+      "en": " coins each"
+    },
+    {
+      "ru": " монет",
+      "en": " coins"
+    },
+    {
+      "ru": " монет?",
+      "en": " coins?"
+    },
+    {
+      "ru": " примен.",
+      "en": " uses"
+    },
+    {
+      "ru": " прочности",
+      "en": " durability"
+    },
+    {
+      "ru": " с",
+      "en": " s"
+    },
+    {
+      "ru": " с/примен.",
+      "en": " s/use"
+    },
+    {
+      "ru": " сейчас → после +урона:",
+      "en": " now → after damage upgrade:"
+    },
+    {
+      "ru": " соседу",
+      "en": " to neighbour"
+    },
+    {
+      "ru": " ступ.",
+      "en": " levels"
+    },
+    {
+      "ru": " тыс",
+      "en": " K"
+    },
+    {
+      "ru": " урона",
+      "en": " damage"
+    },
+    {
+      "ru": " урона сильного удара",
+      "en": " strong-hit damage"
+    },
+    {
+      "ru": "% износа в лаве",
+      "en": "% lava wear"
+    },
+    {
+      "ru": "% расхода",
+      "en": "% cost"
+    },
+    {
+      "ru": "% урона в воде",
+      "en": "% damage in water"
+    },
+    {
+      "ru": "({0:0.00}, {1:0.00}) · скорость {2:0.00} · урон {3:0.0}",
+      "en": "({0:0.00}, {1:0.00}) · speed {2:0.00} · damage {3:0.0}"
+    },
+    {
+      "ru": "/с",
+      "en": "/s"
+    },
+    {
+      "ru": "0 м",
+      "en": "0 m"
+    },
+    {
+      "ru": "30 нажатий за 8 секунд. Не успеешь — потеряешь 30% максимальной прочности этой кирки.",
+      "en": "30 taps in 8 seconds. Fail and this pickaxe loses 30% of its maximum durability."
+    },
+    {
+      "ru": "8,0 с",
+      "en": "8.0 s"
+    },
+    {
+      "ru": "English",
+      "en": "English"
+    },
+    {
+      "ru": "PickaxeFall · Версия ",
+      "en": "PickaxeFall · Version "
+    },
+    {
+      "ru": "«Землекоп» даёт больше земли и песка. «Подводник» уменьшает штраф воды, «Термозащита» — износ в лаве. «Искатель сокровищ» добавляет добычу из сундуков.",
+      "en": "Digger gives extra dirt and sand. Diver reduces the water penalty; Heat Shield reduces lava wear. Treasure Hunter adds chest loot."
+    },
+    {
+      "ru": "» уровня ",
+      "en": "” at level "
+    },
+    {
+      "ru": "АВТОРЫ ЗВУКА И МУЗЫКИ",
+      "en": "SOUND & MUSIC CREDITS"
+    },
+    {
+      "ru": "Ад",
+      "en": "Nether"
+    },
+    {
+      "ru": "Алмаз",
+      "en": "Diamond"
+    },
+    {
+      "ru": "Алмазная",
+      "en": "Diamond"
+    },
+    {
+      "ru": "БЕЗ ПОДСКАЗОК",
+      "en": "SKIP HINTS"
+    },
+    {
+      "ru": "БЕЗДОННАЯ ШАХТА",
+      "en": "ENDLESS MINE"
+    },
+    {
+      "ru": "Базальт",
+      "en": "Basalt"
+    },
+    {
+      "ru": "Бездонная шахта",
+      "en": "Endless Mine"
+    },
+    {
+      "ru": "Бережный удар",
+      "en": "Careful Strike"
+    },
+    {
+      "ru": "Бирюза",
+      "en": "Turquoise"
+    },
+    {
+      "ru": "Богатая жила",
+      "en": "Rich Vein"
+    },
+    {
+      "ru": "Более сильный направленный рывок.",
+      "en": "A stronger directional dash."
+    },
+    {
+      "ru": "Больше кирок при выпадении отряда.",
+      "en": "More pickaxes when a squad appears."
+    },
+    {
+      "ru": "Больше прочности выбранной кирке.",
+      "en": "More durability for this pickaxe type."
+    },
+    {
+      "ru": "Больше урона выбранной кирке.",
+      "en": "More damage for this pickaxe type."
+    },
+    {
+      "ru": "Больше урона при сильном столкновении.",
+      "en": "More damage on strong impacts."
+    },
+    {
+      "ru": "Большой запас: продавай ресурсы частями.",
+      "en": "Large stock: sell resources in smaller amounts."
+    },
+    {
+      "ru": "Будут проданы материалы цели: ",
+      "en": "This will sell resources reserved for your goal: "
+    },
+    {
+      "ru": "Будут удалены монеты, ресурсы, все улучшения и рекорд глубины. Текущий забег завершится. Настройки останутся. Отменить сброс нельзя.\n\nДля подтверждения введи СБРОС:",
+      "en": "Coins, resources, upgrades and depth records will be deleted. Your current run will end. Settings will stay. This cannot be undone.\n\nType RESET to confirm:"
+    },
+    {
+      "ru": "Булыжник",
+      "en": "Cobblestone"
+    },
+    {
+      "ru": "В облаке",
+      "en": "Cloud save"
+    },
+    {
+      "ru": "В разделе «Карты» внеси материалы в мост или портал. Можно строить частями. Готовая локация остаётся открытой навсегда.",
+      "en": "Open Maps and contribute materials to the bridge or portal. You can build in parts. An unlocked location stays open."
+    },
+    {
+      "ru": "В рюкзаке: {0}\nЦена: {1} монет за шт.",
+      "en": "In backpack: {0}\nPrice: {1} coins each"
+    },
+    {
+      "ru": "В сохранённом спуске нет выбранной живой кирки.",
+      "en": "The saved run has no selected living pickaxe."
+    },
+    {
+      "ru": "В этой версии прогресс всех игроков начинается заново: появились уровни профиля, новые условия открытия навыков и строительство карт. Старое сохранение оставлено в резервной копии. Настройки сохранены.",
+      "en": "This version starts a new progression season with profile levels, skill requirements and map construction. Your old save was backed up. Settings are kept."
+    },
+    {
+      "ru": "ВЕРНУТЬСЯ В ШАХТУ",
+      "en": "RETURN TO MINE"
+    },
+    {
+      "ru": "ВЕРСТАК",
+      "en": "WORKBENCH"
+    },
+    {
+      "ru": "ВКЛ",
+      "en": "ON"
+    },
+    {
+      "ru": "ВНЕСТИ МАТЕРИАЛЫ",
+      "en": "ADD MATERIALS"
+    },
+    {
+      "ru": "ВРАЩАЕТСЯ…",
+      "en": "SPINNING…"
+    },
+    {
+      "ru": "ВРЕМЯ ВЫШЛО",
+      "en": "TIME UP"
+    },
+    {
+      "ru": "ВСЁ РАВНО ПРОДАТЬ",
+      "en": "SELL ANYWAY"
+    },
+    {
+      "ru": "ВЫБЕРИ ЦЕЛЬ ДЛЯ ПРОДАЖИ",
+      "en": "CHOOSE A SAVING GOAL"
+    },
+    {
+      "ru": "ВЫБРАТЬ · ",
+      "en": "SELECT · "
+    },
+    {
+      "ru": "ВЫКЛ",
+      "en": "OFF"
+    },
+    {
+      "ru": "Вагонетка с сундуком",
+      "en": "Chest Minecart"
+    },
+    {
+      "ru": "Вероятности каждого типа указаны под кирками.",
+      "en": "Each pickaxe's chance is shown below it."
+    },
+    {
+      "ru": "Верстак",
+      "en": "Workbench"
+    },
+    {
+      "ru": "Верстаки",
+      "en": "Workbenches"
+    },
+    {
+      "ru": "Ветвь ещё недоступна или уже открыта.",
+      "en": "This branch is locked or already unlocked."
+    },
+    {
+      "ru": "Взрывная находка",
+      "en": "Explosive Find"
+    },
+    {
+      "ru": "Внести материалы?",
+      "en": "Add materials?"
+    },
+    {
+      "ru": "Вода",
+      "en": "Water"
+    },
+    {
+      "ru": "Вода замедляет кирку и снижает её урон. Лава тоже замедляет, но ещё тратит прочность — даже при касании кончиком. Встреча воды и лавы даёт обсидиан.",
+      "en": "Water slows pickaxes and reduces damage. Lava also slows them and drains durability, even on a tip contact. Water touching lava creates obsidian."
+    },
+    {
+      "ru": "Вода и лава",
+      "en": "Water and lava"
+    },
+    {
+      "ru": "Войти в Яндекс",
+      "en": "Sign in to Yandex"
+    },
+    {
+      "ru": "Восстанавливай энергию быстрее.",
+      "en": "Recover energy faster."
+    },
+    {
+      "ru": "Восстановление энергии",
+      "en": "Energy Recovery"
+    },
+    {
+      "ru": "Все ветви доступны",
+      "en": "All branches available"
+    },
+    {
+      "ru": "Всё добытое — твоё",
+      "en": "Keep everything you mine"
+    },
+    {
+      "ru": "Вход сохраняет прогресс между устройствами. Текущий спуск остаётся в этом браузере.",
+      "en": "Sign in to carry progress across devices. Your current run stays in this browser."
+    },
+    {
+      "ru": "Выбери карту перед спуском. Улучшения кирок действуют во всех локациях.",
+      "en": "Choose a map before a run. Pickaxe upgrades work in every location."
+    },
+    {
+      "ru": "Выбери сохранение",
+      "en": "Choose a save"
+    },
+    {
+      "ru": "Выбираем кирку",
+      "en": "Choosing a pickaxe"
+    },
+    {
+      "ru": "Высокая опасность лавы",
+      "en": "High lava danger"
+    },
+    {
+      "ru": "Выше частота — плавнее движение и больше расход батареи. «По экрану» использует текущую частоту дисплея.",
+      "en": "Higher frame rates give smoother motion and use more battery. Display mode follows your screen's current refresh rate."
+    },
+    {
+      "ru": "ГЛУБИНА",
+      "en": "DEPTH"
+    },
+    {
+      "ru": "ГОТОВНОСТЬ",
+      "en": "PROGRESS"
+    },
+    {
+      "ru": "ГОТОВО",
+      "en": "DONE"
+    },
+    {
+      "ru": "ГОТОВО!",
+      "en": "DONE!"
+    },
+    {
+      "ru": "Глубинный сланец",
+      "en": "Deepslate"
+    },
+    {
+      "ru": "Глубокий пробой",
+      "en": "Deep Plunge"
+    },
+    {
+      "ru": "Готов к спуску?",
+      "en": "Ready to descend?"
+    },
+    {
+      "ru": "Гранат",
+      "en": "Garnet"
+    },
+    {
+      "ru": "Громкость: ",
+      "en": "Volume: "
+    },
+    {
+      "ru": "ДАЛЕЕ",
+      "en": "NEXT"
+    },
+    {
+      "ru": "ДОБЫЧА",
+      "en": "LOOT"
+    },
+    {
+      "ru": "ДОБЫЧА ЗА ВСЁ ВРЕМЯ",
+      "en": "LIFETIME MINING"
+    },
+    {
+      "ru": "ДОЖДИСЬ ОКОНЧАНИЯ ПРОБИТИЯ",
+      "en": "WAIT FOR THE CURRENT ABILITY"
+    },
+    {
+      "ru": "ДОСТУПЕН УРОВЕНЬ ПРОФИЛЯ ",
+      "en": "PROFILE LEVEL AVAILABLE: "
+    },
+    {
+      "ru": "ДОСТУПНА",
+      "en": "AVAILABLE"
+    },
+    {
+      "ru": "Двойной верстак",
+      "en": "Double Workbench"
+    },
+    {
+      "ru": "Дерево",
+      "en": "Wood"
+    },
+    {
+      "ru": "Деревянная",
+      "en": "Wooden"
+    },
+    {
+      "ru": "Динамит",
+      "en": "TNT"
+    },
+    {
+      "ru": "Для нового уровня нужны монеты, добытые за всё время блоки и указанные навыки. Счётчик добычи не расходуется.",
+      "en": "A new level requires coins, lifetime mining totals and the listed skills. Mining totals are never spent."
+    },
+    {
+      "ru": "Добавляет кирку в выпавший отряд. Сам шанс отряда не меняется.",
+      "en": "Adds a pickaxe to a lucky squad. Does not change squad chance."
+    },
+    {
+      "ru": "Добытая прямым ударом руда может вызвать небольшой взрыв. Добыча остаётся в рюкзаке.",
+      "en": "Ore mined by a direct hit may trigger a small explosion. You keep the loot."
+    },
+    {
+      "ru": "Добытая руда может вызвать взрыв.",
+      "en": "Mined ore may trigger an explosion."
+    },
+    {
+      "ru": "Добыча в рюкзаке. Продай лишнее и усиль кирки.",
+      "en": "Your loot is in the backpack. Sell spare resources and upgrade your pickaxes."
+    },
+    {
+      "ru": "Добыча и улучшения сохраняются.",
+      "en": "Loot and upgrades are saved."
+    },
+    {
+      "ru": "Древние обломки",
+      "en": "Ancient Debris"
+    },
+    {
+      "ru": "Другие локации",
+      "en": "Other locations"
+    },
+    {
+      "ru": "Дымчатый кварц",
+      "en": "Smoky Quartz"
+    },
+    {
+      "ru": "ЕЩЁ ОДИН ЗАБЕГ",
+      "en": "ANOTHER RUN"
+    },
+    {
+      "ru": "Железная",
+      "en": "Iron"
+    },
+    {
+      "ru": "Железо",
+      "en": "Iron"
+    },
+    {
+      "ru": "ЗАКРЫТЬ",
+      "en": "CLOSE"
+    },
+    {
+      "ru": "Заверши выбор текущей кирки перед сменой карты",
+      "en": "Finish choosing your pickaxe before changing maps"
+    },
+    {
+      "ru": "Замшелый булыжник",
+      "en": "Mossy Cobblestone"
+    },
+    {
+      "ru": "Запас на улучшения",
+      "en": "Saving for upgrades"
+    },
+    {
+      "ru": "Запас энергии",
+      "en": "Energy Reserve"
+    },
+    {
+      "ru": "Звук и музыка",
+      "en": "Sound and music"
+    },
+    {
+      "ru": "Звуковые эффекты: Kenney и artisticdude · CC0.\nИнтерфейс: PickaxeFall · CC0.\n\nМузыка: Kevin MacLeod (incompetech.com)\nDreams Become Real\nEastern Thought\nOssuary 5 — Rest\n\nCreative Commons Attribution 4.0. Громкость и переходы адаптированы для игры.",
+      "en": "Sound effects: Kenney and artisticdude · CC0.\nInterface sounds: PickaxeFall · CC0.\n\nMusic: Kevin MacLeod (incompetech.com)\nDreams Become Real\nEastern Thought\nOssuary 5 — Rest\n\nCreative Commons Attribution 4.0. Volume and transitions adapted for this game.\nhttps://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "ru": "Землекоп",
+      "en": "Digger"
+    },
+    {
+      "ru": "Земля",
+      "en": "Dirt"
+    },
+    {
+      "ru": "Золотая",
+      "en": "Golden"
+    },
+    {
+      "ru": "Золото",
+      "en": "Gold"
+    },
+    {
+      "ru": "ИГРАТЬ",
+      "en": "PLAY"
+    },
+    {
+      "ru": "ИСПЫТАНИЕ ПРОЙДЕНО",
+      "en": "TRIAL COMPLETE"
+    },
+    {
+      "ru": "Игра сохраняет прогресс сама. Незавершённый спуск после запуска ждёт на паузе. Повторить обучение и изменить эффекты можно в настройках.",
+      "en": "Progress saves automatically. An unfinished run returns paused. Replay the tutorial or change effects in Settings."
+    },
+    {
+      "ru": "Играть гостем",
+      "en": "Play as guest"
+    },
+    {
+      "ru": "Изумруд",
+      "en": "Emerald"
+    },
+    {
+      "ru": "Импульс в выбранную сторону.",
+      "en": "A push in the chosen direction."
+    },
+    {
+      "ru": "Искатель сокровищ",
+      "en": "Treasure Hunter"
+    },
+    {
+      "ru": "КАРТЫ",
+      "en": "MAPS"
+    },
+    {
+      "ru": "КИРКА №",
+      "en": "PICKAXE #"
+    },
+    {
+      "ru": "КИРКИ",
+      "en": "PICKAXES"
+    },
+    {
+      "ru": "КРУТИТЬ РУЛЕТКУ",
+      "en": "SPIN THE WHEEL"
+    },
+    {
+      "ru": "Каждый спуск — новая шахта.",
+      "en": "A new mine every run."
+    },
+    {
+      "ru": "Каждый спуск — новая шахта. Добычу можно продать в рюкзаке.",
+      "en": "A new mine every run. Sell your loot in the backpack."
+    },
+    {
+      "ru": "Каменная",
+      "en": "Stone"
+    },
+    {
+      "ru": "Камень",
+      "en": "Stone"
+    },
+    {
+      "ru": "Кварц",
+      "en": "Quartz"
+    },
+    {
+      "ru": "Киноварь",
+      "en": "Cinnabar"
+    },
+    {
+      "ru": "Кирка выбирается рулеткой",
+      "en": "The wheel chooses your pickaxe"
+    },
+    {
+      "ru": "Кирка готова к спуску.",
+      "en": "Pickaxe ready to drop."
+    },
+    {
+      "ru": "Кирка падает и разбивает блоки. Удары тратят прочность. Когда сломается последняя кирка, добыча останется в рюкзаке.",
+      "en": "Your pickaxe falls and breaks blocks. Hits use durability. When the last pickaxe breaks, your loot stays in the backpack."
+    },
+    {
+      "ru": "Кирка потеряла 30% максимальной прочности.",
+      "en": "This pickaxe lost 30% of its maximum durability."
+    },
+    {
+      "ru": "Кирпичи крепости",
+      "en": "Fortress Bricks"
+    },
+    {
+      "ru": "Коснись спавнера киркой: спуск остановится. Сделай 30 нажатий за 8 секунд и получи награду. Не успеешь — кирка потеряет 30% максимальной прочности. Пауза сохраняет время и нажатия.",
+      "en": "Hit a spawner to pause the mine. Tap it 30 times in 8 seconds to earn a reward. Fail and your pickaxe loses 30% of its maximum durability. Pausing preserves time and taps."
+    },
+    {
+      "ru": "Красная пыль",
+      "en": "Redstone"
+    },
+    {
+      "ru": "Крепкая рукоять",
+      "en": "Sturdy Handle"
+    },
+    {
+      "ru": "Кристалл душ",
+      "en": "Soul Crystal"
+    },
+    {
+      "ru": "Кристаллы аметиста",
+      "en": "Amethyst Crystals"
+    },
+    {
+      "ru": "Крути рулетку, добывай и улучшай снаряжение.",
+      "en": "Spin, mine and upgrade your gear."
+    },
+    {
+      "ru": "Крути рулетку. Шанс каждой кирки указан под её значком. После выбора нажми «Начать спуск».",
+      "en": "Spin the wheel. Each pickaxe's chance is shown below its icon. Once chosen, press Start Descent."
+    },
+    {
+      "ru": "ЛЕГЕНДАРНАЯ",
+      "en": "LEGENDARY"
+    },
+    {
+      "ru": "ЛИЦЕНЗИЯ CC BY 4.0",
+      "en": "CC BY 4.0 LICENSE"
+    },
+    {
+      "ru": "ЛИШНЕЕ ПРОДАНО",
+      "en": "SPARE RESOURCES SOLD"
+    },
+    {
+      "ru": "ЛИШНИХ РЕСУРСОВ НЕТ",
+      "en": "NO SPARE RESOURCES"
+    },
+    {
+      "ru": "Лава",
+      "en": "Lava"
+    },
+    {
+      "ru": "Лава, крепости и редчайшие минералы.",
+      "en": "Lava, fortresses and the rarest minerals."
+    },
+    {
+      "ru": "Лазурит",
+      "en": "Lapis Lazuli"
+    },
+    {
+      "ru": "Лишних ресурсов пока нет.",
+      "en": "No spare resources to sell yet."
+    },
+    {
+      "ru": "Любой верстак полностью чинит кирку. Улучшающий верстак ещё и повышает её вид. Купленные улучшения получившегося вида сохраняются.",
+      "en": "Every workbench fully repairs your pickaxe. An upgrade workbench also raises its type. Purchased upgrades for the new type still apply."
+    },
+    {
+      "ru": "МАГАЗИН",
+      "en": "SHOP"
+    },
+    {
+      "ru": "МАКС.",
+      "en": "MAX"
+    },
+    {
+      "ru": "МЕНЬШЕ ЧАСТИЦ: ",
+      "en": "FEWER PARTICLES: "
+    },
+    {
+      "ru": "МОНЕТЫ",
+      "en": "COINS"
+    },
+    {
+      "ru": "МОСТ ПОСТРОЕН",
+      "en": "BRIDGE BUILT"
+    },
+    {
+      "ru": "Максимальный уровень",
+      "en": "Maximum level"
+    },
+    {
+      "ru": "Максимальный уровень профиля",
+      "en": "Maximum profile level"
+    },
+    {
+      "ru": "Максимальный уровень профиля. Продолжай улучшать навыки и готовить новые маршруты.",
+      "en": "Maximum profile level. Keep upgrading skills and opening new routes."
+    },
+    {
+      "ru": "Малахит",
+      "en": "Malachite"
+    },
+    {
+      "ru": "Маршруты",
+      "en": "Routes"
+    },
+    {
+      "ru": "Материалы будут вложены в ",
+      "en": "Materials will be added to the "
+    },
+    {
+      "ru": "Материалы не расходуются.",
+      "en": "Materials are not consumed."
+    },
+    {
+      "ru": "Медь",
+      "en": "Copper"
+    },
+    {
+      "ru": "Меньше износ в лаве.",
+      "en": "Less wear in lava."
+    },
+    {
+      "ru": "Меньше штраф урона в воде.",
+      "en": "Less damage penalty in water."
+    },
+    {
+      "ru": "Меньше энергии на каждый приём.",
+      "en": "Less energy per ability."
+    },
+    {
+      "ru": "Можно вносить частями.",
+      "en": "You can contribute in parts."
+    },
+    {
+      "ru": "Мост в пустыню",
+      "en": "Bridge to the Desert"
+    },
+    {
+      "ru": "Мощный удар",
+      "en": "Power Strike"
+    },
+    {
+      "ru": "Музыка",
+      "en": "Music"
+    },
+    {
+      "ru": "НАЖМИ, ЧТОБЫ ОТКРЫТЬ",
+      "en": "TAP TO UNLOCK"
+    },
+    {
+      "ru": "НАЗАД",
+      "en": "BACK"
+    },
+    {
+      "ru": "НАЗАД К ПРОФИЛЮ",
+      "en": "BACK TO PROFILE"
+    },
+    {
+      "ru": "НАСТРОЙКИ",
+      "en": "SETTINGS"
+    },
+    {
+      "ru": "НАСТРОЙКИ ПО УМОЛЧАНИЮ",
+      "en": "DEFAULT SETTINGS"
+    },
+    {
+      "ru": "НАЧАТЬ",
+      "en": "START"
+    },
+    {
+      "ru": "НАЧАТЬ НОВОЕ ПРИКЛЮЧЕНИЕ",
+      "en": "START A NEW ADVENTURE"
+    },
+    {
+      "ru": "НАЧАТЬ СПУСК ↓",
+      "en": "START DESCENT ↓"
+    },
+    {
+      "ru": "НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС",
+      "en": "COULD NOT SAVE PROGRESS"
+    },
+    {
+      "ru": "НЕОБЫЧНАЯ",
+      "en": "UNCOMMON"
+    },
+    {
+      "ru": "НОВЫЙ РЕКОРД · ",
+      "en": "NEW RECORD · "
+    },
+    {
+      "ru": "НУЖНО БОЛЬШЕ ЭНЕРГИИ",
+      "en": "NOT ENOUGH ENERGY"
+    },
+    {
+      "ru": "На устройстве",
+      "en": "On this device"
+    },
+    {
+      "ru": "Навыки для локаций",
+      "en": "Location skills"
+    },
+    {
+      "ru": "Награда в рюкзаке.",
+      "en": "Reward added to your backpack."
+    },
+    {
+      "ru": "Награда получена",
+      "en": "Reward received"
+    },
+    {
+      "ru": "Нажатие направляет выбранную кирку вниз и мгновенно пробивает блок. Отдельная прокачка увеличивает глубину.",
+      "en": "Tap to drive the selected pickaxe down and break a block instantly. A separate upgrade increases plunge depth."
+    },
+    {
+      "ru": "Нажатие: ",
+      "en": "Tap: "
+    },
+    {
+      "ru": "Нажми на замок, чтобы открыть ветвь бесплатно",
+      "en": "Tap the lock to open this branch for free"
+    },
+    {
+      "ru": "Нажми на карточку навыка: красная кнопка отметит цель. «Продать лишнее» сохранит материалы на выбранное число будущих ступеней.",
+      "en": "Tap a skill card to pin your goal. Sell Spare keeps the materials needed for your chosen number of future levels."
+    },
+    {
+      "ru": "Нажми на ресурс в рюкзаке, чтобы продать нужное количество. Внизу можно продать весь рюкзак с подтверждением.",
+      "en": "Tap a backpack resource to sell a chosen amount. Sell everything at the bottom, with confirmation."
+    },
+    {
+      "ru": "Нажми на ресурс, чтобы продать выбранное количество или весь запас этого вида.",
+      "en": "Tap a resource to sell a chosen amount or all of that type."
+    },
+    {
+      "ru": "Накапливай запас до трёх применений.",
+      "en": "Store energy for up to three uses."
+    },
+    {
+      "ru": "Накопленная добыча",
+      "en": "Collected loot"
+    },
+    {
+      "ru": "Настройки игры",
+      "en": "Game settings"
+    },
+    {
+      "ru": "Не удалось выдать награду. Попробуй ещё раз.",
+      "en": "Could not grant the reward. Try again."
+    },
+    {
+      "ru": "Не удалось прочитать сохранение. Резервные файлы сохранены.",
+      "en": "Could not read the save. Backup files are preserved."
+    },
+    {
+      "ru": "Не удалось сохранить на устройстве",
+      "en": "Could not save on this device"
+    },
+    {
+      "ru": "Не удалось сохранить сброс. Прогресс не изменён.",
+      "en": "Could not save the reset. Progress is unchanged."
+    },
+    {
+      "ru": "Не удалось сохранить. Операция отменена, ресурсы и монеты сохранены.",
+      "en": "Could not save. Purchase cancelled; your coins and resources are safe."
+    },
+    {
+      "ru": "Не хватает монет",
+      "en": "Not enough coins"
+    },
+    {
+      "ru": "Не хватает ресурсов",
+      "en": "Not enough resources"
+    },
+    {
+      "ru": "Недостаточно добыто: ",
+      "en": "Mine more: "
+    },
+    {
+      "ru": "Незерак",
+      "en": "Netherrack"
+    },
+    {
+      "ru": "Неизвестная способность",
+      "en": "Unknown ability"
+    },
+    {
+      "ru": "Неизвестное улучшение",
+      "en": "Unknown upgrade"
+    },
+    {
+      "ru": "Неизвестный навык",
+      "en": "Unknown skill"
+    },
+    {
+      "ru": "Некорректная конфигурация прогрессии.",
+      "en": "Invalid progression configuration."
+    },
+    {
+      "ru": "Некорректная прибавка кирки.",
+      "en": "Invalid pickaxe upgrade."
+    },
+    {
+      "ru": "Некорректная цель",
+      "en": "Invalid goal"
+    },
+    {
+      "ru": "Некорректная цена или вероятность.",
+      "en": "Invalid price or probability."
+    },
+    {
+      "ru": "Некорректная цена отряда.",
+      "en": "Invalid squad price."
+    },
+    {
+      "ru": "Некорректная цена пробоя.",
+      "en": "Invalid plunge price."
+    },
+    {
+      "ru": "Некорректная энергия или рецепт.",
+      "en": "Invalid energy or recipe."
+    },
+    {
+      "ru": "Некорректный множитель рецепта.",
+      "en": "Invalid recipe multiplier."
+    },
+    {
+      "ru": "Неполная конфигурация прогрессии.",
+      "en": "Incomplete progression configuration."
+    },
+    {
+      "ru": "Нет доступной рекламы. Попробуй позже.",
+      "en": "No ad available. Try again later."
+    },
+    {
+      "ru": "Нет материалов для строительства.",
+      "en": "No construction materials available."
+    },
+    {
+      "ru": "Нет связи с облаком. Прогресс на устройстве сохранён.",
+      "en": "Cloud unavailable. Progress is saved on this device."
+    },
+    {
+      "ru": "Новые карты и кирки",
+      "en": "New maps and pickaxes"
+    },
+    {
+      "ru": "Новый старт · ",
+      "en": "A fresh start · "
+    },
+    {
+      "ru": "Нужен навык «",
+      "en": "Requires “"
+    },
+    {
+      "ru": "Нужен уровень профиля ",
+      "en": "Requires profile level "
+    },
+    {
+      "ru": "Нужные материалы пока не собраны.",
+      "en": "Required materials not collected yet."
+    },
+    {
+      "ru": "ОБУЧЕНИЕ · {0} / {1}",
+      "en": "TUTORIAL · {0} / {1}"
+    },
+    {
+      "ru": "ОБЫЧНАЯ",
+      "en": "COMMON"
+    },
+    {
+      "ru": "ОСТАВИТЬ РЕСУРСЫ",
+      "en": "KEEP RESOURCES"
+    },
+    {
+      "ru": "ОСТАВЛЯТЬ НА",
+      "en": "KEEP FOR"
+    },
+    {
+      "ru": "ОТКРЫТО",
+      "en": "UNLOCKED"
+    },
+    {
+      "ru": "ОТКРЫТЬ",
+      "en": "UNLOCK"
+    },
+    {
+      "ru": "ОТМЕНА",
+      "en": "CANCEL"
+    },
+    {
+      "ru": "Облако недоступно",
+      "en": "Cloud unavailable"
+    },
+    {
+      "ru": "Обсидиан",
+      "en": "Obsidian"
+    },
+    {
+      "ru": "Обсидиан · ",
+      "en": "Obsidian · "
+    },
+    {
+      "ru": "Огненный опал",
+      "en": "Fire Opal"
+    },
+    {
+      "ru": "Осветляет блоки в шахте. Яркость экрана и интерфейса не меняется.",
+      "en": "Brightens mine blocks. Does not change screen or interface brightness."
+    },
+    {
+      "ru": "Осколочный удар",
+      "en": "Shrapnel Strike"
+    },
+    {
+      "ru": "Останется в рюкзаке",
+      "en": "Kept in backpack"
+    },
+    {
+      "ru": "Острота",
+      "en": "Sharpness"
+    },
+    {
+      "ru": "Откроется на уровне ",
+      "en": "Unlocks at level "
+    },
+    {
+      "ru": "Открывается один раз",
+      "en": "A one-time unlock"
+    },
+    {
+      "ru": "Открыто навсегда",
+      "en": "Unlocked forever"
+    },
+    {
+      "ru": "Отрицательная цена.",
+      "en": "Negative price."
+    },
+    {
+      "ru": "Отрицательный рецепт.",
+      "en": "Negative recipe."
+    },
+    {
+      "ru": "Отряд шахтёров",
+      "en": "Miner Squad"
+    },
+    {
+      "ru": "Отряд: {0}% · {1} кирки при удаче",
+      "en": "Squad: {0}% · {1} pickaxes on success"
+    },
+    {
+      "ru": "ПАУЗА",
+      "en": "PAUSE"
+    },
+    {
+      "ru": "ПО ЭКРАНУ",
+      "en": "DISPLAY RATE"
+    },
+    {
+      "ru": "ПОВЕРХНОСТЬ",
+      "en": "SURFACE"
+    },
+    {
+      "ru": "ПОВТОРИТЬ ОБУЧЕНИЕ",
+      "en": "REPLAY TUTORIAL"
+    },
+    {
+      "ru": "ПОВЫСИТЬ ДО ",
+      "en": "UPGRADE TO "
+    },
+    {
+      "ru": "ПОДОЖДИ…",
+      "en": "PLEASE WAIT…"
+    },
+    {
+      "ru": "ПОДСКАЗКИ ДОБЫЧИ: ",
+      "en": "LOOT MESSAGES: "
+    },
+    {
+      "ru": "ПОЛЬЗА УЛУЧШЕНИЙ",
+      "en": "UPGRADE BENEFITS"
+    },
+    {
+      "ru": "ПОНЯТНО",
+      "en": "GOT IT"
+    },
+    {
+      "ru": "ПОРТАЛ ПОСТРОЕН",
+      "en": "PORTAL BUILT"
+    },
+    {
+      "ru": "ПОСЛЕДНИЙ ШАНС! +50% ПРОЧНОСТИ И ЭНЕРГИЯ",
+      "en": "LAST CHANCE! +50% DURABILITY AND ENERGY"
+    },
+    {
+      "ru": "ПОСТРОЕНО",
+      "en": "BUILT"
+    },
+    {
+      "ru": "ПОСТРОИТЬ",
+      "en": "BUILD"
+    },
+    {
+      "ru": "ПРИЁМЫ",
+      "en": "ABILITIES"
+    },
+    {
+      "ru": "ПРОГРЕСС СБРОШЕН",
+      "en": "PROGRESS RESET"
+    },
+    {
+      "ru": "ПРОДАТЬ",
+      "en": "SELL"
+    },
+    {
+      "ru": "ПРОДАТЬ ВЕСЬ РЮКЗАК",
+      "en": "SELL ENTIRE BACKPACK"
+    },
+    {
+      "ru": "ПРОДАТЬ ВЕСЬ ЭТОТ ВИД",
+      "en": "SELL ALL OF THIS TYPE"
+    },
+    {
+      "ru": "ПРОДАТЬ ВСЁ",
+      "en": "SELL ALL"
+    },
+    {
+      "ru": "ПРОДАТЬ ЛИШНЕЕ",
+      "en": "SELL SPARE"
+    },
+    {
+      "ru": "ПРОДАТЬ ЛИШНЕЕ · ",
+      "en": "SELL SPARE · "
+    },
+    {
+      "ru": "ПРОДОЛЖИТЬ",
+      "en": "CONTINUE"
+    },
+    {
+      "ru": "ПРОКАЧАНО",
+      "en": "UPGRADED"
+    },
+    {
+      "ru": "ПРОКАЧКА",
+      "en": "UPGRADES"
+    },
+    {
+      "ru": "ПРОПУСТИТЬ",
+      "en": "SKIP"
+    },
+    {
+      "ru": "ПУТЬ ОТКРЫТ",
+      "en": "ROUTE OPEN"
+    },
+    {
+      "ru": "Пауза",
+      "en": "Paused"
+    },
+    {
+      "ru": "Песок",
+      "en": "Sand"
+    },
+    {
+      "ru": "Песчанник",
+      "en": "Sandstone"
+    },
+    {
+      "ru": "Песчанник, кварцит и сокровища храмов.",
+      "en": "Sandstone, quartzite and temple treasure."
+    },
+    {
+      "ru": "Повреждена добыча сохранённого спуска.",
+      "en": "Saved loot is damaged."
+    },
+    {
+      "ru": "Повреждена жидкость сохранённого спуска.",
+      "en": "Saved liquid data is damaged."
+    },
+    {
+      "ru": "Повреждена кирка сохранённого спуска.",
+      "en": "Saved pickaxe data is damaged."
+    },
+    {
+      "ru": "Повреждена случайность сохранённого спуска.",
+      "en": "Saved random state is damaged."
+    },
+    {
+      "ru": "Повреждена шахта сохранённого спуска.",
+      "en": "Saved mine data is damaged."
+    },
+    {
+      "ru": "Повреждены данные незавершённого спуска.",
+      "en": "Unfinished run data is damaged."
+    },
+    {
+      "ru": "Повторить загрузку",
+      "en": "Retry loading"
+    },
+    {
+      "ru": "Повышает урон выбранного вида кирки. Точная прибавка показана на карточке.",
+      "en": "Raises damage for this pickaxe type. The card shows the exact increase."
+    },
+    {
+      "ru": "Подводник",
+      "en": "Diver"
+    },
+    {
+      "ru": "Позволяет пробить больше блоков одним нажатием.",
+      "en": "Break more blocks with one plunge."
+    },
+    {
+      "ru": "Покупка пробоя",
+      "en": "Unlock Plunge"
+    },
+    {
+      "ru": "Покупка рывка",
+      "en": "Unlock Dash"
+    },
+    {
+      "ru": "Польза улучшений",
+      "en": "Upgrade benefits"
+    },
+    {
+      "ru": "Портал в ад",
+      "en": "Portal to the Nether"
+    },
+    {
+      "ru": "Последний шанс",
+      "en": "Last Chance"
+    },
+    {
+      "ru": "Последняя кирка может восстановить половину прочности и энергию на пробой. Одна попытка за спуск.",
+      "en": "The last pickaxe may recover half its durability and enough energy for a plunge. One chance per run."
+    },
+    {
+      "ru": "Построй путь к новой карте.",
+      "en": "Build a route to a new map."
+    },
+    {
+      "ru": "Предметов: {0}\nВыручка: {1} монет\n\nБудут проданы и материалы для улучшений. Продажу нельзя отменить.",
+      "en": "Items: {0}\nProceeds: {1} coins\n\nUpgrade materials will also be sold. This cannot be undone."
+    },
+    {
+      "ru": "Предметов: {0}\nМожно продать за {1} монет",
+      "en": "Items: {0}\nSale value: {1} coins"
+    },
+    {
+      "ru": "Приёмы — в магазине. Верстак чинит, улучшающий повышает тип.",
+      "en": "Abilities are in the shop. Workbenches repair; upgrade benches raise pickaxe type."
+    },
+    {
+      "ru": "Пробивай больше блоков нажатием.",
+      "en": "Break more blocks with a plunge."
+    },
+    {
+      "ru": "Пробито: {0} · Доп. руда: {1} · Сбережено: {2}",
+      "en": "Pierced: {0} · Bonus ore: {1} · Wear saved: {2}"
+    },
+    {
+      "ru": "Пробой",
+      "en": "Plunge"
+    },
+    {
+      "ru": "Пробой · нажатие",
+      "en": "Plunge · tap"
+    },
+    {
+      "ru": "Продать ",
+      "en": "Sell "
+    },
+    {
+      "ru": "Продать весь рюкзак?",
+      "en": "Sell your entire backpack?"
+    },
+    {
+      "ru": "Продать лишнее?",
+      "en": "Sell spare resources?"
+    },
+    {
+      "ru": "Продать материалы цели?",
+      "en": "Sell resources reserved for your goal?"
+    },
+    {
+      "ru": "Профиль",
+      "en": "Profile"
+    },
+    {
+      "ru": "Пустыня",
+      "en": "Desert"
+    },
+    {
+      "ru": "Пять видов кирок",
+      "en": "Five pickaxe types"
+    },
+    {
+      "ru": "РЕДКАЯ",
+      "en": "RARE"
+    },
+    {
+      "ru": "РЕКОРД",
+      "en": "RECORD"
+    },
+    {
+      "ru": "РЕСУРСЫ ПРОДАНЫ",
+      "en": "RESOURCES SOLD"
+    },
+    {
+      "ru": "РУБЕЖ: ",
+      "en": "NEXT: "
+    },
+    {
+      "ru": "РЮКЗАК",
+      "en": "BACKPACK"
+    },
+    {
+      "ru": "РЮКЗАК ПРОДАН",
+      "en": "BACKPACK SOLD"
+    },
+    {
+      "ru": "Разбей сундук, чтобы забрать находки. Содержимое появится сбоку и сразу попадёт в рюкзак. Награды зависят от карты и глубины.",
+      "en": "Break a chest to collect its contents. Finds appear at the side and go straight into your backpack. Rewards depend on the map and depth."
+    },
+    {
+      "ru": "Размер отряда",
+      "en": "Squad Size"
+    },
+    {
+      "ru": "Реклама через {0}",
+      "en": "Ad in {0}"
+    },
+    {
+      "ru": "Реклама: +{0} монет",
+      "en": "Ad: +{0} coins"
+    },
+    {
+      "ru": "Рекорд: ",
+      "en": "Record: "
+    },
+    {
+      "ru": "Рельсы",
+      "en": "Rails"
+    },
+    {
+      "ru": "Русский",
+      "en": "Русский"
+    },
+    {
+      "ru": "Рывок",
+      "en": "Dash"
+    },
+    {
+      "ru": "Рывок · свайп",
+      "en": "Dash · swipe"
+    },
+    {
+      "ru": "Рывок и пробой",
+      "en": "Dash and Plunge"
+    },
+    {
+      "ru": "Рывок покупается на втором уровне профиля, пробой — на третьем. Свайп толкает выбранную кирку в сторону, нажатие пробивает блоки вниз. Энергия восстанавливается сама.",
+      "en": "Dash unlocks at profile level 2, Plunge at level 3. Swipe to push the selected pickaxe sideways; tap to plunge through blocks. Energy recovers automatically."
+    },
+    {
+      "ru": "Рюкзак и продажа",
+      "en": "Backpack and selling"
+    },
+    {
+      "ru": "Рюкзак пуст.",
+      "en": "Backpack empty."
+    },
+    {
+      "ru": "САЙТ АВТОРА",
+      "en": "AUTHOR WEBSITE"
+    },
+    {
+      "ru": "СБРОС",
+      "en": "RESET"
+    },
+    {
+      "ru": "СБРОСИТЬ ПРОГРЕСС",
+      "en": "RESET PROGRESS"
+    },
+    {
+      "ru": "СНЯТЬ ЦЕЛЬ",
+      "en": "UNPIN GOAL"
+    },
+    {
+      "ru": "СПАВНЕР · 30 НАЖАТИЙ ЗА 8 СЕКУНД",
+      "en": "SPAWNER · 30 TAPS IN 8 SECONDS"
+    },
+    {
+      "ru": "СПАВНЕР СЛОМАН · −30% МАКС. ПРОЧНОСТИ",
+      "en": "SPAWNER BROKEN · −30% MAX DURABILITY"
+    },
+    {
+      "ru": "СПОСОБНОСТЬ ОТКРЫТА",
+      "en": "ABILITY UNLOCKED"
+    },
+    {
+      "ru": "СПУСК ВОССТАНОВЛЕН · НАЖМИ «ПРОДОЛЖИТЬ»",
+      "en": "RUN RESTORED · PRESS CONTINUE"
+    },
+    {
+      "ru": "СТАТИСТИКА",
+      "en": "STATISTICS"
+    },
+    {
+      "ru": "СУНДУК · РЕСУРСЫ В РЮКЗАКЕ",
+      "en": "CHEST · LOOT IN BACKPACK"
+    },
+    {
+      "ru": "СУНДУК ОТКРЫТ",
+      "en": "CHEST OPENED"
+    },
+    {
+      "ru": "Сбережено в лаве: {0}\nБонусов сундука: {1}\nБонусов землекопа: {2}\nАктивных действий: {3}\nБлоков пробито: {4}\nДополнительная руда: {5}\nСбережено прочности: {6}\nСильных ударов: {7}\nБлоков добыто осколками: {8}\nВзрывных находок: {9}\nДвойных верстаков: {10}\nУсиленных взрывов: {11}\nСпасений: {12}\nВосстановлено прочности: {13}\nПолучено энергии: {14}",
+      "en": "Lava wear saved: {0}\nChest bonuses: {1}\nDigger bonuses: {2}\nAbilities used: {3}\nBlocks pierced: {4}\nBonus ore: {5}\nDurability saved: {6}\nStrong hits: {7}\nShrapnel blocks: {8}\nExplosive finds: {9}\nDouble workbenches: {10}\nBoosted blasts: {11}\nRescues: {12}\nDurability restored: {13}\nEnergy recovered: {14}"
+    },
+    {
+      "ru": "Сбросить весь прогресс?",
+      "en": "Reset all progress?"
+    },
+    {
+      "ru": "Свайп толкает выбранную кирку в одну из четырёх сторон и мгновенно пробивает первый блок.",
+      "en": "Swipe in one of four directions to push the selected pickaxe and instantly pierce its first block."
+    },
+    {
+      "ru": "Свайп: ",
+      "en": "Swipe: "
+    },
+    {
+      "ru": "Сера",
+      "en": "Sulfur"
+    },
+    {
+      "ru": "Сила рывка",
+      "en": "Dash Power"
+    },
+    {
+      "ru": "Сильный удар повреждает один соседний блок. Дополнительная прочность не тратится.",
+      "en": "A strong hit damages one neighbouring block without extra durability cost."
+    },
+    {
+      "ru": "Сильный удар повреждает соседний блок.",
+      "en": "Strong hits damage a neighbouring block."
+    },
+    {
+      "ru": "Сколько продать?",
+      "en": "How many to sell?"
+    },
+    {
+      "ru": "Сланец",
+      "en": "Deepslate"
+    },
+    {
+      "ru": "Следующая ступень — ",
+      "en": "Next level — "
+    },
+    {
+      "ru": "Слишком большая сумма.",
+      "en": "Amount too large."
+    },
+    {
+      "ru": "Слишком много ресурсов.",
+      "en": "Too many resources."
+    },
+    {
+      "ru": "Сложнее шахты",
+      "en": "Harder than the Mine"
+    },
+    {
+      "ru": "Сломай спавнер",
+      "en": "Break the spawner"
+    },
+    {
+      "ru": "Сначала выбери цель.",
+      "en": "Choose a goal first."
+    },
+    {
+      "ru": "Сначала открой «Отряд шахтёров»",
+      "en": "Unlock Miner Squad first"
+    },
+    {
+      "ru": "Сначала открой нужный приём в разделе «Приёмы»",
+      "en": "Unlock the required ability in Abilities first"
+    },
+    {
+      "ru": "Сначала построй маршрут.",
+      "en": "Build the route first."
+    },
+    {
+      "ru": "Снижает расход энергии на рывок и пробой.",
+      "en": "Reduces energy cost of Dash and Plunge."
+    },
+    {
+      "ru": "Собрано на {0} монет\nРазрушено блоков: {1}",
+      "en": "Loot worth {0} coins\nBlocks broken: {1}"
+    },
+    {
+      "ru": "Сохранение",
+      "en": "Saving"
+    },
+    {
+      "ru": "Сохранение в облако…",
+      "en": "Saving to cloud…"
+    },
+    {
+      "ru": "Сохранение недоступно.\n",
+      "en": "Save unavailable.\n"
+    },
+    {
+      "ru": "Сохранено в облаке",
+      "en": "Saved to cloud"
+    },
+    {
+      "ru": "Спавнер",
+      "en": "Spawner"
+    },
+    {
+      "ru": "Способность уже открыта",
+      "en": "Ability already unlocked"
+    },
+    {
+      "ru": "Спуск · ",
+      "en": "Descent · "
+    },
+    {
+      "ru": "Спуск в шахту",
+      "en": "Descend into the mine"
+    },
+    {
+      "ru": "Спуск завершён · {0} м",
+      "en": "Run finished · {0} m"
+    },
+    {
+      "ru": "Сундук",
+      "en": "Chest"
+    },
+    {
+      "ru": "Сундук может дать дополнительную порцию ресурсов. Редчайшие находки и гарантированный обсидиан не дублируются. На спавнер не действует.",
+      "en": "A chest may give extra resources. The rarest finds and guaranteed obsidian are not duplicated. Does not affect spawners."
+    },
+    {
+      "ru": "Сундуки",
+      "en": "Chests"
+    },
+    {
+      "ru": "Твой рюкзак",
+      "en": "Your backpack"
+    },
+    {
+      "ru": "Термозащита",
+      "en": "Heat Shield"
+    },
+    {
+      "ru": "Ты получишь {0} монет",
+      "en": "You will receive {0} coins"
+    },
+    {
+      "ru": "Тёмный кварцит",
+      "en": "Dark Quartzite"
+    },
+    {
+      "ru": "У каждого вида кирки свои урон и прочность. На карточке видно, что даст покупка. Зелёным отмечено то, на что уже хватает ресурсов.",
+      "en": "Each pickaxe type has its own damage and durability. Cards show what an upgrade adds. Green requirements mean you have enough resources."
+    },
+    {
+      "ru": "У кирки появляются +количество и значок ресурса. Одновременная добыча одного вида объединяется, чтобы не закрывать шахту.",
+      "en": "Small resource icons and quantities appear beside the pickaxe. Matching finds are combined to keep the mine clear."
+    },
+    {
+      "ru": "УДАЛИТЬ ПРОГРЕСС",
+      "en": "DELETE PROGRESS"
+    },
+    {
+      "ru": "УДАЧА",
+      "en": "LUCK"
+    },
+    {
+      "ru": "УДАЧА! КИРОК В ОТРЯДЕ: ",
+      "en": "LUCKY SQUAD! PICKAXES: "
+    },
+    {
+      "ru": "УЛУЧШАЮЩИЙ ВЕРСТАК",
+      "en": "UPGRADE WORKBENCH"
+    },
+    {
+      "ru": "УЛУЧШЕНИЕ КУПЛЕНО",
+      "en": "UPGRADE PURCHASED"
+    },
+    {
+      "ru": "УЛУЧШИТЬ",
+      "en": "UPGRADE"
+    },
+    {
+      "ru": "УР. ",
+      "en": "LV. "
+    },
+    {
+      "ru": "УР. 1",
+      "en": "LV. 1"
+    },
+    {
+      "ru": "УРОВЕНЬ ",
+      "en": "LEVEL "
+    },
+    {
+      "ru": "УРОВЕНЬ ПРОФИЛЯ ",
+      "en": "PROFILE LEVEL "
+    },
+    {
+      "ru": "УСЛОВИЯ",
+      "en": "REQUIREMENTS"
+    },
+    {
+      "ru": "Увеличивает запас энергии. На полной прокачке помещается три применения приёмов.",
+      "en": "Increases energy reserve. At maximum level it holds three ability uses."
+    },
+    {
+      "ru": "Увеличивает прочность выбранного вида кирки. Верстак восстанавливает весь запас.",
+      "en": "Increases durability for this pickaxe type. A workbench restores the full amount."
+    },
+    {
+      "ru": "Увеличивает урон сильного столкновения. На мгновенное пробитие приёмов не влияет.",
+      "en": "Increases strong-impact damage. Does not affect instant ability piercing."
+    },
+    {
+      "ru": "Уголь",
+      "en": "Coal"
+    },
+    {
+      "ru": "Удар вниз с пробитием.",
+      "en": "A downward plunge through blocks."
+    },
+    {
+      "ru": "Ударов на глубине появления",
+      "en": "Hits at first available depth"
+    },
+    {
+      "ru": "Укажи доступное целое количество.",
+      "en": "Enter an available whole amount."
+    },
+    {
+      "ru": "Укажи целое количество от 1 до имеющегося.",
+      "en": "Enter a whole amount from 1 to your available stock."
+    },
+    {
+      "ru": "Улучшающий верстак",
+      "en": "Upgrade Workbench"
+    },
+    {
+      "ru": "Улучшения",
+      "en": "Upgrades"
+    },
+    {
+      "ru": "Улучшения кирок",
+      "en": "Pickaxe upgrades"
+    },
+    {
+      "ru": "Уменьшает потерю прочности в лаве. Полная прокачка снижает её вдвое.",
+      "en": "Reduces durability loss in lava, down to half at maximum level."
+    },
+    {
+      "ru": "Уменьшает штраф урона в воде. На последнем уровне кирка бьёт так же, как на суше. Сопротивление воды остаётся.",
+      "en": "Reduces the water damage penalty. At maximum level damage matches dry land. Water resistance remains."
+    },
+    {
+      "ru": "Уровень {0} · Монеты {1}",
+      "en": "Level {0} · Coins {1}"
+    },
+    {
+      "ru": "Уровень профиля",
+      "en": "Profile level"
+    },
+    {
+      "ru": "Урон {0} · Прочность {1}",
+      "en": "Damage {0} · Durability {1}"
+    },
+    {
+      "ru": "Усиленный TNT",
+      "en": "Boosted TNT"
+    },
+    {
+      "ru": "Усиливает толчок рывка. Как и раньше, рывок сразу пробивает один блок.",
+      "en": "Increases dash impulse. Dash still instantly pierces one block."
+    },
+    {
+      "ru": "Ускоряет восстановление энергии. На карточке показано время до одного применения.",
+      "en": "Recovers energy faster. The card shows the time needed for one use."
+    },
+    {
+      "ru": "ЦЕЛЬ СОХРАНЕНА · ",
+      "en": "GOAL PINNED · "
+    },
+    {
+      "ru": "Цель не выбрана",
+      "en": "No goal selected"
+    },
+    {
+      "ru": "Цель: ",
+      "en": "Goal: "
+    },
+    {
+      "ru": "Частота кадров",
+      "en": "Frame rate"
+    },
+    {
+      "ru": "Чернит",
+      "en": "Blackstone"
+    },
+    {
+      "ru": "ШАХТА",
+      "en": "MINE"
+    },
+    {
+      "ru": "Шанс взорвать вдвое большую площадь. Урон и добыча работают как у обычного взрыва.",
+      "en": "A chance to double blast area. Damage and loot follow normal explosion rules."
+    },
+    {
+      "ru": "Шанс добыть больше земли и песка.",
+      "en": "A chance to mine extra dirt and sand."
+    },
+    {
+      "ru": "Шанс добыть ещё один блок земли или песка прямым ударом. Взрывы и осколки бонус не дают.",
+      "en": "Direct hits may yield one extra dirt or sand block. Explosions and shrapnel do not grant this bonus."
+    },
+    {
+      "ru": "Шанс дополнительно повысить вид кирки на верстаке. Если кирка уже алмазная, пополняет энергию.",
+      "en": "A chance for an extra pickaxe type upgrade at a workbench. Diamond pickaxes recover energy instead."
+    },
+    {
+      "ru": "Шанс дополнительного улучшения на верстаке.",
+      "en": "A chance for a second workbench upgrade."
+    },
+    {
+      "ru": "Шанс на дополнительную добычу из сундука.",
+      "en": "A chance for extra chest loot."
+    },
+    {
+      "ru": "Шанс начать спуск с несколькими кирками.",
+      "en": "A chance to start with several pickaxes."
+    },
+    {
+      "ru": "Шанс начать спуск с отрядом одинаковых кирок. Их количество увеличивает «Размер отряда».",
+      "en": "A chance to start with identical pickaxes. Squad Size increases their number."
+    },
+    {
+      "ru": "Шанс не потратить прочность при ударе. От лавы защищает отдельный навык.",
+      "en": "A chance to avoid hit wear. A separate skill protects against lava."
+    },
+    {
+      "ru": "Шанс получить дополнительную руду.",
+      "en": "A chance for extra ore."
+    },
+    {
+      "ru": "Шанс получить ещё одну единицу руды. Работает и при добыче взрывом.",
+      "en": "A chance to collect one extra ore unit. Also works with explosions."
+    },
+    {
+      "ru": "Шанс сохранить прочность при ударе.",
+      "en": "A chance to save durability on a hit."
+    },
+    {
+      "ru": "Шанс спасти последнюю кирку один раз за спуск.",
+      "en": "A chance to rescue the last pickaxe once per run."
+    },
+    {
+      "ru": "Шанс удвоить площадь взрыва.",
+      "en": "A chance to double blast area."
+    },
+    {
+      "ru": "Шахта",
+      "en": "Mine"
+    },
+    {
+      "ru": "ЭНЕРГИЯ {0} / {1}",
+      "en": "ENERGY {0} / {1}"
+    },
+    {
+      "ru": "ЭПИЧЕСКАЯ",
+      "en": "EPIC"
+    },
+    {
+      "ru": "Экономия энергии",
+      "en": "Energy Efficiency"
+    },
+    {
+      "ru": "Эффекты",
+      "en": "Effects"
+    },
+    {
+      "ru": "Язык",
+      "en": "Language"
+    },
+    {
+      "ru": "Яркость шахты: ",
+      "en": "Mine brightness: "
+    },
+    {
+      "ru": "алмаз",
+      "en": "diamond"
+    },
+    {
+      "ru": "в магазине",
+      "en": "in the shop"
+    },
+    {
+      "ru": "дерево",
+      "en": "wood"
+    },
+    {
+      "ru": "до максимума",
+      "en": "to maximum"
+    },
+    {
+      "ru": "железо",
+      "en": "iron"
+    },
+    {
+      "ru": "золото",
+      "en": "gold"
+    },
+    {
+      "ru": "камень",
+      "en": "stone"
+    },
+    {
+      "ru": "мост.",
+      "en": "bridge."
+    },
+    {
+      "ru": "оставшаяся стоимость цели",
+      "en": "remaining goal cost"
+    },
+    {
+      "ru": "портал.",
+      "en": "portal."
+    },
+    {
+      "ru": "Не удалось подключить платформу. Перезагрузи страницу.",
+      "en": "Could not connect to the platform. Reload the page."
+    },
+    {
+      "ru": "Разреши сохранение данных сайта в браузере и перезагрузи страницу.",
+      "en": "Allow this site to save data in your browser, then reload the page."
+    },
+    {
+      "ru": "Память браузера недоступна или заполнена. Предыдущее сохранение не изменено.",
+      "en": "Browser storage is full or unavailable. Your previous save is unchanged."
+    }
+  ]
+}

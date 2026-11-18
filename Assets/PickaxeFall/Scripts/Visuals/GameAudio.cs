@@ -8,7 +8,11 @@ namespace PickaxeFall
     {
         readonly Dictionary<string,AudioClip[]> clips=new();readonly Dictionary<string,float> played=new();
         readonly System.Random random=new();AudioSource[] voices;AudioSource[] songs;GameController game;
-        int voice,current=-1;MapId map;float transition=1;bool suspended;
+        int voice,current=-1;MapId map;float transition=1;bool suspended,platformPaused,systemPaused;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        bool audioUnlocked;
+#endif
+        public bool IsSuspended=>suspended;
         public void Initialize(GameController owner)
         {
             game=owner;if(owner.IsSimulation)return;
@@ -18,6 +22,9 @@ namespace PickaxeFall
         }
         public void SetMap(MapId value)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if(!audioUnlocked){map=value;return;}
+#endif
             if(songs==null || current>=0&&map==value)return;map=value;current=(current+1)%2;var next=songs[current];next.Stop();next.clip=Resources.Load<AudioClip>("Audio/Music/"+(value==MapId.Desert?"Desert":value==MapId.Nether?"Nether":"Mine"));next.volume=0;next.Play();transition=0;
         }
         public void Ui(UiSound cue)
@@ -38,10 +45,16 @@ namespace PickaxeFall
         float ambience;
         void Update()
         {
-            if(songs==null)return;if(current<0)SetMap(game.CurrentMap);
+            if(songs==null)return;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if(!audioUnlocked){if(Input.GetMouseButtonDown(0)||Input.touchCount>0||Input.anyKeyDown)audioUnlocked=true;else return;}
+#endif
+            if(current<0)SetMap(game.CurrentMap);
             transition=Mathf.Min(1,transition+Time.unscaledDeltaTime/2);for(int i=0;i<2;i++)songs[i].volume=game.Settings.MusicVolume*(i==current?transition:1-transition)*(game.Paused?.45f:1);if(transition>=1)songs[1-current].Stop();
             if(game.Phase==RunPhase.Mining&&!game.Paused&&Time.unscaledTime>ambience){ambience=Time.unscaledTime+1.5f;var tool=game.SelectedTool;if(tool!=null){if(game.World.Liquids.Touches(tool,BlockKind.Lava))Play("lava");else if(game.World.Liquids.Touches(tool,BlockKind.Water))Play("water");}}
         }
-        void OnApplicationPause(bool pause){suspended=pause;if(songs==null)return;foreach(var s in songs)if(pause)s.Pause();else s.UnPause();if(pause)foreach(var v in voices)v.Stop();}
+        public void SetPlatformSuspended(bool value){platformPaused=value;ApplySuspension();}
+        void OnApplicationPause(bool pause){systemPaused=pause;ApplySuspension();}
+        void ApplySuspension(){bool pause=platformPaused||systemPaused;if(suspended==pause)return;suspended=pause;if(songs==null)return;foreach(var s in songs)if(pause)s.Pause();else s.UnPause();if(pause)foreach(var v in voices)v.Stop();}
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace PickaxeFall
 {
-    public sealed class ProfileStore
+    public sealed class ProfileStore : IProfilePersistence
     {
         readonly string path;
         readonly Func<PlayerProfile> importLegacy;
@@ -31,7 +31,7 @@ namespace PickaxeFall
                 return result;
             }
             // Never silently replace an existing, unreadable save with an empty profile.
-            if (File.Exists(path) || File.Exists(path + ".bak")) throw new IOException("Не удалось прочитать сохранение. Резервные файлы сохранены.");
+            if (File.Exists(path) || File.Exists(path + ".bak")) throw new IOException(L.T("Не удалось прочитать сохранение. Резервные файлы сохранены."));
             var imported = importLegacy();
             Save(imported);
             return imported;
@@ -73,6 +73,11 @@ namespace PickaxeFall
                 if(profile.run.version==1 && profile.run.loot?.Length==14)Array.Resize(ref profile.run.loot,ResourceInventory.SlotCount);
             }
             profile.Validate(); return profile;
+        }
+        public static PlayerProfile Parse(string json)=>ReadProfile(json);
+        public static string Serialize(PlayerProfile profile)
+        {
+            var copy=profile.Copy();copy.activeRunJson=copy.run==null?null:JsonUtility.ToJson(copy.run);copy.Validate();return JsonUtility.ToJson(copy);
         }
         public void Reset(PlayerProfile empty)
         {

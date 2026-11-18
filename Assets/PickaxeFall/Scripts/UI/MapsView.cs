@@ -9,8 +9,8 @@ namespace PickaxeFall
         void OpenMaps(int page,float oldStone=-1,float oldIron=-1,float oldObsidian=-1)
         {
             if(!game.CanTrade)return;
-            string[] names={"Шахта","Пустыня","Ад"};
-            var card=OpenModal("Маршруты");card.AddToClassList("map-card");
+            string[] names={L.T("Шахта"),L.T("Пустыня"),L.T("Ад")};
+            var card=OpenModal(L.T("Маршруты"));card.AddToClassList("map-card");
             var navigation=Box(card,"map-navigation");
             for(int i=0;i<3;i++){int tab=i;Button(navigation,names[i].ToUpperInvariant(),()=>OpenMaps(tab),"stone-button map-tab"+(page==i?" active":"")).name="map-page-"+i;}
             var p=game.Economy.Profile;
@@ -19,55 +19,55 @@ namespace PickaxeFall
             DrawConstruction(scene,page,oldStone<0?p.bridgeStone:oldStone,oldIron<0?p.bridgeIron:oldIron,oldObsidian<0?p.portalObsidian:oldObsidian);
             if(page==0)
             {
-                BoldText(project,"Бездонная шахта","map-title");
-                Text(project,"Каждый спуск — новая шахта.","skill-summary");
-                Text(project,"ДОСТУПНА","map-status cost-enough");
-                Button(card,"ВЕРНУТЬСЯ В ШАХТУ",()=>{if(game.SelectMap(MapId.Mine)){CloseModal();SelectTab(HubTab.Mine);}else Toast("Заверши выбор текущей кирки перед сменой карты");},"stone-button compact-button buy-ready").name="map-enter-mine";
+                BoldText(project,L.T("Бездонная шахта"),"map-title");
+                Text(project,L.T("Каждый спуск — новая шахта."),"skill-summary");
+                Text(project,L.T("ДОСТУПНА"),"map-status cost-enough");
+                Button(card,L.T("ВЕРНУТЬСЯ В ШАХТУ"),()=>{if(game.SelectMap(MapId.Mine)){CloseModal();SelectTab(HubTab.Mine);}else Toast(L.T("Заверши выбор текущей кирки перед сменой карты"));},"stone-button compact-button buy-ready").name="map-enter-mine";
             }
             else
             {
                 var kind=page==1?GoalKind.Bridge:GoalKind.Portal;bool complete=ProfileRules.Complete(p,kind);
-                BoldText(project,page==1?"Мост в пустыню":"Портал в ад","map-title");
-                Text(project,complete?(page==1?"Песчанник, кварцит и сокровища храмов.":"Лава, крепости и редчайшие минералы."):"Построй путь к новой карте.","skill-summary");
+                BoldText(project,page==1?L.T("Мост в пустыню"):L.T("Портал в ад"),"map-title");
+                Text(project,complete?(page==1?L.T("Песчанник, кварцит и сокровища храмов."):L.T("Лава, крепости и редчайшие минералы.")):L.T("Построй путь к новой карте."),"skill-summary");
                 float fraction=page==1?(p.bridgeStone/1000f+p.bridgeIron/50f)*.5f:p.portalObsidian/10f;
                 var progress=Box(project,"map-progress-row");Display(progress,!complete);
-                Text(progress,complete?"ПОСТРОЕНО":"ГОТОВНОСТЬ","map-status"+(complete?" cost-enough":""));
+                Text(progress,complete?L.T("ПОСТРОЕНО"):L.T("ГОТОВНОСТЬ"),"map-status"+(complete?" cost-enough":""));
                 BoldText(progress,Mathf.RoundToInt(fraction*100)+"%","map-status");
                 var track=Box(project,"profile-progress-track");Display(track,!complete);Box(track,"profile-progress-fill").style.width=Length.Percent(fraction*100);
                 var requirements=Box(project,"map-materials");Display(requirements,!complete);
                 if(page==1){RecipeLine(requirements,BlockKind.Stone,p.bridgeStone,1000);RecipeLine(requirements,BlockKind.Iron,p.bridgeIron,50);}
                 else RecipeLine(requirements,BlockKind.Obsidian,p.portalObsidian,10);
                 var pin=PaperPin(project);pin.name="map-goal-pin";Display(pin,!complete&&p.goalKind==kind);
-                if(complete){Text(project,"ПУТЬ ОТКРЫТ","map-status cost-enough");Button(card,"ВЫБРАТЬ · "+names[page].ToUpperInvariant(),()=>{if(game.SelectMap((MapId)page)){CloseModal();SelectTab(HubTab.Mine);}else Toast("Заверши выбор текущей кирки перед сменой карты");},"stone-button compact-button buy-ready").name="map-enter-"+page;Text(card,"Рекорд: "+p.mapRecords[page]+" м · "+(page==1?"Сложнее шахты":"Высокая опасность лавы"),"profile-note");}
+                if(complete){Text(project,L.T("ПУТЬ ОТКРЫТ"),"map-status cost-enough");Button(card,L.T("ВЫБРАТЬ · ")+names[page].ToUpperInvariant(),()=>{if(game.SelectMap((MapId)page)){CloseModal();SelectTab(HubTab.Mine);}else Toast(L.T("Заверши выбор текущей кирки перед сменой карты"));},"stone-button compact-button buy-ready").name="map-enter-"+page;Text(card,L.T("Рекорд: ")+p.mapRecords[page]+L.T(" м · ")+(page==1?L.T("Сложнее шахты"):L.T("Высокая опасность лавы")),"profile-note");}
                 if(!complete)
                 {
                     CardClick(project,()=>{ToggleCardGoal(kind,0);OpenMaps(page);});
                     long total=0;foreach(long n in game.Economy.ConstructionQuote(kind))total+=n;
-                    var contribute=Button(card,"ВНЕСТИ МАТЕРИАЛЫ",()=>ConfirmContribution(page),"stone-button compact-button "+(total>0?"buy-ready":"buy-blocked"));
+                    var contribute=Button(card,L.T("ВНЕСТИ МАТЕРИАЛЫ"),()=>ConfirmContribution(page),"stone-button compact-button "+(total>0?"buy-ready":"buy-blocked"));
                     contribute.name="contribute-"+kind;contribute.SetEnabled(total>0);
-                    Text(card,total>0?"Можно вносить частями.":"Нужные материалы пока не собраны.","profile-note");
+                    Text(card,total>0?L.T("Можно вносить частями."):L.T("Нужные материалы пока не собраны."),"profile-note");
                 }
             }
-            Button(card,"ЗАКРЫТЬ",()=>CloseModal(),"stone-button compact-button");
+            Button(card,L.T("ЗАКРЫТЬ"),()=>CloseModal(),"stone-button compact-button");
         }
         void ConfirmContribution(int page)
         {
             if(!game.CanTrade)return;
             var kind=page==1?GoalKind.Bridge:GoalKind.Portal;var amounts=game.Economy.ConstructionQuote(kind);
             long total=0;foreach(long n in amounts)total+=n;if(total==0)return;
-            var card=OpenModal("Внести материалы?");card.AddToClassList("profile-dialog");
+            var card=OpenModal(L.T("Внести материалы?"));card.AddToClassList("profile-dialog");
             foreach(var material in ResourceInventory.Materials)if(amounts[(int)material]>0)RecipeLine(card,material,amounts[(int)material],0);
-            Text(card,"Материалы будут вложены в "+(page==1?"мост.":"портал."),"profile-note");
-            Button(card,"ПОСТРОИТЬ",()=>{
+            Text(card,L.T("Материалы будут вложены в ")+(page==1?L.T("мост."):L.T("портал.")),"profile-note");
+            Button(card,L.T("ПОСТРОИТЬ"),()=>{
                 if(Time.unscaledTime<nextTrade)return;nextTrade=Time.unscaledTime+.25f;
                 var before=game.Economy.Profile.Copy();
                 CommitProfile(()=>game.Economy.TryContribute(kind),()=>{
                     OpenMaps(page,before.bridgeStone,before.bridgeIron,before.portalObsidian);
                     FlyConstructionMaterials(root.Q("construction-scene"),amounts);
-                    if(ProfileRules.Complete(game.Economy.Profile,kind)){game.Audio?.Ui(UiSound.Construction);Celebrate(page==1?"МОСТ ПОСТРОЕН":"ПОРТАЛ ПОСТРОЕН");}
+                    if(ProfileRules.Complete(game.Economy.Profile,kind)){game.Audio?.Ui(UiSound.Construction);Celebrate(page==1?L.T("МОСТ ПОСТРОЕН"):L.T("ПОРТАЛ ПОСТРОЕН"));}
                 });
             },"stone-button compact-button buy-ready").name="confirm-construction";
-            Button(card,"ОТМЕНА",()=>OpenMaps(page),"stone-button compact-button");
+            Button(card,L.T("ОТМЕНА"),()=>OpenMaps(page),"stone-button compact-button");
         }
         static VisualElement ArtPiece(VisualElement parent,float x,float y,float w,float h,Color color,Sprite sprite=null)
         {

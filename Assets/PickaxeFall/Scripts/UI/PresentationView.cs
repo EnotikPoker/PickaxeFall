@@ -32,7 +32,7 @@ namespace PickaxeFall
         {
             Toast(text);toast.AddToClassList("celebration");toast.schedule.Execute(()=>toast.RemoveFromClassList("celebration")).ExecuteLater(game.Settings.ReducedEffects?100:650);
         }
-        void StartResults(){if(game.Depth>startingRecords[(int)game.CurrentMap]){game.Audio?.Ui(UiSound.Record);Celebrate("НОВЫЙ РЕКОРД · "+game.Depth+" м");}resultsAt=Time.unscaledTime;runGrid.Update(_=>0,kind=>game.OreCounts[(int)kind]>0);}
+        void StartResults(){if(game.Depth>startingRecords[(int)game.CurrentMap]){game.Audio?.Ui(UiSound.Record);Celebrate(L.T("НОВЫЙ РЕКОРД · ")+game.Depth+L.T(" м"));}resultsAt=Time.unscaledTime;runGrid.Update(_=>0,kind=>game.OreCounts[(int)kind]>0);}
         void TickPresentation()
         {
             if(game.Phase==RunPhase.Ready || !game.Settings.LootMessages)
@@ -80,7 +80,7 @@ namespace PickaxeFall
             }
             if(item==null){item=lootFloats[0];foreach(var candidate in lootFloats)if(candidate.started<item.started)item=candidate;}
             item.worldOrigin=value.position;item.side=(lootSequence&1)==0?1:-1;item.lane=(lootSequence++/2)%3;
-            item.count.text="+"+Short(value.count);item.icon.style.backgroundImage=Background.FromSprite(PixelArt.ResourceIcon(value.kind));
+            item.count.text= L.T("+"+Short(value.count));item.icon.style.backgroundImage=Background.FromSprite(PixelArt.ResourceIcon(value.kind));
             item.started=Time.unscaledTime;item.active=true;Display(item.element,true);
             PlaceLoot(item,0);
             item.element.BringToFront();

@@ -173,16 +173,16 @@ namespace PickaxeFall
 
         public static string BlockName(BlockKind kind) => kind switch
         {
-            BlockKind.Sand=>"Песок",BlockKind.Sandstone=>"Песчанник",BlockKind.DarkQuartzite=>"Тёмный кварцит",
-            BlockKind.Malachite=>"Малахит",BlockKind.Turquoise=>"Бирюза",BlockKind.Garnet=>"Гранат",BlockKind.SmokyQuartz=>"Дымчатый кварц",
-            BlockKind.Netherrack=>"Незерак",BlockKind.Basalt=>"Базальт",BlockKind.Blackstone=>"Чернит",BlockKind.Quartz=>"Кварц",BlockKind.Sulfur=>"Сера",BlockKind.Cinnabar=>"Киноварь",BlockKind.FireOpal=>"Огненный опал",BlockKind.AncientDebris=>"Древние обломки",BlockKind.SoulCrystal=>"Кристалл душ",BlockKind.Timber=>"Дерево",BlockKind.Rail=>"Рельсы",BlockKind.MinecartChest=>"Вагонетка с сундуком",BlockKind.NetherBrick=>"Кирпичи крепости",
-            BlockKind.Dirt => "Земля", BlockKind.Stone => "Камень", BlockKind.Coal => "Уголь",
-            BlockKind.Copper => "Медь", BlockKind.Iron => "Железо", BlockKind.Gold => "Золото",
-            BlockKind.Diamond => "Алмаз", BlockKind.Deepstone => "Глубинный сланец",
-            BlockKind.Emerald => "Изумруд",BlockKind.Lapis => "Лазурит",BlockKind.Redstone => "Красная пыль",
-            BlockKind.Amethyst or BlockKind.AmethystCluster => "Кристаллы аметиста",BlockKind.Cobblestone => "Булыжник",
-            BlockKind.MossyCobblestone => "Замшелый булыжник",BlockKind.Chest => "Сундук",BlockKind.Spawner => "Спавнер",
-            BlockKind.UpgradeWorkbench=>"Улучшающий верстак",BlockKind.Obsidian=>"Обсидиан",BlockKind.Water=>"Вода",BlockKind.Lava=>"Лава",BlockKind.Tnt => "Динамит", _ => "Верстак"
+            BlockKind.Sand=>L.T("Песок"),BlockKind.Sandstone=>L.T("Песчанник"),BlockKind.DarkQuartzite=>L.T("Тёмный кварцит"),
+            BlockKind.Malachite=>L.T("Малахит"),BlockKind.Turquoise=>L.T("Бирюза"),BlockKind.Garnet=>L.T("Гранат"),BlockKind.SmokyQuartz=>L.T("Дымчатый кварц"),
+            BlockKind.Netherrack=>L.T("Незерак"),BlockKind.Basalt=>L.T("Базальт"),BlockKind.Blackstone=>L.T("Чернит"),BlockKind.Quartz=>L.T("Кварц"),BlockKind.Sulfur=>L.T("Сера"),BlockKind.Cinnabar=>L.T("Киноварь"),BlockKind.FireOpal=>L.T("Огненный опал"),BlockKind.AncientDebris=>L.T("Древние обломки"),BlockKind.SoulCrystal=>L.T("Кристалл душ"),BlockKind.Timber=>L.T("Дерево"),BlockKind.Rail=>L.T("Рельсы"),BlockKind.MinecartChest=>L.T("Вагонетка с сундуком"),BlockKind.NetherBrick=>L.T("Кирпичи крепости"),
+            BlockKind.Dirt => L.T("Земля"), BlockKind.Stone => L.T("Камень"), BlockKind.Coal => L.T("Уголь"),
+            BlockKind.Copper => L.T("Медь"), BlockKind.Iron => L.T("Железо"), BlockKind.Gold => L.T("Золото"),
+            BlockKind.Diamond => L.T("Алмаз"), BlockKind.Deepstone => L.T("Глубинный сланец"),
+            BlockKind.Emerald => L.T("Изумруд"),BlockKind.Lapis => L.T("Лазурит"),BlockKind.Redstone => L.T("Красная пыль"),
+            BlockKind.Amethyst or BlockKind.AmethystCluster => L.T("Кристаллы аметиста"),BlockKind.Cobblestone => L.T("Булыжник"),
+            BlockKind.MossyCobblestone => L.T("Замшелый булыжник"),BlockKind.Chest => L.T("Сундук"),BlockKind.Spawner => L.T("Спавнер"),
+            BlockKind.UpgradeWorkbench=>L.T("Улучшающий верстак"),BlockKind.Obsidian=>L.T("Обсидиан"),BlockKind.Water=>L.T("Вода"),BlockKind.Lava=>L.T("Лава"),BlockKind.Tnt => L.T("Динамит"), _ => L.T("Верстак")
         };
     }
 }

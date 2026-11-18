@@ -23,7 +23,7 @@ namespace PickaxeFall
 
         void BuildInventory(VisualElement parent)
         {
-            BoldText(parent, "Твой рюкзак", "title");
+            BoldText(parent, L.T("Твой рюкзак"), "title");
             bagValue = Text(parent, "", "description"); bagValue.name = "bag-value";
             bagGoal = Text(parent, "", "goal-note"); bagGoal.name = "bag-goal";
             bagGoalResources=Box(parent,"recipe-resources");bagGoalResources.name="goal-materials";
@@ -33,37 +33,37 @@ namespace PickaxeFall
                 int i=(int)kind;
                 var card = Button(grid, "", () => OpenSale(kind), "resource-card inset"); card.name = "sell-" + kind;
                 Icon(card, PixelArt.ResourceIcon(kind), "bag-icon");
-                BoldText(card, kind == BlockKind.Deepstone ? "Глубинный сланец" : GameBalance.BlockName(kind), "bag-name");
+                BoldText(card, kind == BlockKind.Deepstone ? L.T("Глубинный сланец") : GameBalance.BlockName(kind), "bag-name");
                 bagCounts[i] = BoldText(card, "0", "bag-count"); bagCounts[i].name = "count-" + kind;
-                Text(card, game.Economy.Config.sellPrices[i] + " мон. за шт.", "bag-price");
+                Text(card, game.Economy.Config.sellPrices[i] + L.T(" мон. за шт."), "bag-price");
             }
             var reserve=Box(parent,"reserve-options");
-            Text(reserve,"ОСТАВЛЯТЬ НА", "micro");
-            foreach(int steps in new[]{1,3,5,0}){int n=steps;var b=Button(reserve,n==0?"МАКС.":n+" УР.",()=>{game.Settings.SetReserveSteps(n);game.Settings.Save();game.Economy.ReserveSteps=n;RefreshInventory();},"stone-button reserve-choice");b.name="reserve-"+n;}
-            sellSurplus=Button(parent,"ПРОДАТЬ ЛИШНЕЕ",OpenSellSurplus,"stone-button primary");sellSurplus.name="sell-surplus";
-            Button(parent,"СНЯТЬ ЦЕЛЬ",()=>PinGoal(GoalKind.None),"stone-button secondary").name="clear-goal";
-            sellBag = Button(parent, "ПРОДАТЬ ВЕСЬ РЮКЗАК", OpenSellAll, "stone-button primary"); sellBag.name = "sell-bag";
-            Text(parent, "Нажми на ресурс, чтобы продать выбранное количество или весь запас этого вида.", "footnote");
+            Text(reserve,L.T("ОСТАВЛЯТЬ НА"), "micro");
+            foreach(int steps in new[]{1,3,5,0}){int n=steps;var b=Button(reserve,n==0?L.T("МАКС."):n+L.T(" УР."),()=>{game.Settings.SetReserveSteps(n);game.Settings.Save();game.Economy.ReserveSteps=n;RefreshInventory();},"stone-button reserve-choice");b.name="reserve-"+n;}
+            sellSurplus=Button(parent,L.T("ПРОДАТЬ ЛИШНЕЕ"),OpenSellSurplus,"stone-button primary");sellSurplus.name="sell-surplus";
+            Button(parent,L.T("СНЯТЬ ЦЕЛЬ"),()=>PinGoal(GoalKind.None),"stone-button secondary").name="clear-goal";
+            sellBag = Button(parent, L.T("ПРОДАТЬ ВЕСЬ РЮКЗАК"), OpenSellAll, "stone-button primary"); sellBag.name = "sell-bag";
+            Text(parent, L.T("Нажми на ресурс, чтобы продать выбранное количество или весь запас этого вида."), "footnote");
         }
         void RefreshInventory()
         {
             bool quote = game.Economy.TryInventoryValue(out long total);
-            bagValue.text = quote ? $"Предметов: {Short(game.Inventory.Total)}\nМожно продать за {Exact(total)} монет" : "Большой запас: продавай ресурсы частями.";
+            bagValue.text = L.T(quote ? L.F("Предметов: {0}\nМожно продать за {1} монет", (Short(game.Inventory.Total)), (Exact(total))) : L.T("Большой запас: продавай ресурсы частями."));
             sellBag.SetEnabled(quote && total > 0 && game.CanTrade);
-            foreach(var kind in ResourceInventory.Materials){int i=(int)kind;bagCounts[i].text=Short(game.Inventory[kind]);Display(bagCounts[i].parent,game.Economy.Profile.discovered[i]||game.Inventory[kind]>0);}
-            bagGoal.text=game.Economy.GoalTitle;Display(root.Q(className:"reserve-options"),game.Economy.Profile.goalKind==GoalKind.Upgrade);
-            if(game.Economy.Profile.goalKind==GoalKind.Upgrade){var key=ProfileRules.Key(game.Economy.Profile.goalIndex);int first=game.Economy.Profile.Level(key)+1;int last=game.Economy.ReserveSteps==0?Progression.MaxLevel(key.Kind):Math.Min(Progression.MaxLevel(key.Kind),first+game.Economy.ReserveSteps-1);bagGoal.text=Progression.Title(key.Kind)+(key.Kind<=UpgradeKind.Durability?" · "+game.ShopBalance.pickaxes[key.Tier].title:"")+" · запас на ур. "+first+"–"+last;}
+            foreach(var kind in ResourceInventory.Materials){int i=(int)kind;bagCounts[i].text= L.T(Short(game.Inventory[kind]));Display(bagCounts[i].parent,game.Economy.Profile.discovered[i]||game.Inventory[kind]>0);}
+            bagGoal.text= L.T(game.Economy.GoalTitle);Display(root.Q(className:"reserve-options"),game.Economy.Profile.goalKind==GoalKind.Upgrade);
+            if(game.Economy.Profile.goalKind==GoalKind.Upgrade){var key=ProfileRules.Key(game.Economy.Profile.goalIndex);int first=game.Economy.Profile.Level(key)+1;int last=game.Economy.ReserveSteps==0?Progression.MaxLevel(key.Kind):Math.Min(Progression.MaxLevel(key.Kind),first+game.Economy.ReserveSteps-1);bagGoal.text= L.T(Progression.Title(key.Kind)+(key.Kind<=UpgradeKind.Durability?" · "+L.T(game.ShopBalance.pickaxes[key.Tier].title):"")+L.T(" · запас на ур. ")+first+"–"+last);}
             foreach(int n in new[]{1,3,5,0})root.Q<Button>("reserve-"+n)?.EnableInClassList("active",n==game.Economy.ReserveSteps);
             bagGoalResources.Clear();
             if(game.Economy.Profile.goalKind!=GoalKind.None){
                 var target=game.Economy.ReservationCost();
-                if(target.Coins>0)bagGoal.text+="\nНа покупки: "+Exact(target.Coins)+" монет";
+                if(target.Coins>0)bagGoal.text+=L.T("\nНа покупки: ")+Exact(target.Coins)+L.T(" монет");
                 foreach(var material in ResourceInventory.Materials)if(target.Resources[(int)material]>0)RecipeLine(bagGoalResources,material,game.Inventory[material],target.Resources[(int)material]);
             }
             long surplus=0;try{game.Economy.SurplusQuote(out surplus);checked{_=game.Wallet+surplus;}}catch(OverflowException){surplus=0;}
             bool hasGoal=game.Economy.Profile.goalKind!=GoalKind.None;
             sellSurplus.SetEnabled(hasGoal&&surplus>0&&game.CanTrade);
-            sellSurplus.text=!hasGoal?"ВЫБЕРИ ЦЕЛЬ ДЛЯ ПРОДАЖИ":surplus>0?"ПРОДАТЬ ЛИШНЕЕ · "+Short(surplus)+" МОН.":"ЛИШНИХ РЕСУРСОВ НЕТ";
+            sellSurplus.text= L.T(!hasGoal?L.T("ВЫБЕРИ ЦЕЛЬ ДЛЯ ПРОДАЖИ"):surplus>0?L.T("ПРОДАТЬ ЛИШНЕЕ · ")+Short(surplus)+L.T(" МОН."):L.T("ЛИШНИХ РЕСУРСОВ НЕТ"));
         }
         public static bool TrySaleQuantity(string value, long available, out long quantity)
         {
@@ -79,12 +79,12 @@ namespace PickaxeFall
         {
             if (!game.CanTrade) return;
             long available = game.Inventory[kind]; var card = OpenModal(GameBalance.BlockName(kind));
-            Text(card, $"В рюкзаке: {Exact(available)}\nЦена: {game.Economy.Config.sellPrices[(int)kind]} монет за шт.", "description");
-            Text(card, "Сколько продать?", "section-label");
+            Text(card, L.F("В рюкзаке: {0}\nЦена: {1} монет за шт.", (Exact(available)), (game.Economy.Config.sellPrices[(int)kind])), "description");
+            Text(card, L.T("Сколько продать?"), "section-label");
             var input = new TextField { value = available > 0 ? "1" : "0", maxLength = 19, keyboardType = TouchScreenKeyboardType.NumberPad, name = "sale-quantity" };
             input.AddToClassList("quantity-input"); card.Add(input);
             var quote = BoldText(card, "", "sale-quote");
-            var confirm = Button(card, "ПРОДАТЬ", () =>
+            var confirm = Button(card, L.T("ПРОДАТЬ"), () =>
             {
                 if (Time.unscaledTime < nextTrade || !TrySaleQuantity(input.value, game.Inventory[kind], out long count)) return;
                 nextTrade = Time.unscaledTime + 0.25f; ConfirmTargetSale(kind,count);
@@ -94,29 +94,29 @@ namespace PickaxeFall
                 bool valid = TrySaleQuantity(input.value, game.Inventory[kind], out long count);
                 long money = 0;
                 if (valid) { try { money = checked(count * game.Economy.Config.sellPrices[(int)kind]); checked { _ = money + game.Wallet; } } catch (OverflowException) { valid = false; } }
-                quote.text = valid ? $"Ты получишь {Exact(money)} монет" : "Укажи доступное целое количество."; confirm.SetEnabled(valid);
+                quote.text = L.T(valid ? L.F("Ты получишь {0} монет", (Exact(money))) : L.T("Укажи доступное целое количество.")); confirm.SetEnabled(valid);
             }
             input.RegisterValueChangedCallback(_ => UpdateQuote()); UpdateQuote();
-            var all = Button(card, "ПРОДАТЬ ВЕСЬ ЭТОТ ВИД", () =>
+            var all = Button(card, L.T("ПРОДАТЬ ВЕСЬ ЭТОТ ВИД"), () =>
             {
                 if (Time.unscaledTime < nextTrade) return;
                 nextTrade = Time.unscaledTime + 0.25f; ConfirmTargetSale(kind,game.Inventory[kind]);
             }, "stone-button secondary"); all.name = "sale-all-kind"; all.SetEnabled(available > 0);
-            Button(card, "ОТМЕНА", () => CloseModal(), "stone-button secondary");
+            Button(card, L.T("ОТМЕНА"), () => CloseModal(), "stone-button secondary");
         }
         void OpenSellAll()
         {
             if (!game.CanTrade || !game.Economy.TryInventoryValue(out long value) || value == 0) return;
-            var card = OpenModal("Продать весь рюкзак?");
+            var card = OpenModal(L.T("Продать весь рюкзак?"));
             ReservationWarning(card,null,0);
-            Text(card, $"Предметов: {Exact(game.Inventory.Total)}\nВыручка: {Exact(value)} монет\n\nБудут проданы и материалы для улучшений. Продажу нельзя отменить.", "description");
-            Button(card, "ПРОДАТЬ ВСЁ", () => { if (Time.unscaledTime < nextTrade) return; nextTrade = Time.unscaledTime + 0.25f; if (game.SellAll()) CloseModal(); }, "stone-button primary").name = "sale-confirm-all";
-            Button(card, "ОСТАВИТЬ РЕСУРСЫ", () => CloseModal(), "stone-button secondary");
+            Text(card, L.F("Предметов: {0}\nВыручка: {1} монет\n\nБудут проданы и материалы для улучшений. Продажу нельзя отменить.", (Exact(game.Inventory.Total)), (Exact(value))), "description");
+            Button(card, L.T("ПРОДАТЬ ВСЁ"), () => { if (Time.unscaledTime < nextTrade) return; nextTrade = Time.unscaledTime + 0.25f; if (game.SellAll()) CloseModal(); }, "stone-button primary").name = "sale-confirm-all";
+            Button(card, L.T("ОСТАВИТЬ РЕСУРСЫ"), () => CloseModal(), "stone-button secondary");
         }
         void BuildShop(VisualElement parent)
         {
-            BoldText(parent, "Улучшения", "title");
-            var categories = Box(parent, "shop-categories"); string[] names = { "КИРКИ", "ДОБЫЧА", "УДАЧА", "ПРИЁМЫ" };
+            BoldText(parent, L.T("Улучшения"), "title");
+            var categories = Box(parent, "shop-categories"); string[] names = { L.T("КИРКИ"), L.T("ДОБЫЧА"), L.T("УДАЧА"), L.T("ПРИЁМЫ") };
             for (int i = 0; i < names.Length; i++)
             {
                 int index = i; var b = Button(categories, names[i], () => { shopCategory = index; RebuildShop(); }, "stone-button category"); b.name = "shop-category-" + i; categoryButtons.Add(b);
@@ -125,14 +125,14 @@ namespace PickaxeFall
             for (int i = 0; i < 5; i++)
             {
                 int tier = i;
-                var b = Button(tierSelector, "", () => { shopTier = tier; RebuildShop(); }, "stone-button tier-button"); b.tooltip = game.ShopBalance.pickaxes[i].title; b.name = "shop-tier-" + i;
+                var b = Button(tierSelector, "", () => { shopTier = tier; RebuildShop(); }, "stone-button tier-button"); b.tooltip = L.T(game.ShopBalance.pickaxes[i].title); b.name = "shop-tier-" + i;
                 Icon(b, PixelArt.Pickaxe(i), "tier-icon"); tierButtons.Add(b);
             }
             selectedToolName = BoldText(parent, "", "selected-tool");
             toolHitCounts = Text(parent, "", "description"); shopCards = Box(parent, "shop-cards");
             soonPanel = Box(parent, "soon-panel");
-            BoldText(soonPanel, "Новые карты и кирки", "title");
-            Text(soonPanel, "Выбери карту перед спуском. Улучшения кирок действуют во всех локациях.", "description");
+            BoldText(soonPanel, L.T("Новые карты и кирки"), "title");
+            Text(soonPanel, L.T("Выбери карту перед спуском. Улучшения кирок действуют во всех локациях."), "description");
             RebuildShop();
         }
         void RebuildShop()
@@ -157,13 +157,13 @@ namespace PickaxeFall
         {
             for (int i = 0; i < categoryButtons.Count; i++) categoryButtons[i].EnableInClassList("active", i == shopCategory);
             for (int i = 0; i < tierButtons.Count; i++) tierButtons[i].EnableInClassList("active", i == shopTier);
-            selectedToolName.text = game.ShopBalance.pickaxes[shopTier].title;
+            selectedToolName.text = L.T(game.ShopBalance.pickaxes[shopTier].title);
             if (shopCategory == 0)
             {
                 int damage = game.PreviewDamageHalfUnits(shopTier);
                 bool canUpgrade = game.Economy.Profile.Level(new(UpgradeKind.Damage, shopTier)) < Progression.MaxLevel(UpgradeKind.Damage);
                 int nextDamage = canUpgrade ? damage + Progression.DamageStepHalfUnits(shopTier,game.Economy.Config) : damage;
-                toolHitCounts.text = "Ударов на глубине появления" + (canUpgrade ? " сейчас → после +урона:" : ":") + "\nКамень " + HitComparison(BlockKind.Stone, damage, nextDamage) + " · Медь " + HitComparison(BlockKind.Copper, damage, nextDamage) + " · Железо " + HitComparison(BlockKind.Iron, damage, nextDamage) + " · Алмаз " + HitComparison(BlockKind.Diamond, damage, nextDamage);
+                toolHitCounts.text = L.T("Ударов на глубине появления") + (canUpgrade ? L.T(" сейчас → после +урона:") : ":") + L.T("\nКамень ") + HitComparison(BlockKind.Stone, damage, nextDamage) + L.T(" · Медь ") + HitComparison(BlockKind.Copper, damage, nextDamage) + L.T(" · Железо ") + HitComparison(BlockKind.Iron, damage, nextDamage) + L.T(" · Алмаз ") + HitComparison(BlockKind.Diamond, damage, nextDamage);
             }
             foreach (var card in upgradeCards) card.Refresh();
             foreach(var card in abilityCards)card.Refresh();
@@ -194,20 +194,20 @@ namespace PickaxeFall
         }
         string UpgradeEffect(UpgradeKey key, int level)
         {
-            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.ShopBalance.pickaxes[key.Tier].damage + level * Progression.DamageStepHalfUnits(key.Tier,game.Economy.Config) * 0.5) + " урона";
-            if (key.Kind == UpgradeKind.Durability) return (game.ShopBalance.pickaxes[key.Tier].durability + level * Progression.DurabilityStep(key.Tier,game.Economy.Config)) + " прочности";
-            if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + " кирки";
+            if (key.Kind == UpgradeKind.Damage) return Progression.Number(game.ShopBalance.pickaxes[key.Tier].damage + level * Progression.DamageStepHalfUnits(key.Tier,game.Economy.Config) * 0.5) + L.T(" урона");
+            if (key.Kind == UpgradeKind.Durability) return (game.ShopBalance.pickaxes[key.Tier].durability + level * Progression.DurabilityStep(key.Tier,game.Economy.Config)) + L.T(" прочности");
+            if (key.Kind == UpgradeKind.TeamSize) return (2 + level) + L.T(" кирки");
             return key.Kind switch
             {
-                UpgradeKind.EnergyCapacity => Progression.Number(EnergyPreview(key,level).StoredUses)+" примен.",
-                UpgradeKind.EnergyCharge => Progression.Number(EnergyPreview(key,level).RechargeSeconds)+" с/примен.",
-                UpgradeKind.EnergyEfficiency => "−" + Progression.Number(level*game.Economy.Config.efficiencyStep*100) + "% расхода",
-                UpgradeKind.DashForce => Progression.Number(game.Economy.Config.dashSpeed + game.Economy.Config.dashSpeedStep * level) + " м/с",
-                UpgradeKind.PlungeDepth => (1 + level) + " блоков",
-                UpgradeKind.ImpactPower => "+" + Progression.Number(level * game.Economy.Config.impactStep * 0.5) + " урона сильного удара",
-                UpgradeKind.Underwater => "−"+Progression.Number(30*(1-level/10f))+"% урона в воде",
-                UpgradeKind.HeatShield => "−"+Progression.Number(level*5)+"% износа в лаве",
-                UpgradeKind.Shrapnel => Progression.Number(level * game.Economy.Config.shrapnelStep * 0.5) + " соседу",
+                UpgradeKind.EnergyCapacity => Progression.Number(EnergyPreview(key,level).StoredUses)+L.T(" примен."),
+                UpgradeKind.EnergyCharge => Progression.Number(EnergyPreview(key,level).RechargeSeconds)+L.T(" с/примен."),
+                UpgradeKind.EnergyEfficiency => "−" + Progression.Number(level*game.Economy.Config.efficiencyStep*100) + L.T("% расхода"),
+                UpgradeKind.DashForce => Progression.Number(game.Economy.Config.dashSpeed + game.Economy.Config.dashSpeedStep * level) + L.T(" м/с"),
+                UpgradeKind.PlungeDepth => (1 + level) + L.T(" блоков"),
+                UpgradeKind.ImpactPower => "+" + Progression.Number(level * game.Economy.Config.impactStep * 0.5) + L.T(" урона сильного удара"),
+                UpgradeKind.Underwater => "−"+Progression.Number(30*(1-level/10f))+L.T("% урона в воде"),
+                UpgradeKind.HeatShield => "−"+Progression.Number(level*5)+L.T("% износа в лаве"),
+                UpgradeKind.Shrapnel => Progression.Number(level * game.Economy.Config.shrapnelStep * 0.5) + L.T(" соседу"),
                 _ => Progression.Number(level * Progression.ChanceStep(key.Kind,game.Economy.Config) * 100) + "%"
             };
         }
@@ -225,7 +225,7 @@ namespace PickaxeFall
                 effect=hud.BoldText(content,"","upgrade-effect");
                 var priceRow=Box(content,"skill-price-row");cost=hud.BoldText(priceRow,"","upgrade-price");resources=Box(priceRow,"recipe-resources");
                 reason=Text(content,"","upgrade-reason");
-                buy=hud.Button(content,"УЛУЧШИТЬ",()=>{
+                buy=hud.Button(content,L.T("УЛУЧШИТЬ"),()=>{
                     if(Time.unscaledTime<hud.nextTrade)return;hud.nextTrade=Time.unscaledTime+.25f;if(hud.game.Buy(key)){box.AddToClassList("purchase-flash");box.schedule.Execute(()=>box.RemoveFromClassList("purchase-flash")).ExecuteLater(350);}
                 },"stone-button skill-buy",UiSound.None);buy.name="buy-"+key.Kind+"-"+key.Tier;
                 pin=PaperPin(box);pin.name="goal-pin-"+key.Index;
@@ -235,17 +235,17 @@ namespace PickaxeFall
             public void Refresh()
             {
                 int level=hud.game.Economy.Profile.Level(key),max=Progression.MaxLevel(key.Kind);
-                heading.text=Progression.Title(key.Kind)+"  "+level+"/"+max;
-                effect.text=hud.UpgradeEffect(key,level)+(level<max?" → "+hud.UpgradeEffect(key,level+1):" · МАКС.");
+                heading.text= L.T(Progression.Title(key.Kind)+"  "+level+"/"+max);
+                effect.text= L.T(hud.UpgradeEffect(key,level)+(level<max?" → "+hud.UpgradeEffect(key,level+1):L.T(" · МАКС.")));
                 Display(pin,skillLock.IsOpen&&hud.game.Economy.Profile.goalKind==GoalKind.Upgrade&&hud.game.Economy.Profile.goalIndex==key.Index);
                 skillLock.Refresh();
                 bool available=hud.game.Economy.CanBuy(key,out string why)&&hud.game.CanTrade;
-                buy.SetEnabled(available);buy.text=level>=max?"ПРОКАЧАНО":"УЛУЧШИТЬ";
+                buy.SetEnabled(available);buy.text= L.T(level>=max?L.T("ПРОКАЧАНО"):L.T("УЛУЧШИТЬ"));
                 buy.EnableInClassList("buy-ready",available);buy.EnableInClassList("buy-blocked",!available&&level<max);
                 resources.Clear();Display(buy,skillLock.IsOpen&&level<max);
-                if(level>=max){cost.text="";reason.text="";Display(reason,false);return;}
+                if(level>=max){cost.text= L.T("");reason.text= L.T("");Display(reason,false);return;}
                 var price=Progression.Cost(key,level+1,hud.game.Economy.Config);
-                cost.text=Exact(price.Coins)+" мон.";
+                cost.text= L.T(Exact(price.Coins)+L.T(" мон."));
                 cost.EnableInClassList("cost-enough",hud.game.Wallet>=price.Coins);cost.EnableInClassList("cost-short",hud.game.Wallet<price.Coins);
                 for(int i=0;i<ResourceInventory.SlotCount;i++)
                 {
@@ -254,7 +254,7 @@ namespace PickaxeFall
                     Icon(item,PixelArt.ResourceIcon(kind),"recipe-icon");
                     item.tooltip=GameBalance.BlockName(kind)+" · "+WorldCatalog.FoundIn(kind);hud.BoldText(item,Short(hud.game.Inventory[kind])+"/"+Short(price.Resources[i]),enough?"recipe-amount cost-enough":"recipe-amount cost-short").name="required-"+kind;
                 }
-                reason.text=why??"";Display(reason,!available&&skillLock.IsOpen);
+                reason.text= L.T(why??"");Display(reason,!available&&skillLock.IsOpen);
             }
         }
     }

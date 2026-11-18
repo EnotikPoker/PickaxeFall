@@ -53,7 +53,7 @@ namespace PickaxeFall
         public bool Paused { get; private set; }
         public bool SystemSuspended { get; private set; }
         public bool TrialOpen => World != null && World.ActiveTrial != null;
-        public bool WorldFrozen => Paused || SystemSuspended || TrialOpen;
+        public bool WorldFrozen => Paused || SystemSuspended || TrialOpen || PlatformFrozen;
         public float SessionSeconds => Clock.Now + Benefits.TrialSeconds;
         void RefreshTimeScale() { if(!IsSimulation)Time.timeScale=WorldFrozen?0:1; }
         internal void TrialChanged() { trialFrameDelta=0;hud?.CancelUiPresses(); RefreshTimeScale(); Notify(); SaveProgress(); }
@@ -63,7 +63,7 @@ namespace PickaxeFall
             hud?.CancelUiPresses();SystemSuspended=value;if(!value)skipTrialFrame=true;RefreshTimeScale();if(value)SaveProgress();
         }
 
-        public bool CanTrade => Phase == RunPhase.Ready || Phase == RunPhase.Equipped || Phase == RunPhase.Finished;
+        public bool CanTrade => !PlatformFrozen && (Phase == RunPhase.Ready || Phase == RunPhase.Equipped || Phase == RunPhase.Finished);
         public Rect GameplayViewport => hud != null ? hud.GameplayViewport : new Rect(0.04f, 0.24f, 0.92f, 0.53f);
         public readonly long[] OreCounts = new long[ResourceInventory.SlotCount];
         public event Action Changed;
@@ -72,14 +72,14 @@ namespace PickaxeFall
         System.Random rouletteRandom;
         int selectedTier;
         bool initialized, dirty, skipTrialFrame;
-        float nextSave,lastMinedTime,trialFrameDelta;
+        float nextSave,lastMinedTime,trialFrameDelta,nextWebSave;
 
         public void Configure(GameBalance config, PanelSettings panel, StyleSheet style)
         { balance = config; panelSettings = panel; interfaceStyle = style; }
 
-        void Start()
+        IEnumerator Start()
         {
-            if (IsSimulation) return;
+            if (IsSimulation) yield break;
             Application.runInBackground=true; Application.targetFrameRate = 60; Screen.orientation = ScreenOrientation.Portrait;
             Time.fixedDeltaTime = 1f / 60; Physics2D.simulationMode = SimulationMode2D.Script;
             Physics2D.gravity = new Vector2(0, balance.gravity);
@@ -99,7 +99,8 @@ namespace PickaxeFall
             if (Array.IndexOf(new[] { "touch", "touch-edge", "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned", "desert", "nether", "temple", "fortress", "mineshaft", "treasure" }, TestMode) < 0) TestMode = "";
             bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
             if (probe) TestMode = "probe";
-            if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--input-checks"))TestMode="input";
+            if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--localization-check"))TestMode="localization";
+            else if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--input-checks"))TestMode="input";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
             foreach(string mode in new[] {"savewrite","saveread","savefinished"})if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--"+mode+"-check"))TestMode=mode;
             if (TestMode.Length > 0) { Application.runInBackground=true; ProfileDirectory = Path.Combine(Application.temporaryCachePath, "verification", Guid.NewGuid().ToString("N")); }
@@ -110,16 +111,23 @@ namespace PickaxeFall
                 ProfileDirectory=Path.Combine(Application.temporaryCachePath,"verification","resume-"+guid.ToString("N"));
             }
 #endif
+            Platform=gameObject.AddComponent<PlatformHost>();
+            var bootstrap=Platform.Initialize(this,panelSettings,interfaceStyle,ProfileDirectory,TestMode.Length>0);
+            while(true)
+            {
+                bool move;try{move=bootstrap.MoveNext();}catch(Exception e){ShowStartupError(e.Message);yield break;}
+                if(!move)break;yield return bootstrap.Current;
+            }
             Settings = new GameSettings(TestMode.Length > 0);
-            var store = new ProfileStore(ProfileDirectory, TestMode.Length > 0 ? () => new PlayerProfile() : null);
+            var store = Platform.Store;
             try { Economy = new EconomyService(store.Load(), store.Save, store.Reset, balance.progression); }
             catch (Exception e)
             {
                 Debug.LogError(e.Message);
                 var errorDocument = gameObject.AddComponent<UIDocument>(); errorDocument.panelSettings = panelSettings;
                 errorDocument.rootVisualElement.styleSheets.Add(interfaceStyle);
-                var message = new Label("Сохранение недоступно.\n" + e.Message) { name = "save-error" };
-                message.AddToClassList("fatal-error"); errorDocument.rootVisualElement.Add(message); return;
+                var message = new Label(L.T("Сохранение недоступно.\n") + L.T("Не удалось прочитать сохранение. Резервные файлы сохранены.")) { name = "save-error" };
+                message.AddToClassList("fatal-error"); errorDocument.rootVisualElement.Add(message); yield break;
             }
             if(Economy.Profile.resetNotice){Settings.SetTutorialSeen(false);Settings.Save();}
             Economy.ReserveSteps=Settings.ReserveSteps;
@@ -140,12 +148,14 @@ namespace PickaxeFall
             gameObject.AddComponent<DeveloperDiagnostics>().Initialize(this);
 #endif
             if(Economy.Profile.run!=null)RestoreRun(Economy.Profile.run);else NewRun();
+            Platform.GameReady();PlatformStateChanged();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (TestMode == "smoke" || Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--smoke-test")) gameObject.AddComponent<RuntimeSmokeTest>();
             if(TestMode.StartsWith("touch",StringComparison.Ordinal))gameObject.AddComponent<RuntimeTouchProbe>();
             if(TestMode=="input")gameObject.AddComponent<RuntimeInputLightingChecks>();
+            if(TestMode=="localization")gameObject.AddComponent<RuntimeLocalizationChecks>();
             if(TestMode.StartsWith("save",StringComparison.Ordinal))gameObject.AddComponent<RuntimeResumeCheck>();
-            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
+            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && TestMode!="localization" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe" || arg == "--economy-probe")) gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
@@ -218,8 +228,9 @@ namespace PickaxeFall
                 tools[i].Equip(selectedTier, i, (i - (RunToolCount - 1) * 0.5f) * 1.4f); tools[i].Launch();
             }
             Energy.Reset(RunUpgrades); SelectTool(0);
+            if(!IsSimulation&&Platform!=null&&Platform.IsYandex)Platform.Ads.StartRun();
             Phase = RunPhase.Mining; World.StreamTools(tools); cameraFollow?.ResetView(); Notify();
-            if (RunToolCount > 1) hud?.Toast("УДАЧА! КИРОК В ОТРЯДЕ: " + RunToolCount);
+            if (RunToolCount > 1) hud?.Toast(L.T("УДАЧА! КИРОК В ОТРЯДЕ: ") + RunToolCount);
         }
         public bool RollEffect(UpgradeKind kind) => Rolls.Roll(kind, RunUpgrades.Chance(kind));
         public int PreviewDamageHalfUnits(int tier) => ShopBalance.pickaxes[tier].damage * 2 + Progression.DamageStepHalfUnits(tier,Economy.Config) * Economy.Profile.Level(new(UpgradeKind.Damage, tier));
@@ -231,7 +242,7 @@ namespace PickaxeFall
             if (Input.GetKeyDown(KeyCode.Escape)) { if (!hud.CloseModal()) TogglePause(); }
             if (Phase == RunPhase.Mining && !Paused)
             {
-                if (Time.unscaledTime >= nextSave) SaveProgress();
+                if (Time.unscaledTime >= nextSave || Platform!=null&&Platform.IsYandex&&dirty&&Time.unscaledTime>=nextWebSave) SaveProgress();
             }
             #if PICKAXEFALL_DEVTOOLS
             if(DeveloperInfiniteEnergy&&Phase==RunPhase.Mining)Energy.Ensure(Energy.Maximum);
@@ -240,16 +251,16 @@ namespace PickaxeFall
             if(skipTrialFrame)skipTrialFrame=false;
             else
             {
-                AdvanceRoulette(Time.unscaledDeltaTime);
-                if(!Paused&&!SystemSuspended)trialFrameDelta=Time.unscaledDeltaTime;
+                if(!PlatformFrozen)AdvanceRoulette(Time.unscaledDeltaTime);
+                if(!Paused&&!SystemSuspended&&!PlatformFrozen)trialFrameDelta=Time.unscaledDeltaTime;
             }
-            hud.Tick();
+            TickPlatform();hud.Tick();
         }
 
         void LateUpdate()
         {
             // Complete this frame's input before deciding that the tap timer expired.
-            if(initialized&&!IsSimulation&&!Paused&&!SystemSuspended&&trialFrameDelta>0)World.AdvanceTrial(trialFrameDelta);
+            if(initialized&&!IsSimulation&&!Paused&&!SystemSuspended&&!PlatformFrozen&&trialFrameDelta>0)World.AdvanceTrial(trialFrameDelta);
             trialFrameDelta=0;
         }
         void FixedUpdate() { if (initialized && !IsSimulation) SimulateMiningStep(); }
@@ -257,7 +268,7 @@ namespace PickaxeFall
         public void SimulateMiningStep(Action<GameController> policy = null)
         {
             if (Phase != RunPhase.Mining || WorldFrozen) return;
-            Clock.Advance(); if(Clock.Now-lastMinedTime>15)Benefits.SlowMiningSeconds+=Clock.Delta; Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
+            Clock.Advance(); if(!IsSimulation&&Platform!=null&&Platform.IsYandex)Platform.Ads.Advance(Clock.Delta);if(Clock.Now-lastMinedTime>15)Benefits.SlowMiningSeconds+=Clock.Delta; Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
             foreach (var tool in tools) if (tool.IsAlive) tool.PhysicsTick();
             if(WorldFrozen)return;
             Physics2D.SyncTransforms(); PhysicsScene.Simulate(Clock.Delta);
@@ -315,7 +326,7 @@ namespace PickaxeFall
                 if(upgrading)Benefits.UpgradeBenches++;
                 RecordBench(source,block,before,maximumBefore,tierBefore);
                 Effects.Impact(block.transform.position,upgrading?new Color32(81,233,228,255):new Color32(105,239,196,255),18,true);
-                hud?.Toast((upgrading?"УЛУЧШАЮЩИЙ ВЕРСТАК":"ВЕРСТАК")+(doubled?" ×2":"")+" · ПОЛНЫЙ РЕМОНТ"+(source.Tier>tierBefore?" И ПОВЫШЕНИЕ":""));
+                hud?.Toast((upgrading?L.T("УЛУЧШАЮЩИЙ ВЕРСТАК"):L.T("ВЕРСТАК"))+(doubled?" ×2":"")+L.T(" · ПОЛНЫЙ РЕМОНТ")+(source.Tier>tierBefore?L.T(" И ПОВЫШЕНИЕ"):""));
             }
             else
             {
@@ -347,13 +358,13 @@ namespace PickaxeFall
                 if (RollEffect(UpgradeKind.LastChance))
                 {
                     tool.Revive(); Benefits.Rescues++; Benefits.RestoredDurability += tool.Durability; Energy.Ensure(AbilityCost(AbilityKind.Plunge));
-                    hud?.Toast("ПОСЛЕДНИЙ ШАНС! +50% ПРОЧНОСТИ И ЭНЕРГИЯ"); Notify(); return;
+                    hud?.Toast(L.T("ПОСЛЕДНИЙ ШАНС! +50% ПРОЧНОСТИ И ЭНЕРГИЯ")); Notify(); return;
                 }
             }
             tool.BreakApart();
             if (tool == SelectedTool) for (int i = 0; i < tools.Count; i++) if (SelectTool(i)) break;
             foreach(var other in tools)other.SetSelected(other.ToolIndex==SelectedToolIndex);
-            if (last) FinishRun(); else { hud?.Toast("КИРКА №" + (tool.ToolIndex + 1) + " РАССЫПАЛАСЬ"); Notify(); }
+            if (last) FinishRun(); else { hud?.Toast(L.T("КИРКА №") + (tool.ToolIndex + 1) + L.T(" РАССЫПАЛАСЬ")); Notify(); }
         }
         public void FinishRun()
         {
@@ -364,11 +375,12 @@ namespace PickaxeFall
                 if (tool.IsAlive) { Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.transform.position.y)); tool.BreakApart(); }
             }
             hud.CancelUiPresses();
-            Phase = RunPhase.Breaking; Paused = false; Time.timeScale = 1;
+            Phase = RunPhase.Breaking; Paused = false; RefreshTimeScale();
+            if(Platform!=null&&Platform.IsYandex)Platform.Ads.Finish(PotentialSaleValue);
             Economy.Profile.mapRecords[(int)CurrentMap]=Mathf.Max(BestDepth,Depth);if(CurrentMap==MapId.Mine)Economy.Profile.bestDepth=Economy.Profile.mapRecords[0]; SaveProgress();
             Notify(); StartCoroutine(FinishAnimation());
         }
-        IEnumerator FinishAnimation() { yield return new WaitForSeconds(0.85f); Phase = RunPhase.Finished; Notify(); }
+        IEnumerator FinishAnimation() { yield return new WaitForSeconds(0.85f); Phase = RunPhase.Finished; SaveProgress();Notify(); }
 
         public bool ResetProgress()
         {
@@ -381,21 +393,21 @@ namespace PickaxeFall
             if (!CanTrade) return false;
             bool success = Economy.TryBuy(key);
             if (success && Phase == RunPhase.Equipped) { RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression); Pickaxe.Equip(selectedTier); }
-            if(success)Audio?.Ui(UiSound.Skill);else Audio?.Play("error");hud.Toast(success ? "УЛУЧШЕНИЕ КУПЛЕНО" : Economy.LastError); Notify(); return success;
+            if(success)Audio?.Ui(UiSound.Skill);else Audio?.Play("error");hud.Toast(success ? L.T("УЛУЧШЕНИЕ КУПЛЕНО") : Economy.LastError); Notify(); return success;
         }
         public bool Sell(BlockKind kind, long quantity)
         {
             if (!CanTrade) return false;
-            bool success = Economy.TrySell(kind, quantity); if(success)Audio?.Ui(UiSound.Sale);else Audio?.Play("error");hud.Toast(success ? "РЕСУРСЫ ПРОДАНЫ" : Economy.LastError); Notify(); return success;
+            bool success = Economy.TrySell(kind, quantity); if(success)Audio?.Ui(UiSound.Sale);else Audio?.Play("error");hud.Toast(success ? L.T("РЕСУРСЫ ПРОДАНЫ") : Economy.LastError); Notify(); return success;
         }
         public bool SellAll()
         {
             if (!CanTrade) return false;
-            bool success = Economy.TrySellAll(); if(success)Audio?.Ui(UiSound.Sale);else Audio?.Play("error");hud.Toast(success ? "РЮКЗАК ПРОДАН" : Economy.LastError); Notify(); return success;
+            bool success = Economy.TrySellAll(); if(success)Audio?.Ui(UiSound.Sale);else Audio?.Play("error");hud.Toast(success ? L.T("РЮКЗАК ПРОДАН") : Economy.LastError); Notify(); return success;
         }
         public void TogglePause()
         {
-            if (Phase != RunPhase.Mining) return;
+            if (Phase != RunPhase.Mining || PlatformFrozen) return;
             hud?.CancelUiPresses(); Paused = !Paused; RefreshTimeScale(); Notify();
             if(Paused)SaveProgress();
         }
@@ -403,17 +415,24 @@ namespace PickaxeFall
         void SaveProgress()
         {
             if (IsSimulation || !initialized) return;
-            try { Economy.Profile.run=Phase==RunPhase.Mining?CaptureRun():null;Economy.Save(); Settings?.Save(); dirty = false; nextSave = Time.unscaledTime + 5; }
-            catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС"); nextSave = Time.unscaledTime + 10; }
+            try { Economy.Profile.run=Phase==RunPhase.Mining?CaptureRun():null;Economy.Save(); Settings?.Save(); dirty = false;nextWebSave=0; nextSave = Time.unscaledTime + 5; }
+            catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast(L.T("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС")); nextSave = Time.unscaledTime + 10;nextWebSave=nextSave; }
+        }
+        void ShowStartupError(string error)
+        {
+            var doc=gameObject.AddComponent<UIDocument>();doc.panelSettings=panelSettings;doc.rootVisualElement.styleSheets.Add(interfaceStyle);
+            var label=new Label(L.T("Сохранение недоступно.\n")+error);label.AddToClassList("fatal-error");doc.rootVisualElement.Add(label);
+            var retry=new Button(()=>Platform.Reload()){text=L.T("Повторить загрузку")};retry.AddToClassList("stone-button");doc.rootVisualElement.Add(retry);
         }
         void OnApplicationPause(bool pause) => SetApplicationSuspended(pause);
         void OnApplicationFocus(bool focus)
         {
+            if(Platform!=null&&Platform.IsYandex){SetApplicationSuspended(!focus);return;}
             if(!focus && initialized && !IsSimulation){hud?.CancelUiPresses();SaveProgress();}
         }
         void OnApplicationQuit(){SaveProgress();quitting=true;}
         void OnDestroy() { if (initialized && !quitting) SaveProgress(); Time.timeScale = 1; hud?.Dispose();if(restoredBalance)Destroy(restoredBalance); }
-        void Notify() => Changed?.Invoke();
+        void Notify(){dirty=true;Changed?.Invoke();}
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         public void BeginProbeRun(int tier, int seed, int count = 0)

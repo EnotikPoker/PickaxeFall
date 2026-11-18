@@ -25,30 +25,30 @@ namespace PickaxeFall
         void ShowSkillDetails(string title,string body)
         {
             var card=OpenModal(title);Text(card,body,"description");
-            Button(card,"ПОНЯТНО",()=>CloseModal(),"stone-button compact-button");
+            Button(card,L.T("ПОНЯТНО"),()=>CloseModal(),"stone-button compact-button");
         }
         static string SkillSummary(UpgradeKind kind)=>kind switch{
-            UpgradeKind.Underwater=>"Меньше штраф урона в воде.",
-            UpgradeKind.HeatShield=>"Меньше износ в лаве.",
-            UpgradeKind.TreasureHunter=>"Шанс на дополнительную добычу из сундука.",
-            UpgradeKind.EarthDigger=>"Шанс добыть больше земли и песка.",
-            UpgradeKind.Damage=>"Больше урона выбранной кирке.",
-            UpgradeKind.Durability=>"Больше прочности выбранной кирке.",
-            UpgradeKind.Fortune=>"Шанс получить дополнительную руду.",
-            UpgradeKind.TeamChance=>"Шанс начать спуск с несколькими кирками.",
-            UpgradeKind.TeamSize=>"Больше кирок при выпадении отряда.",
-            UpgradeKind.TntFind=>"Добытая руда может вызвать взрыв.",
-            UpgradeKind.DoubleBench=>"Шанс дополнительного улучшения на верстаке.",
-            UpgradeKind.DoubleBlast=>"Шанс удвоить площадь взрыва.",
-            UpgradeKind.Careful=>"Шанс сохранить прочность при ударе.",
-            UpgradeKind.LastChance=>"Шанс спасти последнюю кирку один раз за спуск.",
-            UpgradeKind.EnergyCapacity=>"Накапливай запас до трёх применений.",
-            UpgradeKind.EnergyCharge=>"Восстанавливай энергию быстрее.",
-            UpgradeKind.EnergyEfficiency=>"Меньше энергии на каждый приём.",
-            UpgradeKind.DashForce=>"Более сильный направленный рывок.",
-            UpgradeKind.PlungeDepth=>"Пробивай больше блоков нажатием.",
-            UpgradeKind.ImpactPower=>"Больше урона при сильном столкновении.",
-            _=>"Сильный удар повреждает соседний блок."
+            UpgradeKind.Underwater=>L.T("Меньше штраф урона в воде."),
+            UpgradeKind.HeatShield=>L.T("Меньше износ в лаве."),
+            UpgradeKind.TreasureHunter=>L.T("Шанс на дополнительную добычу из сундука."),
+            UpgradeKind.EarthDigger=>L.T("Шанс добыть больше земли и песка."),
+            UpgradeKind.Damage=>L.T("Больше урона выбранной кирке."),
+            UpgradeKind.Durability=>L.T("Больше прочности выбранной кирке."),
+            UpgradeKind.Fortune=>L.T("Шанс получить дополнительную руду."),
+            UpgradeKind.TeamChance=>L.T("Шанс начать спуск с несколькими кирками."),
+            UpgradeKind.TeamSize=>L.T("Больше кирок при выпадении отряда."),
+            UpgradeKind.TntFind=>L.T("Добытая руда может вызвать взрыв."),
+            UpgradeKind.DoubleBench=>L.T("Шанс дополнительного улучшения на верстаке."),
+            UpgradeKind.DoubleBlast=>L.T("Шанс удвоить площадь взрыва."),
+            UpgradeKind.Careful=>L.T("Шанс сохранить прочность при ударе."),
+            UpgradeKind.LastChance=>L.T("Шанс спасти последнюю кирку один раз за спуск."),
+            UpgradeKind.EnergyCapacity=>L.T("Накапливай запас до трёх применений."),
+            UpgradeKind.EnergyCharge=>L.T("Восстанавливай энергию быстрее."),
+            UpgradeKind.EnergyEfficiency=>L.T("Меньше энергии на каждый приём."),
+            UpgradeKind.DashForce=>L.T("Более сильный направленный рывок."),
+            UpgradeKind.PlungeDepth=>L.T("Пробивай больше блоков нажатием."),
+            UpgradeKind.ImpactPower=>L.T("Больше урона при сильном столкновении."),
+            _=>L.T("Сильный удар повреждает соседний блок.")
         };
 
         sealed class SkillLock
@@ -62,7 +62,7 @@ namespace PickaxeFall
                 panel=Box(card,"skill-lock-layer");panel.name="lock-"+index;
                 cover=hud.Button(panel,"",Activate,"skill-lock-cover");cover.name="reveal-"+index;
                 drawing=new ChainDrawing {pickingMode=PickingMode.Ignore};drawing.AddToClassList("chain-drawing");cover.Add(drawing);
-                string title=index==25?"Рывок":index==26?"Пробой":Progression.Title(ProfileRules.RevealKey(index).Kind);
+                string title=index==25?L.T("Рывок"):index==26?L.T("Пробой"):Progression.Title(ProfileRules.RevealKey(index).Kind);
                 hud.BoldText(cover,title,"locked-title").pickingMode=PickingMode.Ignore;
                 note=hud.BoldText(cover,"","locked-note");note.pickingMode=PickingMode.Ignore;
                 cover.tooltip=title;
@@ -75,7 +75,7 @@ namespace PickaxeFall
                 card.EnableInClassList("locked-skill",!IsOpen||animating);
                 Display(panel,!IsOpen||animating);cover.SetEnabled(eligible&&!IsOpen&&!animating&&hud.game.CanTrade);
                 cover.EnableInClassList("lock-ready",eligible);
-                note.text=eligible?"НАЖМИ, ЧТОБЫ ОТКРЫТЬ":"УРОВЕНЬ ПРОФИЛЯ "+ProfileRules.RequiredLevel(index);
+                note.text= L.T(eligible?L.T("НАЖМИ, ЧТОБЫ ОТКРЫТЬ"):L.T("УРОВЕНЬ ПРОФИЛЯ ")+ProfileRules.RequiredLevel(index));
                 drawing.Ready=eligible;drawing.MarkDirtyRepaint();
             }
             public void Activate()

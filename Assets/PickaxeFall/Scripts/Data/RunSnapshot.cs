@@ -30,7 +30,7 @@ namespace PickaxeFall
                 string.IsNullOrEmpty(balanceJson) || levels==null || levels.Length!=Progression.KeyCount || loot==null || loot.Length!=ResourceInventory.SlotCount ||
                 rollStates==null || rollStates.Length!=Progression.KindCount || attempts==null || attempts.Length!=Progression.KindCount || successes==null || successes.Length!=Progression.KindCount ||
                 tools==null || tools.Length!=5 || cells==null || benefits==null || !Finite(energy) || !Finite(energyEarned) || energy<0 || energyEarned<0)
-                throw new InvalidOperationException("Повреждены данные незавершённого спуска.");
+                throw new InvalidOperationException(L.T("Повреждены данные незавершённого спуска."));
             if(!Enum.IsDefined(typeof(MapId),map))throw new InvalidOperationException("Invalid saved world.");
             if(spawners!=null)foreach(var s in spawners)
             {
@@ -43,14 +43,14 @@ namespace PickaxeFall
             for(int i=0;i<tools.Length;i++)
             {
                 var t=tools[i];
-                if(t==null || t.index!=i || t.tier<0 || t.tier>4 || t.originalTier<0 || t.originalTier>4 || t.durability<0 || !Finite(t.position.x) || !Finite(t.position.y) || !Finite(t.velocity.x) || !Finite(t.velocity.y) || !Finite(t.rotation) || !Finite(t.angularVelocity) || !Finite(t.lavaWear) || t.lavaWear<0 || t.lavaWear>=1)throw new InvalidOperationException("Повреждена кирка сохранённого спуска.");
+                if(t==null || t.index!=i || t.tier<0 || t.tier>4 || t.originalTier<0 || t.originalTier>4 || t.durability<0 || !Finite(t.position.x) || !Finite(t.position.y) || !Finite(t.velocity.x) || !Finite(t.velocity.y) || !Finite(t.rotation) || !Finite(t.angularVelocity) || !Finite(t.lavaWear) || t.lavaWear<0 || t.lavaWear>=1)throw new InvalidOperationException(L.T("Повреждена кирка сохранённого спуска."));
                 alive|=t.alive && t.durability>0;
             }
-            if(!alive || !tools[selectedTool].alive)throw new InvalidOperationException("В сохранённом спуске нет выбранной живой кирки.");
-            foreach(var cell in cells)if(cell==null || cell.row< -2 || !Enum.IsDefined(typeof(BlockKind),cell.kind) || cell.health<0 || !Finite(cell.litUntil))throw new InvalidOperationException("Повреждена шахта сохранённого спуска.");
-            for(int i=0;i<Progression.KindCount;i++)if(rollStates[i]==0 || attempts[i]<0 || successes[i]<0 || successes[i]>attempts[i])throw new InvalidOperationException("Повреждена случайность сохранённого спуска.");
-            if(liquids!=null)foreach(var cell in liquids)if(cell==null || cell.row< -2 || cell.amount<0 || cell.amount>8 || cell.kind!=BlockKind.Water && cell.kind!=BlockKind.Lava || cell.cooling && (cell.kind!=BlockKind.Lava || cell.amount!=0))throw new InvalidOperationException("Повреждена жидкость сохранённого спуска.");
-            foreach(long count in loot)if(count<0)throw new InvalidOperationException("Повреждена добыча сохранённого спуска.");
+            if(!alive || !tools[selectedTool].alive)throw new InvalidOperationException(L.T("В сохранённом спуске нет выбранной живой кирки."));
+            foreach(var cell in cells)if(cell==null || cell.row< -2 || !Enum.IsDefined(typeof(BlockKind),cell.kind) || cell.health<0 || !Finite(cell.litUntil))throw new InvalidOperationException(L.T("Повреждена шахта сохранённого спуска."));
+            for(int i=0;i<Progression.KindCount;i++)if(rollStates[i]==0 || attempts[i]<0 || successes[i]<0 || successes[i]>attempts[i])throw new InvalidOperationException(L.T("Повреждена случайность сохранённого спуска."));
+            if(liquids!=null)foreach(var cell in liquids)if(cell==null || cell.row< -2 || cell.amount<0 || cell.amount>8 || cell.kind!=BlockKind.Water && cell.kind!=BlockKind.Lava || cell.cooling && (cell.kind!=BlockKind.Lava || cell.amount!=0))throw new InvalidOperationException(L.T("Повреждена жидкость сохранённого спуска."));
+            foreach(long count in loot)if(count<0)throw new InvalidOperationException(L.T("Повреждена добыча сохранённого спуска."));
         }
         static bool Finite(float x)=>!float.IsNaN(x) && !float.IsInfinity(x);
     }
