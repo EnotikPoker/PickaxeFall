@@ -11,13 +11,17 @@ namespace PickaxeFall
         public StyleSheet InterfaceStyle=>interfaceStyle;
         bool adCountdown;string verifiedRewardId="";
         public bool PlatformFrozen=>adCountdown||Platform!=null&&(Platform.Busy||Platform.Suspended);
-        public bool RewardAvailable=>Platform!=null&&Platform.IsYandex&&(Phase==RunPhase.Finished||Phase==RunPhase.Ready)&&!Platform.Ads.rewarded&&Platform.Ads.rewardValue>0;
+        public bool RewardAvailable=>Platform!=null&&Platform.HasAdvertising&&(Phase==RunPhase.Finished||Phase==RunPhase.Ready)&&!Platform.Ads.rewarded&&Platform.Ads.rewardValue>0;
         public void PlatformStateChanged()
         {
             if(!initialized)return;hud?.CancelUiPresses();RefreshTimeScale();Audio?.SetPlatformSuspended(PlatformFrozen);
             Platform?.Gameplay(Phase==RunPhase.Mining&&!WorldFrozen);if(PlatformFrozen)SaveProgress();
         }
         public void SaveCheckpoint()=>SaveProgress();
+        public void ApplyPlatformProfile(PlayerProfile profile)
+        {
+            var run=profile.run;Economy.ReplaceSaved(profile);NewRun();if(run!=null)RestoreRun(run);SaveProgress();
+        }
         public void ChangeLanguage(string language)
         {
             Settings.SetLanguage(language);Settings.Save();hud?.Dispose();var document=GetComponent<UIDocument>();document.rootVisualElement.Clear();
@@ -25,7 +29,7 @@ namespace PickaxeFall
         }
         public void RepeatRun()
         {
-            if(Platform==null||!Platform.IsYandex||!Platform.Ads.AfterDue){NewRun();return;}
+            if(Platform==null||!Platform.HasAdvertising||!Platform.Ads.AfterDue){NewRun();return;}
             SaveProgress();Platform.Show("after-run",false,null,shown=>{Platform.Ads.AfterResult(shown);SaveProgress();NewRun();});
         }
         public void ClaimRunReward()
@@ -37,17 +41,15 @@ namespace PickaxeFall
         }
         void GrantRunReward(string id)
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            if(Platform.Store is not BrowserProfileStore store||Platform.Ads.rewarded||Platform.Ads.rewardId!=id)return;
+            if(Platform.Store is not IRewardProfileStore store||Platform.Ads.rewarded||Platform.Ads.rewardId!=id)return;
             verifiedRewardId=id;var next=Economy.Profile.Copy();var ads=Platform.Ads.Copy();
-            try{next.coins=checked(next.coins+ads.rewardValue);ads.rewarded=true;store.Commit(next,ads);Economy.ReplaceSaved(next);hud?.Toast(L.T("Награда получена"));}
+            try{next.coins=checked(next.coins+ads.rewardValue);ads.rewarded=true;store.CommitReward(next,ads);Economy.ReplaceSaved(next);hud?.Toast(L.T("Награда получена"));}
             catch(Exception){hud?.Toast(L.T("Не удалось выдать награду. Попробуй ещё раз."));}
             Notify();
-#endif
         }
         void TickPlatform()
         {
-            if(Platform==null||!Platform.IsYandex)return;
+            if(Platform==null||!Platform.HasAdvertising)return;
             Audio?.SetPlatformSuspended(PlatformFrozen);
             Platform.Gameplay(Phase==RunPhase.Mining&&!WorldFrozen);
             if(Platform.Available&&Platform.MidRunAds&&Platform.Ads.RunDue&&Phase==RunPhase.Mining&&!WorldFrozen&&!hud.ModalOpen)
@@ -74,11 +76,12 @@ namespace PickaxeFall
         Label adCountdownLabel;Button rewardButton;
         void BuildPlatformControls()
         {
-            if(game.Platform==null||!game.Platform.IsYandex)return;
+            if(game.Platform==null||!game.Platform.HasAdvertising)return;
             rewardButton=Button(mineView,"",game.ClaimRunReward,"stone-button primary");rewardButton.name="rewarded-run-bonus";
         }
         void TickPlatformControls()
         {
+            TickGoogleControls();
             if(rewardButton==null)return;if(cloudStatusLabel!=null)cloudStatusLabel.text=L.T(game.Platform.CloudStatus);window.SetEnabled(!game.PlatformFrozen);
             Display(rewardButton,game.RewardAvailable);rewardButton.text=L.F("Реклама: +{0} монет",game.Platform.Ads.rewardValue);rewardButton.SetEnabled(game.Platform.Available&&!game.Platform.Busy);
         }

@@ -27,8 +27,8 @@ namespace PickaxeFall
         {
             var card=OpenModal(L.T("Звук и музыка"));Text(card,L.T("Звуковые эффекты: Kenney и artisticdude · CC0.\nИнтерфейс: PickaxeFall · CC0.\n\nМузыка: Kevin MacLeod (incompetech.com)\nDreams Become Real\nEastern Thought\nOssuary 5 — Rest\n\nCreative Commons Attribution 4.0. Громкость и переходы адаптированы для игры."),"description");
             Text(card,"https://creativecommons.org/licenses/by/4.0/","footnote");
-            if(game.Platform==null||!game.Platform.IsYandex)Button(card,L.T("ЛИЦЕНЗИЯ CC BY 4.0"),()=>Application.OpenURL("https://creativecommons.org/licenses/by/4.0/"),"stone-button compact-button");
-            if(game.Platform==null||!game.Platform.IsYandex)Button(card,L.T("САЙТ АВТОРА"),()=>Application.OpenURL("https://incompetech.com/"),"stone-button compact-button");Button(card,L.T("НАЗАД"),DrawSettings,"stone-button compact-button");
+            if(game.Platform==null||!game.Platform.IsYandex&&!game.Platform.IsGooglePlay)Button(card,L.T("ЛИЦЕНЗИЯ CC BY 4.0"),()=>Application.OpenURL("https://creativecommons.org/licenses/by/4.0/"),"stone-button compact-button");
+            if(game.Platform==null||!game.Platform.IsYandex&&!game.Platform.IsGooglePlay)Button(card,L.T("САЙТ АВТОРА"),()=>Application.OpenURL("https://incompetech.com/"),"stone-button compact-button");Button(card,L.T("НАЗАД"),DrawSettings,"stone-button compact-button");
         }
     }
 }

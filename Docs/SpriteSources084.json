@@ -1,0 +1,110 @@
+{
+  "archive": "New_Sprites(1).rar",
+  "entries": [
+    {
+      "source": "New_Sprites/Mine_Landscape.png",
+      "destination": "Assets/PickaxeFall/Resources/Backgrounds/MineLandscape.png",
+      "width": 512,
+      "height": 256,
+      "sha256": "c3e1972f189cc2fc3473f85bde20266f0035a1f5a88e9fc92f6aff6cef9ade98"
+    },
+    {
+      "source": "New_Sprites/Structures/Cobblestone/Cobblestone_Cobblestone_0.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Cobblestone/Cobblestone_Cobblestone_0.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "83984ceb6214d6322aa764cf8e5d4f82d47b8ffbb046382f67b5b329774e9cf2"
+    },
+    {
+      "source": "New_Sprites/Structures/Cobblestone/Cobblestone_Cobblestone_1.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Cobblestone/Cobblestone_Cobblestone_1.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "f7e20ab30e28347532bb20864ee86c1fccf54629571f6d8b07be246b204a43f0"
+    },
+    {
+      "source": "New_Sprites/Structures/Cobblestone/Cobblestone_Cobblestone_2.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Cobblestone/Cobblestone_Cobblestone_2.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "e2f14618391feb45fcd184608235eda8e1dfc96bb3dea83dde6acf305cd3e42c"
+    },
+    {
+      "source": "New_Sprites/Structures/Cobblestone/Cobblestone_Cobblestone_3.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Cobblestone/Cobblestone_Cobblestone_3.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "fdc4a9e284f8969cebc5427da361df70a6795231f1ceebcd744aaed5880c71eb"
+    },
+    {
+      "source": "New_Sprites/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_0.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_0.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "1efdee702fbde10d50b9e1341f58ecaec64c1bcf4d56f59865dcce297a64a3bf"
+    },
+    {
+      "source": "New_Sprites/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_1.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_1.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "91ccba0b03fdb9c35f89b5db9a18bbb1afcf2b8f98eb1ee4d81be97000e7ee46"
+    },
+    {
+      "source": "New_Sprites/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_2.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_2.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "507fe95cdbdd1ffd167eedfcd6dd1e4cf7fe8d0c0626be36eddd54ad02a58348"
+    },
+    {
+      "source": "New_Sprites/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_3.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_3.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "5986c874ef2e07ed959ec36239c68be608c57e97409bd170a090109f689b29e5"
+    },
+    {
+      "source": "New_Sprites/Structures/Tnt/Tnt_0.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/Tnt/Tnt_0.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "c79bd42c79dde68a31f741bd0e160cdb681b1f62bd78b6b17c5a82ce48a6cd93"
+    },
+    {
+      "source": "New_Sprites/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_0.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_0.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "cbfb479ac4c30a60424197868e93f3da5846bd0b78d2ee6277380e67611557f5"
+    },
+    {
+      "source": "New_Sprites/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_1.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_1.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "b76f99ee7312eb1c381b6cba5a2f2eda87fa3507ba8d506a04ea199b41bcdce5"
+    },
+    {
+      "source": "New_Sprites/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_2.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_2.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "72b2bae584e05b91005fb6d1a913ad4b2bc8fecfde4f63035948ee4da8b128ba"
+    },
+    {
+      "source": "New_Sprites/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_3.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/World/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_3.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "dc652257e2dc005999a519ab4b414db2dffa253831916e087cfc2325ac3c8c92"
+    },
+    {
+      "source": "New_Sprites/Structures/Workbench/Workbench_0.png",
+      "destination": "Assets/PickaxeFall/Resources/Blocks/Workbench/Workbench_0.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "0012bc0ebcdf67078cb9de458a69ee002062bb29125fedd6c90047027c102e55"
+    }
+  ]
+}

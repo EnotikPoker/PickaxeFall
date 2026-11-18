@@ -290,3 +290,6 @@ Label { white-space: normal; flex-shrink: 0; }
 
 .platform-choice { position: absolute; left: 6%; right: 6%; top: 15%; padding: 30px; background-color: rgb(40,50,60); }
 .ad-countdown { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(10,18,25,0.95); color: white; font-size: 48px; -unity-text-align: middle-center; }
+.achievement-row { padding: 14px; margin-bottom: 10px; background-color: rgb(37,46,49); border-left-width: 3px; border-left-color: rgb(116,139,89); }
+
+.play-dialog { background-color: rgb(204,205,184); border-top-width: 5px; border-left-width: 5px; border-right-width: 5px; border-bottom-width: 7px; border-top-color: rgb(235,238,213); border-left-color: rgb(235,238,213); border-right-color: rgb(65,67,54); border-bottom-color: rgb(65,67,54); }

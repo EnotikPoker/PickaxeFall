@@ -3,12 +3,12 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('Assets/WebGLTemplates/PickaxeFall/platform.js','utf8');let checks=0;
 const check=(condition,message)=>{checks++;assert.ok(condition,message);};
-function environment(){
- const data=new Map(),events=[],handlers={},ads=[],cloud={};let failWrite=false,cloudFail=false,setCalls=0;
+function environment(epoch=0,data=new Map(),cloud={}){
+ const events=[],handlers={},ads=[];let failWrite=false,cloudFail=false,setCalls=0;
  const storage={getItem:k=>data.get(k)||null,setItem(k,v){if(failWrite)throw Error('quota');data.set(k,v);}};
  const player={isAuthorized:()=>true,getUniqueID:()=>'test-user',getData:async()=>{if(cloudFail)throw Error('offline');return cloud;},setData:async value=>{if(cloudFail)throw Error('offline');setCalls++;Object.assign(cloud,value);}};
  const sdk={on:(event,cb)=>handlers[event]=cb,serverTime:()=>100000,environment:{i18n:{lang:'ru'}},getPlayer:async()=>player,features:{LoadingAPI:{ready:()=>events.push(['ready'])},GameplayAPI:{start:()=>events.push(['start']),stop:()=>events.push(['stop'])}},adv:{showFullscreenAdv:({callbacks})=>ads.push(callbacks),showRewardedVideo:({callbacks})=>ads.push(callbacks)}};
- const window={pickaxeSdk:Promise.resolve(sdk),PICKAXEFALL_CONFIG:{midRunAds:false},addEventListener:(event,cb)=>handlers[event]=cb,location:{reload:()=>events.push(['reload'])}};
+ const window={pickaxeSdk:Promise.resolve(sdk),PICKAXEFALL_CONFIG:{midRunAds:false,saveEpoch:epoch},addEventListener:(event,cb)=>handlers[event]=cb,location:{reload:()=>events.push(['reload'])}};
  const document={hidden:false,hasFocus:()=>true,addEventListener:(event,cb)=>handlers[event]=cb};
  vm.runInNewContext(source,{window,document,localStorage:storage,TextEncoder,setTimeout,clearTimeout,console});
  return {api:window.PickaxePlatform,events,ads,handlers,cloud,data,sdk,setFail:v=>failWrite=v,setCloudFail:v=>cloudFail=v,get setCalls(){return setCalls;}};
@@ -38,5 +38,12 @@ function environment(){
  f.setCloudFail(true);await f.api.readCloud();check(f.events.at(-1)[1].kind==='error','failed cloud read reported');f.setCloudFail(false);await f.api.readCloud();check(f.events.at(-1)[1].kind==='loaded','cloud read recovers');
  f.sdk.getPlayer=async()=>({isAuthorized:()=>false});await f.api.init('guest',(o,m,j)=>f.events.push([m,JSON.parse(j)]));check(f.events.some(([k,v])=>k==='OnPlatformBoot'&&!v.authorized&&v.cloudRead),'guest needs no account');
  f.setFail(true);check(f.api.backup('{}','{}')===0,'backup quota failure reported without uncaught exception');
+ const shared=new Map(),remote={pfCore:{revision:'test-season',profile:'{}'}};
+ const old=environment(0,shared,remote);await old.api.init('old',()=>{});old.api.write('guest','{"coins":100}',false);
+ const release=environment(1,shared,remote);await release.api.init('release',(o,m,j)=>release.events.push([m,JSON.parse(j)]));
+ check(release.api.read('guest')==='','release does not read test-season local data');
+ check(!release.events.find(([m])=>m==='OnPlatformBoot')[1].cloud,'release does not read test-season cloud');
+ release.api.write('guest','{"coins":0}',false);check(old.api.read('guest')==='{"coins":100}','test data retained in its old namespace');
+ await release.api.cloud(JSON.stringify({revision:'first-release',profile:'{}'}),'');check(remote.pfCoreRelease1.revision==='first-release'&&remote.pfCore.revision==='test-season','cloud epochs are separate');
  console.log('PICKAXEFALL_JS_BRIDGE_OK:',checks,'checks');
 })().catch(error=>{console.error(error);process.exit(1);});

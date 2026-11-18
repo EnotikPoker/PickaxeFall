@@ -5,7 +5,7 @@ namespace PickaxeFall
 {
     // Browser localStorage commits are synchronous and atomic per key. Cloud follows
     // only after local success. A quota failure leaves the old checkpoint untouched.
-    public sealed class BrowserProfileStore:IProfilePersistence
+    public sealed class BrowserProfileStore:IRewardProfileStore
     {
         readonly PlatformHost host;string savedAds;
         public WebCheckpoint Checkpoint {get;private set;}
@@ -14,6 +14,7 @@ namespace PickaxeFall
         public PlayerProfile Load()=>ProfileStore.Parse(Checkpoint.profile);
         public void Save(PlayerProfile profile)=>Commit(profile,Ads);
         public void Reset(PlayerProfile profile)=>Commit(profile,new WebAdState(),true);
+        public void CommitReward(PlayerProfile profile,WebAdState ads)=>Commit(profile,ads);
         public void Commit(PlayerProfile profile,WebAdState ads,bool reset=false)
         {
             var next=Checkpoint.Copy();next.profile=ProfileStore.Serialize(profile);next.ads=ads.Copy();next.ads.Validate();

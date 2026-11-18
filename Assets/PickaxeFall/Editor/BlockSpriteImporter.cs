@@ -12,14 +12,15 @@ namespace PickaxeFall.Editor
         void OnPreprocessTexture()
         {
             bool cracks = assetPath.StartsWith("Assets/PickaxeFall/Resources/Cracks/", StringComparison.Ordinal);
-            if ((!assetPath.StartsWith(Root, StringComparison.Ordinal) && !cracks) || !assetPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return;
+            bool background = assetPath.StartsWith("Assets/PickaxeFall/Resources/Backgrounds/", StringComparison.Ordinal);
+            if ((!assetPath.StartsWith(Root, StringComparison.Ordinal) && !cracks && !background) || !assetPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return;
             byte[] header = new byte[24];
             using (var stream = File.OpenRead(assetPath))
                 if (stream.Read(header, 0, header.Length) != header.Length) throw new InvalidDataException("Block image has an invalid PNG header: " + assetPath);
             if (header[0] != 137 || header[1] != 80 || header[2] != 78 || header[3] != 71)
                 throw new InvalidDataException("Block PNG data is missing. Run 'git lfs install --local' and 'git lfs pull' before opening Unity: " + assetPath);
             int width = ReadDimension(header, 16), height = ReadDimension(header, 20);
-            if (width <= 0 || width != height) throw new InvalidDataException("Block sprites must be square: " + assetPath);
+            if (width <= 0 || height <= 0 || !background && width != height) throw new InvalidDataException("Invalid sprite dimensions: " + assetPath);
             var importer = (TextureImporter)assetImporter;
             importer.textureType = TextureImporterType.Sprite;
             importer.textureShape = TextureImporterShape.Texture2D;

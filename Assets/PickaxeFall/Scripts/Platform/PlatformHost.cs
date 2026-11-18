@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 #endif
 namespace PickaxeFall
 {
-    public sealed class PlatformHost:MonoBehaviour,IGameTimeSource,IGameAdvertising,IPlatformLifecycle
+    public sealed partial class PlatformHost:MonoBehaviour,IGameTimeSource,IGameAdvertising,IPlatformLifecycle
     {
         public bool IsYandex {
             get {
@@ -18,14 +18,14 @@ namespace PickaxeFall
 #endif
             }
         }
-        public bool Available {get;private set;}
+        public bool Available {get=>IsGooglePlay?Google?.AdvertisingEnabled==true:available;private set=>available=value;}bool available;
         public bool Busy {get;private set;}
         public bool MidRunAds {get;private set;}
         public bool Authorized {get;private set;}
         public bool Conflict {get;private set;}
         public string Language {get;private set;}="ru";
         public string CloudStatus {get;private set;}="";
-        public bool Suspended=>sdkPaused||pagePaused||Conflict;
+        public bool Suspended=>sdkPaused||pagePaused||Conflict||Google?.Frozen==true||Google?.TransactionBusy==true;
         bool sdkPaused,pagePaused,ready,gameplay;
         GameController game;Action reward;Action<bool> closed;string adId="";bool rewardSent;
         public long UtcMilliseconds=>serverTime>0?serverTime+(long)((Time.realtimeSinceStartupAsDouble-serverAt)*1000):DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -33,6 +33,7 @@ namespace PickaxeFall
         public IProfilePersistence Store {get;private set;}
         public WebAdState Ads {
             get {
+                if(Google!=null)return Google.Store.Ads;
 #if UNITY_WEBGL && !UNITY_EDITOR
                 if(Store is BrowserProfileStore browser)return browser.Ads;
 #endif
@@ -67,12 +68,14 @@ namespace PickaxeFall
             if(cloud!=null&&chosen.revision==cloud.revision)chosen.synced=cloud.revision;
             WriteLocal(chosen);Store=new BrowserProfileStore(this,chosen);QueueCloud();
 #else
-            Store=new ProfileStore(directory,temporary?()=>new PlayerProfile():null);yield break;
+            if(IsGooglePlay&&(!temporary||game.TestMode=="google")){Google=new GooglePlayClient(this,game,directory);Store=Google.Store;}
+            else Store=new ProfileStore(directory,temporary?()=>new PlayerProfile():null);yield break;
 #endif
         }
         public void GameReady()
         {
             if(ready)return;ready=true;
+            Google?.Present();
 #if UNITY_WEBGL && !UNITY_EDITOR
             StartCoroutine(ReadyWhenPresented());
 #endif
@@ -102,18 +105,19 @@ namespace PickaxeFall
         }
         public void Login()
         {
+            if(IsGooglePlay){Google.SignIn();return;}
 #if UNITY_WEBGL && !UNITY_EDITOR
             game.SaveCheckpoint();PF_Login();
 #endif
         }
         public void Show(string placement,bool rewarded,Action onReward,Action<bool> onClosed)
         {
-            if(Busy||!Available){onClosed(false);return;}
+            if(Busy||!Available||!rewarded&&Google?.RemoveAds==true){onClosed(false);return;}
             Busy=true;adId=Guid.NewGuid().ToString("N");reward=onReward;closed=onClosed;rewardSent=false;game.PlatformStateChanged();
 #if UNITY_WEBGL && !UNITY_EDITOR
             PF_Ad(adId,rewarded?1:0);
 #else
-            CompleteAd(false);
+            if(IsGooglePlay)Google.ShowAd(adId,rewarded);else CompleteAd(false);
 #endif
         }
         void CompleteAd(bool shown){if(!Busy)return;Busy=false;reward=null;var callback=closed;closed=null;game.PlatformStateChanged();callback?.Invoke(shown);}
@@ -164,7 +168,7 @@ namespace PickaxeFall
             if(PF_LocalWrite(value.user,JsonUtility.ToJson(value),reset?1:0)!=1)throw new InvalidOperationException(L.T("Память браузера недоступна или заполнена. Предыдущее сохранение не изменено."));
         }
         public void QueueCloud(){cloudDirty=true;}
-        void Update()
+        void TickWebCloud()
         {
             if(!Authorized||Conflict||cloudBusy||Store==null||Time.realtimeSinceStartupAsDouble<nextCloud)return;
             if(!boot.cloudRead){cloudBusy=true;nextCloud=Time.realtimeSinceStartupAsDouble+30;PF_CloudRead();return;}
@@ -214,8 +218,10 @@ namespace PickaxeFall
         }
         IEnumerator Choice(PanelSettings panel,StyleSheet style,string title,string left,string right,Action<bool> choose)
         {
-            var obj=new GameObject("Save choice");obj.transform.SetParent(transform);var doc=obj.AddComponent<UIDocument>();doc.panelSettings=panel;doc.sortingOrder=200;
-            var root=doc.rootVisualElement;root.styleSheets.Add(style);var card=new VisualElement();card.AddToClassList("platform-choice");root.Add(card);
+            var obj=new GameObject("Save choice");var doc=obj.AddComponent<UIDocument>();doc.panelSettings=panel;doc.sortingOrder=200;
+            var root=doc.rootVisualElement;root.styleSheets.Add(style);root.AddToClassList("screen");root.style.position=Position.Absolute;root.style.left=0;root.style.right=0;root.style.top=0;root.style.bottom=0;root.style.backgroundColor=new Color(0,0,0,.7f);
+            var font=Resources.Load<Font>("Fonts/Monocraft");if(font)root.style.unityFontDefinition=FontDefinition.FromFont(font);
+            var card=new VisualElement();card.AddToClassList("platform-choice");card.AddToClassList("play-dialog");root.Add(card);
             var heading=new Label(L.T(title));heading.AddToClassList("title");card.Add(heading);bool done=false;
             foreach(bool first in new[]{true,false}){var b=new Button(()=>{choose(first);done=true;}){text=L.T(first?left:right),name=first?"save-choice-local":"save-choice-cloud"};b.AddToClassList("stone-button");card.Add(b);}
             while(!done)yield return null;Destroy(obj);yield return null;

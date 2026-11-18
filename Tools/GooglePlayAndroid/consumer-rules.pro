@@ -1,0 +1,1 @@
+-keep class com.enotikpoker.pickaxefall.platform.PlayBridge { public static *; }

@@ -48,7 +48,7 @@ namespace PickaxeFall
         {
             int key = (int)kind * 32 + variant % 4 + (deep ? 4 : 0) + (surface ? 8 : 0);
             if (Blocks.TryGetValue(key, out var cached) && cached) return cached;
-            if(kind==BlockKind.UpgradeWorkbench)return Blocks[key]=UpgradeBenchSprite(variant);
+            if(kind==BlockKind.UpgradeWorkbench)return Blocks[key]=ImportedWorld(kind,variant,kind)??UpgradeBenchSprite(variant);
             var imported = ImportedWorld(kind,variant,kind==BlockKind.Amethyst?kind:deep?BlockKind.Deepstone:Progression.IsOre(kind)?BlockKind.Stone:kind);
             if(!imported)imported=Resources.Load<Sprite>(BlockResourcePath(kind, variant, deep, surface));
             if (imported) return Blocks[key] = imported;
@@ -127,6 +127,7 @@ namespace PickaxeFall
 
         public static string BlockResourcePath(BlockKind kind, int variant, bool deep = false, bool surface = false)
         {
+            if(kind==BlockKind.Workbench||kind==BlockKind.Tnt)variant=0;
             string layer = kind == BlockKind.Dirt && surface ? "_Surface"
                 : deep && kind != BlockKind.Dirt && kind != BlockKind.Workbench && kind != BlockKind.Tnt ? "_Deep" : "";
             string work = layer.Length == 0 && (kind == BlockKind.Coal || kind == BlockKind.Stone) ? "_Work" : "";
@@ -195,6 +196,7 @@ namespace PickaxeFall
 
         public static Sprite Landscape()
         {
+            var imported=Resources.Load<Sprite>("Backgrounds/MineLandscape");if(imported)return imported;
             const int width = 256, height = 128;
             var pixels = new Color[width * height];
             for (int y = 0; y < height; y++) for (int x = 0; x < width; x++)
@@ -250,6 +252,13 @@ namespace PickaxeFall
                 { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "PixelArt" };
             texture.SetPixels(pixels); texture.Apply();
             return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), width);
+        }
+
+        // Imported Resources are shared by cameras and UI. Only destroy generated art.
+        public static void ReleaseGenerated(Sprite sprite)
+        {
+            if(!sprite||!sprite.texture||sprite.texture.name!="PixelArt")return;
+            Object.Destroy(sprite.texture);Object.Destroy(sprite);
         }
     }
 }

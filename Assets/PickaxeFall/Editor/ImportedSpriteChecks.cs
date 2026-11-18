@@ -19,7 +19,7 @@ namespace PickaxeFall.Editor
                 if (kind == BlockKind.Dirt) ValidateLayer(kind, false, true, paths);
                 else if (kind != BlockKind.Workbench && kind != BlockKind.Tnt) ValidateLayer(kind, true, false, paths);
             }
-            Require(paths.Count == 72, "The supplied block pack must contain all 72 selected variants.");
+            Require(paths.Count == 66, "Terrain variants plus the canonical new TNT/workbench sprites must resolve.");
             int previous=0;
             for(int stage=1;stage<=8;stage++)
             {
@@ -47,7 +47,7 @@ namespace PickaxeFall.Editor
                 }
                 Require(marked>20,"Visible silhouette outline");
             }
-            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 85 supplied PNGs: 72 blocks, 8 crack stages, 5 tools; terrain/deep ores and cracks 32px, TNT/workbench 16px; Point, no compression/mips, exact world-tile scale.");
+            Debug.Log("PICKAXEFALL_IMPORTED_SPRITES_OK: 66 selected base block PNGs, 8 cracks, 5 tools; canonical 32px TNT/workbench art; exact tile scale.");
         }
 
         static void ValidateLayer(BlockKind kind, bool deep, bool surface, HashSet<string> paths)
@@ -55,11 +55,11 @@ namespace PickaxeFall.Editor
             for (int variant = 0; variant < 4; variant++)
             {
                 string path = "Assets/PickaxeFall/Resources/" + PixelArt.BlockResourcePath(kind, variant, deep, surface) + ".png";
-                Require(paths.Add(path), "A block variant was accidentally mapped twice: " + path);
+                Require(paths.Add(path)||kind==BlockKind.Workbench||kind==BlockKind.Tnt, "A terrain variant was accidentally mapped twice: " + path);
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 Require(sprite, "Missing imported sprite: " + path);
                 Require(PixelArt.Block(kind, variant, deep, surface) == sprite, "The game selected generated art instead of the supplied PNG: " + path);
-                int size = kind==BlockKind.Workbench || kind==BlockKind.Tnt ? 16 : 32;
+                int size = 32;
                 Require(sprite.texture.width == size && sprite.texture.height == size, "Incorrect source variant or resolution: " + path);
                 Require(Mathf.Abs(sprite.bounds.size.x - 1) < 0.001f && Mathf.Abs(sprite.bounds.size.y - 1) < 0.001f,
                     "Mixed pixel sizes must still fill exactly one world tile: " + path);

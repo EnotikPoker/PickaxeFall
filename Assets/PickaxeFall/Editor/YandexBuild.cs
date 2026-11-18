@@ -35,7 +35,7 @@ namespace PickaxeFall.Editor
                 PlayerSettings.WebGL.exceptionSupport=WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
                 var result=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{ProjectTools.ScenePath},target=BuildTarget.WebGL,locationPathName=directory,options=draft?BuildOptions.Development:BuildOptions.None});
                 if(result.summary.result!=BuildResult.Succeeded)throw new InvalidOperationException("Web build failed: "+result.summary.result);
-                string html=Path.Combine(directory,"index.html");File.WriteAllText(html,File.ReadAllText(html).Replace("midRunAds:false","midRunAds:"+(draft?"true":"false")));
+                string html=Path.Combine(directory,"index.html");File.WriteAllText(html,File.ReadAllText(html).Replace("midRunAds:false","midRunAds:"+(draft?"true":"false")).Replace("saveEpoch:0","saveEpoch:"+PlayReleaseConfig.SaveEpoch));
                 long size=0;foreach(string path in Directory.GetFiles(directory,"*",SearchOption.AllDirectories))
                 {
                     string name=path.Substring(directory.Length+1);if(name.Contains(' ')||System.Text.RegularExpressions.Regex.IsMatch(name,"[А-Яа-яЁё]"))throw new InvalidOperationException("Invalid archive path.");size+=new FileInfo(path).Length;

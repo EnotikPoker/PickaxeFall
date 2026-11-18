@@ -96,9 +96,12 @@ namespace PickaxeFall
             }
             catch (Exception e) { Debug.LogWarning("Test intent unavailable: " + e.Message); }
 #endif
-            if (Array.IndexOf(new[] { "touch", "touch-edge", "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned", "desert", "nether", "temple", "fortress", "mineshaft", "treasure" }, TestMode) < 0) TestMode = "";
+            if (Array.IndexOf(new[] { "touch", "touch-edge", "smoke", "shop", "luck", "bag", "sale", "team", "mine", "settings", "controls", "abilities", "results", "benefits", "tutorial", "reset", "loot", "dungeon", "geode", "ores", "liquids", "benches", "profile", "bridge", "portal", "locks", "surplus", "mapmine", "pinned", "desert", "nether", "temple", "fortress", "mineshaft", "treasure", "google" }, TestMode) < 0) TestMode = "";
             bool probe = Array.Exists(Environment.GetCommandLineArgs(), a => a == "--balance-probe" || a == "--economy-probe");
             if (probe) TestMode = "probe";
+#if PICKAXEFALL_PLAY_QA
+            if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--google-check"))TestMode="google";
+#endif
             if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--localization-check"))TestMode="localization";
             else if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--input-checks"))TestMode="input";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
@@ -154,8 +157,11 @@ namespace PickaxeFall
             if(TestMode.StartsWith("touch",StringComparison.Ordinal))gameObject.AddComponent<RuntimeTouchProbe>();
             if(TestMode=="input")gameObject.AddComponent<RuntimeInputLightingChecks>();
             if(TestMode=="localization")gameObject.AddComponent<RuntimeLocalizationChecks>();
+#if PICKAXEFALL_PLAY_QA
+            if(TestMode=="google")gameObject.AddComponent<RuntimeGooglePlayChecks>();
+#endif
             if(TestMode.StartsWith("save",StringComparison.Ordinal))gameObject.AddComponent<RuntimeResumeCheck>();
-            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && TestMode!="localization" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
+            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && TestMode!="localization" && TestMode!="google" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe" || arg == "--economy-probe")) gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
@@ -228,7 +234,7 @@ namespace PickaxeFall
                 tools[i].Equip(selectedTier, i, (i - (RunToolCount - 1) * 0.5f) * 1.4f); tools[i].Launch();
             }
             Energy.Reset(RunUpgrades); SelectTool(0);
-            if(!IsSimulation&&Platform!=null&&Platform.IsYandex)Platform.Ads.StartRun();
+            if(!IsSimulation&&Platform!=null&&Platform.HasAdvertising)Platform.Ads.StartRun();
             Phase = RunPhase.Mining; World.StreamTools(tools); cameraFollow?.ResetView(); Notify();
             if (RunToolCount > 1) hud?.Toast(L.T("УДАЧА! КИРОК В ОТРЯДЕ: ") + RunToolCount);
         }
@@ -268,7 +274,7 @@ namespace PickaxeFall
         public void SimulateMiningStep(Action<GameController> policy = null)
         {
             if (Phase != RunPhase.Mining || WorldFrozen) return;
-            Clock.Advance(); if(!IsSimulation&&Platform!=null&&Platform.IsYandex)Platform.Ads.Advance(Clock.Delta);if(Clock.Now-lastMinedTime>15)Benefits.SlowMiningSeconds+=Clock.Delta; Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
+            Clock.Advance(); if(!IsSimulation&&Platform!=null&&Platform.HasAdvertising)Platform.Ads.Advance(Clock.Delta);if(Clock.Now-lastMinedTime>15)Benefits.SlowMiningSeconds+=Clock.Delta; Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
             foreach (var tool in tools) if (tool.IsAlive) tool.PhysicsTick();
             if(WorldFrozen)return;
             Physics2D.SyncTransforms(); PhysicsScene.Simulate(Clock.Delta);
@@ -376,7 +382,7 @@ namespace PickaxeFall
             }
             hud.CancelUiPresses();
             Phase = RunPhase.Breaking; Paused = false; RefreshTimeScale();
-            if(Platform!=null&&Platform.IsYandex)Platform.Ads.Finish(PotentialSaleValue);
+            if(Platform!=null&&Platform.HasAdvertising)Platform.Ads.Finish(PotentialSaleValue);
             Economy.Profile.mapRecords[(int)CurrentMap]=Mathf.Max(BestDepth,Depth);if(CurrentMap==MapId.Mine)Economy.Profile.bestDepth=Economy.Profile.mapRecords[0]; SaveProgress();
             Notify(); StartCoroutine(FinishAnimation());
         }

@@ -1,0 +1,30 @@
+{
+  "testMode": true,
+  "kidozAccountApproved": false,
+  "kidozCloseWithinFiveSecondsConfirmed": false,
+  "developerName": "",
+  "supportEmail": "",
+  "privacyUrl": "",
+  "deletionUrl": "",
+  "appAdsUrl": "",
+  "gamesApplicationId": "",
+  "googleBillingPublicKey": "",
+  "yandexInterstitial": "",
+  "yandexRewarded": "",
+  "kidozPublisherId": "",
+  "kidozToken": "",
+  "achievementIds": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ]
+}
