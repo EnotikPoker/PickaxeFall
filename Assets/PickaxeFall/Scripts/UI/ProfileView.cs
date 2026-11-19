@@ -84,6 +84,7 @@ namespace PickaxeFall
             else Text(card,L.T("Максимальный уровень профиля. Продолжай улучшать навыки и готовить новые маршруты."),"description");
             var footer=Box(card,"dialog-footer");
             Button(footer,L.T("СТАТИСТИКА"),OpenMiningStatistics,"stone-button compact-button").name="profile-statistics";
+            if(game.Platform?.IsGooglePlay==true)Button(footer,L.T("ДОСТИЖЕНИЯ"),OpenAchievements,"stone-button compact-button").name="profile-achievements";
             Button(footer,L.T("ЗАКРЫТЬ"),()=>CloseModal(),"stone-button compact-button");
         }
         void OpenMiningStatistics()

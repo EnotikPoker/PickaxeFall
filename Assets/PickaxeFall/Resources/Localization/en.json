@@ -193,8 +193,16 @@
       "en": "English"
     },
     {
+      "ru": "Google Play",
+      "en": "Google Play"
+    },
+    {
       "ru": "PickaxeFall · Версия ",
       "en": "PickaxeFall · Version "
+    },
+    {
+      "ru": "Play Games подключится после настройки приложения",
+      "en": "Play Games will connect after app setup"
     },
     {
       "ru": "«Землекоп» даёт больше земли и песка. «Подводник» уменьшает штраф воды, «Термозащита» — износ в лаве. «Искатель сокровищ» добавляет добычу из сундуков.",
@@ -211,6 +219,10 @@
     {
       "ru": "Ад",
       "en": "Nether"
+    },
+    {
+      "ru": "Аккаунт Google изменился. Подключи Play Games заново.",
+      "en": "Your Google account changed. Connect Play Games again."
     },
     {
       "ru": "Алмаз",
@@ -231,6 +243,10 @@
     {
       "ru": "Базальт",
       "en": "Basalt"
+    },
+    {
+      "ru": "Без персонализации",
+      "en": "Without personalization"
     },
     {
       "ru": "Бездонная шахта",
@@ -385,6 +401,14 @@
       "en": "Water and lava"
     },
     {
+      "ru": "Возраст и реклама",
+      "en": "Age and ads"
+    },
+    {
+      "ru": "Возраст нужен, чтобы выбрать подходящую рекламу. Сохраним только возрастную группу на этом устройстве.",
+      "en": "Your age helps us choose suitable ads. Only an age group is saved on this device."
+    },
+    {
       "ru": "Войти в Яндекс",
       "en": "Sign in to Yandex"
     },
@@ -393,8 +417,16 @@
       "en": "Recover energy faster."
     },
     {
+      "ru": "Восстановить покупку",
+      "en": "Restore purchase"
+    },
+    {
       "ru": "Восстановление энергии",
       "en": "Energy Recovery"
+    },
+    {
+      "ru": "Врата в ад",
+      "en": "Gateway to the Nether"
     },
     {
       "ru": "Все ветви доступны",
@@ -421,6 +453,10 @@
       "en": "Choosing a pickaxe"
     },
     {
+      "ru": "Выполнено",
+      "en": "Completed"
+    },
+    {
       "ru": "Высокая опасность лавы",
       "en": "High lava danger"
     },
@@ -443,6 +479,18 @@
     {
       "ru": "ГОТОВО!",
       "en": "DONE!"
+    },
+    {
+      "ru": "Глубина 100 м",
+      "en": "100 metres deep"
+    },
+    {
+      "ru": "Глубина 25 м",
+      "en": "25 metres deep"
+    },
+    {
+      "ru": "Глубина 250 м",
+      "en": "250 metres deep"
     },
     {
       "ru": "Глубинный сланец",
@@ -481,6 +529,10 @@
       "en": "WAIT FOR THE CURRENT ABILITY"
     },
     {
+      "ru": "ДОСТИЖЕНИЯ",
+      "en": "ACHIEVEMENTS"
+    },
+    {
       "ru": "ДОСТУПЕН УРОВЕНЬ ПРОФИЛЯ ",
       "en": "PROFILE LEVEL AVAILABLE: "
     },
@@ -499,6 +551,10 @@
     {
       "ru": "Деревянная",
       "en": "Wooden"
+    },
+    {
+      "ru": "Десять тысяч блоков",
+      "en": "Ten thousand blocks"
     },
     {
       "ru": "Динамит",
@@ -529,6 +585,10 @@
       "en": "Loot and upgrades are saved."
     },
     {
+      "ru": "Дорога в пустыню",
+      "en": "Road to the desert"
+    },
+    {
       "ru": "Древние обломки",
       "en": "Ancient Debris"
     },
@@ -545,6 +605,10 @@
       "en": "ANOTHER RUN"
     },
     {
+      "ru": "Ещё впереди",
+      "en": "Still ahead"
+    },
+    {
       "ru": "Железная",
       "en": "Iron"
     },
@@ -555,6 +619,10 @@
     {
       "ru": "ЗАКРЫТЬ",
       "en": "CLOSE"
+    },
+    {
+      "ru": "ЗАКРЫТЬ ИГРУ",
+      "en": "QUIT GAME"
     },
     {
       "ru": "Заверши выбор текущей кирки перед сменой карты",
@@ -611,6 +679,10 @@
     {
       "ru": "Играть гостем",
       "en": "Play as guest"
+    },
+    {
+      "ru": "Играть можно без входа. Play Games сохраняет прогресс между устройствами; текущий спуск остаётся на телефоне.",
+      "en": "You can play without signing in. Play Games syncs progress across devices; the current descent stays on this phone."
     },
     {
       "ru": "Изумруд",
@@ -767,6 +839,14 @@
     {
       "ru": "МОСТ ПОСТРОЕН",
       "en": "BRIDGE BUILT"
+    },
+    {
+      "ru": "Магазин недоступен. Можно играть без подключения.",
+      "en": "The store is unavailable. You can play offline."
+    },
+    {
+      "ru": "Магазин пока недоступен",
+      "en": "The store is not available yet"
     },
     {
       "ru": "Максимальный уровень",
@@ -929,8 +1009,48 @@
       "en": "Game settings"
     },
     {
+      "ru": "Настройки сохранены",
+      "en": "Settings saved"
+    },
+    {
+      "ru": "Не удалось войти. Прогресс на устройстве сохранён.",
+      "en": "Could not sign in. Your progress is saved on this device."
+    },
+    {
       "ru": "Не удалось выдать награду. Попробуй ещё раз.",
       "en": "Could not grant the reward. Try again."
+    },
+    {
+      "ru": "Не удалось загрузить цену",
+      "en": "Could not load the price"
+    },
+    {
+      "ru": "Не удалось обновить сведения о покупке",
+      "en": "Could not update the purchase information"
+    },
+    {
+      "ru": "Не удалось открыть покупку",
+      "en": "Could not open the purchase"
+    },
+    {
+      "ru": "Не удалось подключить платформу. Перезагрузи страницу.",
+      "en": "Could not connect to the platform. Reload the page."
+    },
+    {
+      "ru": "Не удалось проверить покупки. Сохранённое право осталось на устройстве.",
+      "en": "Could not check purchases. Your saved entitlement remains on this device."
+    },
+    {
+      "ru": "Не удалось проверить покупку",
+      "en": "Could not verify the purchase"
+    },
+    {
+      "ru": "Не удалось проверить сохранённую покупку",
+      "en": "Could not verify the saved purchase"
+    },
+    {
+      "ru": "Не удалось прочитать облако. Локальное сохранение не изменено.",
+      "en": "Could not read the cloud save. Your local save is unchanged."
     },
     {
       "ru": "Не удалось прочитать сохранение. Резервные файлы сохранены.",
@@ -939,6 +1059,14 @@
     {
       "ru": "Не удалось сохранить на устройстве",
       "en": "Could not save on this device"
+    },
+    {
+      "ru": "Не удалось сохранить покупку. Повторим при подключении к магазину.",
+      "en": "Could not save the purchase. We will retry when the store reconnects."
+    },
+    {
+      "ru": "Не удалось сохранить резервную копию. Прогресс не изменён.",
+      "en": "Could not save the backup. Your progress is unchanged."
     },
     {
       "ru": "Не удалось сохранить сброс. Прогресс не изменён.",
@@ -1021,12 +1149,20 @@
       "en": "No construction materials available."
     },
     {
+      "ru": "Нет связи с Google Play",
+      "en": "No connection to Google Play"
+    },
+    {
       "ru": "Нет связи с облаком. Прогресс на устройстве сохранён.",
       "en": "Cloud unavailable. Progress is saved on this device."
     },
     {
       "ru": "Новые карты и кирки",
       "en": "New maps and pickaxes"
+    },
+    {
+      "ru": "Новый выбор начнёт действовать после полного перезапуска игры. До этого реклама отключена.",
+      "en": "Your new choice applies after you fully restart the game. Ads are disabled until then."
     },
     {
       "ru": "Новый старт · ",
@@ -1077,6 +1213,10 @@
       "en": "Cloud unavailable"
     },
     {
+      "ru": "Облачное сохранение удалено",
+      "en": "Cloud save deleted"
+    },
+    {
       "ru": "Обсидиан",
       "en": "Obsidian"
     },
@@ -1109,12 +1249,20 @@
       "en": "Unlocks at level "
     },
     {
+      "ru": "Открываем Google Play…",
+      "en": "Opening Google Play…"
+    },
+    {
       "ru": "Открывается один раз",
       "en": "A one-time unlock"
     },
     {
       "ru": "Открыто навсегда",
       "en": "Unlocked forever"
+    },
+    {
+      "ru": "Открыть в Play Games",
+      "en": "Open in Play Games"
     },
     {
       "ru": "Отрицательная цена.",
@@ -1159,6 +1307,10 @@
     {
       "ru": "ПОДСКАЗКИ ДОБЫЧИ: ",
       "en": "LOOT MESSAGES: "
+    },
+    {
+      "ru": "ПОКА БЕЗ ОБЛАКА",
+      "en": "STAY OFFLINE FOR NOW"
     },
     {
       "ru": "ПОЛЬЗА УЛУЧШЕНИЙ",
@@ -1237,8 +1389,20 @@
       "en": "ROUTE OPEN"
     },
     {
+      "ru": "Память браузера недоступна или заполнена. Предыдущее сохранение не изменено.",
+      "en": "Browser storage is full or unavailable. Your previous save is unchanged."
+    },
+    {
       "ru": "Пауза",
       "en": "Paused"
+    },
+    {
+      "ru": "Первый блок",
+      "en": "First block"
+    },
+    {
+      "ru": "Первый изумруд",
+      "en": "First emerald"
     },
     {
       "ru": "Песок",
@@ -1251,6 +1415,10 @@
     {
       "ru": "Песчанник, кварцит и сокровища храмов.",
       "en": "Sandstone, quartzite and temple treasure."
+    },
+    {
+      "ru": "Платёж ожидает подтверждения. Реклама пока не отключена.",
+      "en": "Payment is pending. Ads have not been removed yet."
     },
     {
       "ru": "Повреждена добыча сохранённого спуска.",
@@ -1289,8 +1457,20 @@
       "en": "Diver"
     },
     {
+      "ru": "Подключить Play Games",
+      "en": "Connect Play Games"
+    },
+    {
       "ru": "Позволяет пробить больше блоков одним нажатием.",
       "en": "Break more blocks with one plunge."
+    },
+    {
+      "ru": "Покупка не завершена. Деньги и прогресс проверяет Google Play.",
+      "en": "Purchase incomplete. Google Play manages the payment."
+    },
+    {
+      "ru": "Покупка отключения рекламы не найдена",
+      "en": "No remove-ads purchase found"
     },
     {
       "ru": "Покупка пробоя",
@@ -1301,6 +1481,14 @@
       "en": "Unlock Dash"
     },
     {
+      "ru": "Покупки подключатся после настройки Google Play",
+      "en": "Purchases will connect after Google Play setup"
+    },
+    {
+      "ru": "Политика конфиденциальности",
+      "en": "Privacy policy"
+    },
+    {
       "ru": "Польза улучшений",
       "en": "Upgrade benefits"
     },
@@ -1309,12 +1497,20 @@
       "en": "Portal to the Nether"
     },
     {
+      "ru": "После подключения Play Games выполненные достижения отправятся автоматически.",
+      "en": "Completed achievements will sync when you connect Play Games."
+    },
+    {
       "ru": "Последний шанс",
       "en": "Last Chance"
     },
     {
       "ru": "Последняя кирка может восстановить половину прочности и энергию на пробой. Одна попытка за спуск.",
       "en": "The last pickaxe may recover half its durability and enough energy for a plunge. One chance per run."
+    },
+    {
+      "ru": "Постоянная покупка убирает принудительную рекламу. Добровольные просмотры за бонус остаются.",
+      "en": "This permanent purchase removes automatic ads. Optional ads for a bonus remain available."
     },
     {
       "ru": "Построй путь к новой карте.",
@@ -1327,6 +1523,10 @@
     {
       "ru": "Предметов: {0}\nМожно продать за {1} монет",
       "en": "Items: {0}\nSale value: {1} coins"
+    },
+    {
+      "ru": "Принудительная реклама отключена",
+      "en": "Automatic ads removed"
     },
     {
       "ru": "Приёмы — в магазине. Верстак чинит, улучшающий повышает тип.",
@@ -1347,6 +1547,22 @@
     {
       "ru": "Пробой · нажатие",
       "en": "Plunge · tap"
+    },
+    {
+      "ru": "Проверить облако",
+      "en": "Check cloud save"
+    },
+    {
+      "ru": "Проверяем покупки…",
+      "en": "Checking purchases…"
+    },
+    {
+      "ru": "Прогресс на этом устройстве останется. Синхронизация остановится до следующего входа.",
+      "en": "Progress on this device will remain. Sync will stop until you sign in again."
+    },
+    {
+      "ru": "Прогресс сохраняется на устройстве",
+      "en": "Progress is saved on this device"
     },
     {
       "ru": "Продать ",
@@ -1371,6 +1587,10 @@
     {
       "ru": "Пустыня",
       "en": "Desert"
+    },
+    {
+      "ru": "Пятая ступень",
+      "en": "Fifth step"
     },
     {
       "ru": "Пять видов кирок",
@@ -1407,6 +1627,22 @@
     {
       "ru": "Размер отряда",
       "en": "Squad Size"
+    },
+    {
+      "ru": "Разреши сохранение данных сайта в браузере и перезагрузи страницу.",
+      "en": "Allow this site to save data in your browser, then reload the page."
+    },
+    {
+      "ru": "Разрешить",
+      "en": "Allow"
+    },
+    {
+      "ru": "Реклама и конфиденциальность",
+      "en": "Ads and privacy"
+    },
+    {
+      "ru": "Реклама отключена",
+      "en": "Ads removed"
     },
     {
       "ru": "Реклама через {0}",
@@ -1517,6 +1753,10 @@
       "en": "Sulfur"
     },
     {
+      "ru": "Сервис временно недоступен",
+      "en": "Service is temporarily unavailable"
+    },
+    {
       "ru": "Сила рывка",
       "en": "Dash Power"
     },
@@ -1531,6 +1771,10 @@
     {
       "ru": "Сколько продать?",
       "en": "How many to sell?"
+    },
+    {
+      "ru": "Сколько тебе лет?",
+      "en": "How old are you?"
     },
     {
       "ru": "Сланец",
@@ -1581,6 +1825,10 @@
       "en": "Loot worth {0} coins\nBlocks broken: {1}"
     },
     {
+      "ru": "Сотня блоков",
+      "en": "One hundred blocks"
+    },
+    {
       "ru": "Сохранение",
       "en": "Saving"
     },
@@ -1591,6 +1839,10 @@
     {
       "ru": "Сохранение недоступно.\n",
       "en": "Save unavailable.\n"
+    },
+    {
+      "ru": "Сохранения не складываются. При загрузке другой копии текущий спуск завершится.",
+      "en": "Saves cannot be combined. Loading another save ends the current descent."
     },
     {
       "ru": "Сохранено в облаке",
@@ -1629,6 +1881,10 @@
       "en": "Chests"
     },
     {
+      "ru": "ТЕСТ GOOGLE PLAY · реальные платежи и детская реклама требуют настройки аккаунтов",
+      "en": "GOOGLE PLAY TEST · purchases and family ads require account setup"
+    },
+    {
       "ru": "Твой рюкзак",
       "en": "Your backpack"
     },
@@ -1637,8 +1893,20 @@
       "en": "Heat Shield"
     },
     {
+      "ru": "Тестовая версия. Публичная политика конфиденциальности ещё не настроена.",
+      "en": "Test version. The public privacy policy is not configured yet."
+    },
+    {
+      "ru": "Третья ступень",
+      "en": "Third step"
+    },
+    {
       "ru": "Ты получишь {0} монет",
       "en": "You will receive {0} coins"
+    },
+    {
+      "ru": "Тысяча блоков",
+      "en": "One thousand blocks"
     },
     {
       "ru": "Тёмный кварцит",
@@ -1651,6 +1919,10 @@
     {
       "ru": "У кирки появляются +количество и значок ресурса. Одновременная добыча одного вида объединяется, чтобы не закрывать шахту.",
       "en": "Small resource icons and quantities appear beside the pickaxe. Matching finds are combined to keep the mine clear."
+    },
+    {
+      "ru": "УДАЛИТЬ",
+      "en": "DELETE"
     },
     {
       "ru": "УДАЛИТЬ ПРОГРЕСС",
@@ -1697,6 +1969,14 @@
       "en": "REQUIREMENTS"
     },
     {
+      "ru": "Убрать рекламу · ",
+      "en": "Remove ads · "
+    },
+    {
+      "ru": "Убрать рекламу · цена недоступна",
+      "en": "Remove ads · price unavailable"
+    },
+    {
       "ru": "Увеличивает запас энергии. На полной прокачке помещается три применения приёмов.",
       "en": "Increases energy reserve. At maximum level it holds three ability uses."
     },
@@ -1711,6 +1991,14 @@
     {
       "ru": "Уголь",
       "en": "Coal"
+    },
+    {
+      "ru": "Удалить облачное сохранение",
+      "en": "Delete cloud save"
+    },
+    {
+      "ru": "Удалить облачное сохранение?",
+      "en": "Delete the cloud save?"
     },
     {
       "ru": "Удар вниз с пробитием.",
@@ -1877,6 +2165,10 @@
       "en": "Language"
     },
     {
+      "ru": "Яндекс может использовать данные для подбора рекламы. Разрешение необязательно: ты сможешь играть при любом выборе.",
+      "en": "Yandex may use data to select ads. Permission is optional: you can play either way."
+    },
+    {
       "ru": "Яркость шахты: ",
       "en": "Mine brightness: "
     },
@@ -1919,18 +2211,6 @@
     {
       "ru": "портал.",
       "en": "portal."
-    },
-    {
-      "ru": "Не удалось подключить платформу. Перезагрузи страницу.",
-      "en": "Could not connect to the platform. Reload the page."
-    },
-    {
-      "ru": "Разреши сохранение данных сайта в браузере и перезагрузи страницу.",
-      "en": "Allow this site to save data in your browser, then reload the page."
-    },
-    {
-      "ru": "Память браузера недоступна или заполнена. Предыдущее сохранение не изменено.",
-      "en": "Browser storage is full or unavailable. Your previous save is unchanged."
     }
   ]
 }
