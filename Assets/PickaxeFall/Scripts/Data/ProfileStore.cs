@@ -10,7 +10,11 @@ namespace PickaxeFall
         readonly string path;
         readonly Func<PlayerProfile> importLegacy;
         public ProfileStore(string directory, Func<PlayerProfile> legacyImporter = null)
-        { path = Path.Combine(directory, "profile-v2.json"); importLegacy = legacyImporter ?? ReadLegacy; }
+        {
+            if(PlayReleaseConfig.SaveEpoch>0)directory=Path.Combine(directory,PlayReleaseConfig.SaveSpace(PlayReleaseConfig.SaveEpoch));
+            path = Path.Combine(directory, "profile-v2.json");
+            importLegacy = legacyImporter ?? (PlayReleaseConfig.SaveEpoch==0?ReadLegacy:()=>new PlayerProfile());
+        }
         public PlayerProfile Load()
         {
             foreach (string candidate in new[] { path, path + ".bak" })

@@ -5,6 +5,9 @@ namespace PickaxeFall
     public static partial class PixelArt
     {
         static readonly (int key,(string prefix,int count) art)[] ImportedWorldCatalog={
+            ((int)BlockKind.Cobblestone*64+(int)BlockKind.Cobblestone, ("Blocks/World/Structures/Cobblestone/Cobblestone_Cobblestone_",4)),
+            ((int)BlockKind.MossyCobblestone*64+(int)BlockKind.MossyCobblestone, ("Blocks/World/Structures/MossyCobblestone/MossyCobblestone_MossyCobblestone_",4)),
+            ((int)BlockKind.UpgradeWorkbench*64+(int)BlockKind.UpgradeWorkbench, ("Blocks/World/Structures/Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_",1)),
             ((int)BlockKind.Amethyst*64+(int)BlockKind.Amethyst, ("Blocks/World/Mine/Amethyst/Amethyst_Amethyst_",4)),
             ((int)BlockKind.Amethyst*64+(int)BlockKind.DarkQuartzite, ("Blocks/World/Desert/Amethyst_DarkQuartzite/Amethyst_DarkQuartzite_",4)),
             ((int)BlockKind.AmethystCluster*64+(int)BlockKind.AmethystCluster, ("Blocks/World/Mine/Cluster/AmethystCluster_AmethystCluster_",4)),

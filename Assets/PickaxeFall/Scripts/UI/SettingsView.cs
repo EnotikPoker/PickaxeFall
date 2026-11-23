@@ -19,7 +19,7 @@ namespace PickaxeFall
 #if PICKAXEFALL_DEVTOOLS
             version.text+=" · DEV";RegisterDeveloperAccess(version);
 #endif
-            if(game.Platform==null||!game.Platform.IsYandex)Button(card,"@gamedevmaxon",()=>Application.OpenURL("https://t.me/gamedevmaxon"),"stone-button channel-button").name="telegram-channel";
+            if(game.Platform==null||!game.Platform.IsYandex&&!game.Platform.IsGooglePlay)Button(card,"@gamedevmaxon",()=>Application.OpenURL("https://t.me/gamedevmaxon"),"stone-button channel-button").name="telegram-channel";
             BoldText(card,L.T("Язык"),"section-label");var languages=Box(card,"settings-row");
             Button(languages,"Русский",()=>game.ChangeLanguage("ru"),"stone-button compact-button").name="language-ru";
             Button(languages,"English",()=>game.ChangeLanguage("en"),"stone-button compact-button").name="language-en";
@@ -30,6 +30,7 @@ namespace PickaxeFall
                 cloudStatusLabel=Text(card,game.Platform.CloudStatus,"footnote");
             }
             var options=game.Settings;
+            DrawGoogleSettings(card);
             var volumeText=BoldText(card,L.T("Громкость: ")+Mathf.RoundToInt(options.Volume*100)+"%","section-label");
             var volume=new Slider(0,1){value=options.Volume,name="settings-volume"};volume.AddToClassList("volume-slider");card.Add(volume);
             volume.RegisterValueChangedCallback(e=>{options.SetVolume(e.newValue);volumeText.text=L.T("Громкость: ")+Mathf.RoundToInt(options.Volume*100)+"%";});

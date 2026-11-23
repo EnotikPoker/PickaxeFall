@@ -1,7 +1,9 @@
 /* PickaxeFall's platform adapter. Production SDK comes only from /sdk.js. */
 (function (global) {
   'use strict';
-  const prefix='pickaxefall.web.v1.';
+  const epoch=global.PICKAXEFALL_CONFIG?.saveEpoch||0;
+  const prefix=epoch?'pickaxefall.web.release'+epoch+'.':'pickaxefall.web.v1.';
+  const cloudKey=epoch?'pfCoreRelease'+epoch:'pfCore';
   const state={sdk:null,player:null,target:'',send:null,ad:null,cloudBusy:false,ready:false,sdkPaused:false};
   const emit=(method,value)=>{if(state.send)state.send(state.target,method,JSON.stringify(value));};
   const key=user=>prefix+encodeURIComponent(user);
@@ -37,7 +39,7 @@
       result.available=true;result.language=sdk.environment.i18n.lang;result.serverTime=sdk.serverTime();
       try {
         state.player=await sdk.getPlayer();result.authorized=state.player.isAuthorized();
-        if(result.authorized){result.user=state.player.getUniqueID();try{const data=await state.player.getData(['pfCore']);result.cloud=data.pfCore?JSON.stringify(data.pfCore):'';result.cloudRead=true;}catch(_){}}
+        if(result.authorized){result.user=state.player.getUniqueID();try{const data=await state.player.getData([cloudKey]);result.cloud=data[cloudKey]?JSON.stringify(data[cloudKey]):'';result.cloudRead=true;}catch(_){}}
         else result.cloudRead=true;
       } catch(_){}
     }catch(_){}
@@ -64,14 +66,14 @@
     if(state.cloudBusy||!state.player?.isAuthorized()){emit('OnPlatformCloud',{kind:'error'});return;}
     state.cloudBusy=true;
     try {
-      const value=JSON.parse(text);if(new TextEncoder().encode(JSON.stringify({pfCore:value})).length>190000)throw Error('cloud quota');
-      const data=await state.player.getData(['pfCore']),remote=data.pfCore;
+      const value=JSON.parse(text);if(new TextEncoder().encode(JSON.stringify({[cloudKey]:value})).length>190000)throw Error('cloud quota');
+      const data=await state.player.getData([cloudKey]),remote=data[cloudKey];
       if(remote&&remote.revision!==expected&&remote.revision!==value.revision){emit('OnPlatformCloud',{kind:'conflict',cloud:JSON.stringify(remote)});return;}
-      await state.player.setData({pfCore:value},true);emit('OnPlatformCloud',{kind:'saved'});
+      await state.player.setData({[cloudKey]:value},true);emit('OnPlatformCloud',{kind:'saved'});
     }catch(_){emit('OnPlatformCloud',{kind:'error'});}finally{state.cloudBusy=false;}
   }
   global.PickaxePlatform={init,read,write,cloud,ad,
-    async readCloud(){try{const data=await state.player.getData(['pfCore']);emit('OnPlatformCloud',{kind:'loaded',cloud:data.pfCore?JSON.stringify(data.pfCore):''});}catch(_){emit('OnPlatformCloud',{kind:'error'});}},
+    async readCloud(){try{const data=await state.player.getData([cloudKey]);emit('OnPlatformCloud',{kind:'loaded',cloud:data[cloudKey]?JSON.stringify(data[cloudKey]):''});}catch(_){emit('OnPlatformCloud',{kind:'error'});}},
     backup(local,remote){try{localStorage.setItem(prefix+'conflict.local',local);localStorage.setItem(prefix+'conflict.cloud',remote);return 1;}catch(_){return 0;}},
     ready(){if(!state.ready&&state.sdk){state.sdk.features.LoadingAPI.ready();state.ready=true;}},
     gameplay(running){const api=state.sdk?.features.GameplayAPI;if(api)(running?api.start():api.stop());},

@@ -35,7 +35,7 @@ namespace PickaxeFall
             UpdateBackground();
         }
 
-        public void SetMap(){if(!landscape)return;Destroy(landscape.sprite.texture);Destroy(landscape.sprite);landscape.sprite=PixelArt.WorldLandscape(game.CurrentMap);backdrop.color=game.CurrentMap==MapId.Desert?new Color(1,.8f,.55f):game.CurrentMap==MapId.Nether?new Color(.8f,.35f,.4f):Color.white;}
+        public void SetMap(){if(!landscape)return;PixelArt.ReleaseGenerated(landscape.sprite);landscape.sprite=PixelArt.WorldLandscape(game.CurrentMap);backdrop.color=game.CurrentMap==MapId.Desert?new Color(1,.8f,.55f):game.CurrentMap==MapId.Nether?new Color(.8f,.35f,.4f):Color.white;}
         void SetFraming() => view.orthographicSize = Mathf.Clamp(6.2f / Mathf.Max(0.35f, view.aspect), 8, 16);
 
         public bool TryGetToolBounds(out Bounds bounds)
@@ -80,8 +80,8 @@ namespace PickaxeFall
 
         void OnDestroy()
         {
-            if (backdrop) { Destroy(backdrop.sprite.texture); Destroy(backdrop.sprite); Destroy(backdrop.gameObject); }
-            if (landscape) { Destroy(landscape.sprite.texture); Destroy(landscape.sprite); Destroy(landscape.gameObject); }
+            if (backdrop) { PixelArt.ReleaseGenerated(backdrop.sprite); Destroy(backdrop.gameObject); }
+            if (landscape) { PixelArt.ReleaseGenerated(landscape.sprite); Destroy(landscape.gameObject); }
         }
     }
 }

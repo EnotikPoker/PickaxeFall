@@ -28,7 +28,7 @@ namespace PickaxeFall
                 if(!initialized)
                 {
                     var loading=new ProbeState{phase="Loading",language=L.Language};
-                    foreach(var doc in GetComponentsInChildren<UIDocument>())ReadProbeButtons(doc.rootVisualElement,loading);
+                    foreach(var doc in UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None))ReadProbeButtons(doc.rootVisualElement,loading);
                     PublishProbe(JsonUtility.ToJson(loading));return;
                 }
                 if(command=="prepare")

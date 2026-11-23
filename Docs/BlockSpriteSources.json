@@ -368,18 +368,20 @@
       "height": 32
     },
     {
-      "source": "Blocks/Tnt_0.png",
+      "source": "New_Sprites/Structures/Tnt/Tnt_0.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Tnt/Tnt_0.png",
-      "sha256": "d3ce577389a3dc878a35b92abd42471c4cb19b0812c9e2ba6902e52ae070fd81",
-      "width": 16,
-      "height": 16
+      "sha256": "c79bd42c79dde68a31f741bd0e160cdb681b1f62bd78b6b17c5a82ce48a6cd93",
+      "width": 32,
+      "height": 32,
+      "archive": "New_Sprites(1).rar"
     },
     {
-      "source": "Blocks/Workbench_0.png",
+      "source": "New_Sprites/Structures/Workbench/Workbench_0.png",
       "asset": "Assets/PickaxeFall/Resources/Blocks/Workbench/Workbench_0.png",
-      "sha256": "1114dd7dd24b65dc433dcdc4f808cc290f318f4e4b2cbd66ffc0ed87c692ca34",
-      "width": 16,
-      "height": 16
+      "sha256": "0012bc0ebcdf67078cb9de458a69ee002062bb29125fedd6c90047027c102e55",
+      "width": 32,
+      "height": 32,
+      "archive": "New_Sprites(1).rar"
     },
     {
       "source": "Blocks/Dirt/Dirt_1.png",
