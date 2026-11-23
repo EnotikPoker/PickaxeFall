@@ -19,7 +19,10 @@ else:
     manifest=subprocess.check_output([str(sdk/'cmdline-tools/16.0/bin/apkanalyzer'),'manifest','print',str(artifact)],env=env,text=True)
     details['signing']=run([sdk/'build-tools/36.0.0/apksigner','verify','--verbose','--print-certs',artifact])
     run([sdk/'build-tools/36.0.0/zipalign','-c','-P','16','4',artifact]);checks['zipAligned16K']=True
-checks['version084']='versionName="0.8.4"' in manifest and 'versionCode="14"' in manifest
+version_source=(ROOT/'Assets/PickaxeFall/Scripts/Data/GameVersion.cs').read_text()
+version=re.search(r'Name = "([^"]+)"',version_source).group(1)
+version_code=re.search(r'AndroidVersionCode = (\d+)',version_source).group(1)
+checks['versionMatchesSource']=f'versionName="{version}"' in manifest and f'versionCode="{version_code}"' in manifest
 checks['package']='package="com.enotikpoker.pickaxefall'+('.playqa' if a.qa else '')+'"' in manifest
 if not a.offline:
     checks['target36']='targetSdkVersion="36"' in manifest

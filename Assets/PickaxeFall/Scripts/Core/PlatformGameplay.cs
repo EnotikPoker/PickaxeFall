@@ -17,7 +17,7 @@ namespace PickaxeFall
             if(!initialized)return;hud?.CancelUiPresses();RefreshTimeScale();Audio?.SetPlatformSuspended(PlatformFrozen);
             Platform?.Gameplay(Phase==RunPhase.Mining&&!WorldFrozen);if(PlatformFrozen)SaveProgress();
         }
-        public void SaveCheckpoint()=>SaveProgress();
+        public bool SaveCheckpoint()=>SaveProgress();
         public void ApplyPlatformProfile(PlayerProfile profile)
         {
             var run=profile.run;Economy.ReplaceSaved(profile);NewRun();if(run!=null)RestoreRun(run);SaveProgress();
@@ -74,6 +74,22 @@ namespace PickaxeFall
     public sealed partial class GameHud
     {
         Label adCountdownLabel;Button rewardButton;
+        VisualElement serviceRecovery;
+        void TickServiceRecovery()
+        {
+            bool stalled=game.Platform?.ServiceStalled==true;
+            if(stalled && serviceRecovery==null)
+            {
+                serviceRecovery=Box(root,"pause-overlay service-recovery");serviceRecovery.name="service-recovery";
+                var card=Box(serviceRecovery,"modal-card");
+                BoldText(card,L.T("Сервис не отвечает"),"title");
+                Text(card,L.T("Перезапусти игру. Перед этим сохраним прогресс."),"description");
+                Button(card,L.T(game.Platform.IsYandex?"ПЕРЕЗАГРУЗИТЬ":"СОХРАНИТЬ И ЗАКРЫТЬ"),game.Platform.ExitStalledService,"stone-button primary").name="service-recovery-exit";
+            }
+            if(serviceRecovery==null)return;
+            Display(serviceRecovery,stalled);
+            if(stalled)serviceRecovery.BringToFront();
+        }
         void BuildPlatformControls()
         {
             if(game.Platform==null||!game.Platform.HasAdvertising)return;
@@ -81,6 +97,7 @@ namespace PickaxeFall
         }
         void TickPlatformControls()
         {
+            TickServiceRecovery();
             TickGoogleControls();
             if(rewardButton==null)return;if(cloudStatusLabel!=null)cloudStatusLabel.text=L.T(game.Platform.CloudStatus);window.SetEnabled(!game.PlatformFrozen);
             Display(rewardButton,game.RewardAvailable);rewardButton.text=L.F("Реклама: +{0} монет",game.Platform.Ads.rewardValue);rewardButton.SetEnabled(game.Platform.Available&&!game.Platform.Busy);

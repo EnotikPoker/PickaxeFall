@@ -31,11 +31,33 @@ def images(path):
     finally:lib.archive_read_free(handle)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('archive',type=Path);args=p.parse_args();records=[];same=0
-    for source,data in images(args.archive):
-        rel=source.removeprefix('New_Sprites/');size=struct.unpack('>II',data[16:24])
+    p=argparse.ArgumentParser();p.add_argument('archive',type=Path)
+    p.add_argument('--refresh',action='store_true',help='Match an artist update to existing resource names, including renamed *_Work PNGs')
+    p.add_argument('--manifest',type=Path,default=Path('Docs/SpriteSources084.json'))
+    args=p.parse_args();records=[];same=0;skipped=[]
+    existing={}
+    if args.refresh:
+        for path in Path('Assets/PickaxeFall/Resources/Blocks').rglob('*.png'):
+            existing.setdefault(path.name.lower(),[]).append(path)
+    entries=list(images(args.archive))
+    prefer_mine_test=args.refresh and any(Path(name).name=='Mine_Landscape_TEST.png' for name,_ in entries)
+    for source,data in entries:
+        rel=source.split('/',1)[-1];size=struct.unpack('>II',data[16:24])
+        if args.refresh:
+            name=Path(rel).name
+            if name=='Mine_LandscapeFULLSCR.png' or prefer_mine_test and name=='Mine_Landscape.png':
+                skipped.append(source);continue
+            if name in ('Mine_Landscape.png','Mine_Landscape_TEST.png','Desert_Landscape.png','Nether_Landscape.png','Mine_CaveWall.png','Desert_CaveWall.png','Nether_CaveWall.png'):
+                dest=Path('Assets/PickaxeFall/Resources/Backgrounds')/('MineLandscape.png' if name=='Mine_Landscape_TEST.png' else name.replace('_',''))
+            else:
+                matches=existing.get(name.lower(),[]) or existing.get(name.lower().replace('_work.png','.png'),[])
+                if len(matches)!=1:raise ValueError('Expected one destination for '+source+': '+str(matches))
+                dest=matches[0]
+        else:
+            dest=None
         if rel=='Mine_LandscapeFULLSCR.png':continue # Exact nearest-neighbour 5x duplicate.
-        if rel=='Mine_Landscape.png':dest=Path('Assets/PickaxeFall/Resources/Backgrounds/MineLandscape.png')
+        if dest is not None:pass
+        elif rel=='Mine_Landscape.png':dest=Path('Assets/PickaxeFall/Resources/Backgrounds/MineLandscape.png')
         elif rel.startswith('Structures/Tnt/'):dest=Path('Assets/PickaxeFall/Resources/Blocks/Tnt')/Path(rel).name
         elif rel.startswith('Structures/Workbench/'):dest=Path('Assets/PickaxeFall/Resources/Blocks/Workbench')/Path(rel).name
         elif rel.startswith(('Desert/','Mine/','Nether/','Structures/')) and '..' not in Path(rel).parts:dest=Path('Assets/PickaxeFall/Resources/Blocks/World')/rel
@@ -43,7 +65,7 @@ def main():
         if dest.exists() and dest.read_bytes()==data:same+=1;continue
         dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
         records.append({'source':source,'destination':str(dest),'width':size[0],'height':size[1],'sha256':hashlib.sha256(data).hexdigest()})
-    if records:Path('Docs/SpriteSources084.json').write_text(json.dumps({'archive':args.archive.name,'entries':records},indent=2)+'\n')
+    if records:args.manifest.write_text(json.dumps({'archive':args.archive.name,'entries':records,'skipped':skipped},indent=2)+'\n')
     print('Imported',len(records),'PNGs; preserved',same,'identical files')
 
 if __name__=='__main__':main()

@@ -48,6 +48,8 @@ namespace PickaxeFall
         }
         public static Sprite WorldLandscape(MapId map)
         {
+            var supplied=Resources.Load<Sprite>("Backgrounds/"+(map==MapId.Desert?"DesertLandscape":map==MapId.Nether?"NetherLandscape":"MineLandscape"));
+            if(supplied)return supplied;
             if(map==MapId.Mine)return Landscape();const int w=256,h=128;var p=new Color[w*h];
             for(int y=0;y<h;y++)for(int x=0;x<w;x++){
                 Color c=map==MapId.Desert?Color.Lerp(new Color32(239,189,117,255),new Color32(111,182,211,255),y/(float)h):Color.Lerp(new Color32(95,36,36,255),new Color32(30,18,32,255),y/(float)h);

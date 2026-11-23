@@ -1,5 +1,7 @@
 package com.enotikpoker.pickaxefall.platform;
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
 import org.json.JSONObject;
 import java.util.IdentityHashMap;
 import net.kidoz.sdk.*;
@@ -7,6 +9,13 @@ import net.kidoz.ads.fullscreen.interstial.*;
 import net.kidoz.ads.fullscreen.rewarded.*;
 
 final class FamilyAds {
+    static final Handler retries = new Handler(Looper.getMainLooper());
+    static int interFailures, rewardFailures;
+    static void retry(boolean reward) {
+        int failures = reward ? rewardFailures++ : interFailures++;
+        long delay = Math.min(60000L, 5000L << Math.min(failures, 4));
+        retries.postDelayed(() -> { if (!PlayBridge.adsBlocked && activity != null && !activity.isFinishing()) load(); }, delay);
+    }
     static Activity activity;static boolean initialized,initializing,loadingInter,loadingReward;static KidozInterstitialAd inter;static KidozRewardedAd rewarded;
     static final class Request {final String id;boolean shown;Request(String id){this.id=id;}}
     static final IdentityHashMap<Object,Request> requests=new IdentityHashMap<>();
@@ -23,13 +32,13 @@ final class FamilyAds {
     }
     static void load(){if(!initialized||PlayBridge.adsBlocked)return;
         if(inter==null&&!loadingInter){loadingInter=true;KidozInterstitialAd.load(activity,new KidozInterstitialAdCallback(){
-            public void onAdLoaded(KidozInterstitialAd ad){loadingInter=false;inter=ad;}public void onAdFailedToLoad(KidozError e){loadingInter=false;}
+            public void onAdLoaded(KidozInterstitialAd ad){loadingInter=false;interFailures=0;inter=ad;}public void onAdFailedToLoad(KidozError e){loadingInter=false;retry(false);}
             public void onAdShown(KidozInterstitialAd ad){shown(ad);}public void onAdImpression(KidozInterstitialAd ad){}
             public void onAdFailedToShow(KidozInterstitialAd ad,KidozError e){close(ad);}
             public void onAdClosed(KidozInterstitialAd ad){close(ad);}
         });}
         if(rewarded==null&&!loadingReward){loadingReward=true;KidozRewardedAd.load(activity,new KidozRewardedAdCallback(){
-            public void onAdLoaded(KidozRewardedAd ad){loadingReward=false;rewarded=ad;}public void onAdFailedToLoad(KidozError e){loadingReward=false;}
+            public void onAdLoaded(KidozRewardedAd ad){loadingReward=false;rewardFailures=0;rewarded=ad;}public void onAdFailedToLoad(KidozError e){loadingReward=false;retry(true);}
             public void onAdShown(KidozRewardedAd ad){shown(ad);}public void onAdImpression(KidozRewardedAd ad){}
             public void onAdFailedToShow(KidozRewardedAd ad,KidozError e){close(ad);}
             public void onRewardReceived(KidozRewardedAd ad){Request r=requests.get(ad);if(r!=null)PlayBridge.ad(r.id,"reward",true);}

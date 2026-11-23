@@ -99,6 +99,18 @@ namespace PickaxeFall
             Icon(row,PixelArt.ResourceIcon(kind),"recipe-icon");
             BoldText(row,GameBalance.BlockName(kind)+" · "+Exact(have)+(need>0?" / "+Exact(need):""),need==0||have>=need?"recipe-amount cost-enough":"recipe-amount cost-short");
         }
+        void RecipeChip(VisualElement parent, BlockKind kind, long have, long need)
+        {
+            var row = Box(parent, "recipe-item recipe-chip");
+            row.name = "recipe-" + kind;
+            row.userData = kind;
+            row.tooltip = GameBalance.BlockName(kind) + " · " + WorldCatalog.FoundIn(kind);
+            Icon(row, PixelArt.ResourceIcon(kind), "recipe-icon");
+            var copy = Box(row, "recipe-copy");
+            Text(copy, GameBalance.BlockName(kind), "recipe-name");
+            BoldText(copy, Exact(have) + " / " + Exact(need),
+                have >= need ? "recipe-amount cost-enough" : "recipe-amount cost-short").name = "required-" + kind;
+        }
         void JumpToSkill(UpgradeKey key)
         {
             CloseModal();CurrentTab=HubTab.Shop;shopTier=key.Tier;

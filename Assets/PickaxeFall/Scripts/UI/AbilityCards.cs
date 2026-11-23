@@ -36,8 +36,8 @@ namespace PickaxeFall
                 price.EnableInClassList("cost-enough",hud.game.Wallet>=cost.Coins);price.EnableInClassList("cost-short",hud.game.Wallet<cost.Coins);
                 foreach(var material in ResourceInventory.Materials)
                 {
-                    int i=(int)material;if(cost.Resources[i]==0)continue;var box=Box(materials,"recipe-item");Icon(box,PixelArt.ResourceIcon(material),"recipe-icon");
-                    hud.BoldText(box,Short(hud.game.Inventory[material])+"/"+Short(cost.Resources[i]),hud.game.Inventory[material]>=cost.Resources[i]?"recipe-amount cost-enough":"recipe-amount cost-short");
+                    int i=(int)material;if(cost.Resources[i]==0)continue;
+                    hud.RecipeChip(materials,material,hud.game.Inventory[material],cost.Resources[i]);
                 }
             }
         }

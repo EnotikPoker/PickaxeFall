@@ -60,7 +60,7 @@ namespace PickaxeFall
         public void SetApplicationSuspended(bool value)
         {
             if(!initialized || IsSimulation)return;
-            hud?.CancelUiPresses();SystemSuspended=value;if(!value)skipTrialFrame=true;RefreshTimeScale();if(value)SaveProgress();
+            hud?.CancelUiPresses();SystemSuspended=value;if(!value){skipTrialFrame=true;Platform?.Google?.PurchaseTickOnResume();}RefreshTimeScale();if(value)SaveProgress();
         }
 
         public bool CanTrade => !PlatformFrozen && (Phase == RunPhase.Ready || Phase == RunPhase.Equipped || Phase == RunPhase.Finished);
@@ -103,6 +103,7 @@ namespace PickaxeFall
             if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--google-check"))TestMode="google";
 #endif
             if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--localization-check"))TestMode="localization";
+            else if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--visual-checks"))TestMode="visual";
             else if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--input-checks"))TestMode="input";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
             foreach(string mode in new[] {"savewrite","saveread","savefinished"})if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--"+mode+"-check"))TestMode=mode;
@@ -157,11 +158,12 @@ namespace PickaxeFall
             if(TestMode.StartsWith("touch",StringComparison.Ordinal))gameObject.AddComponent<RuntimeTouchProbe>();
             if(TestMode=="input")gameObject.AddComponent<RuntimeInputLightingChecks>();
             if(TestMode=="localization")gameObject.AddComponent<RuntimeLocalizationChecks>();
+            if(TestMode=="visual")gameObject.AddComponent<RuntimeVisualChecks>();
 #if PICKAXEFALL_PLAY_QA
             if(TestMode=="google")gameObject.AddComponent<RuntimeGooglePlayChecks>();
 #endif
             if(TestMode.StartsWith("save",StringComparison.Ordinal))gameObject.AddComponent<RuntimeResumeCheck>();
-            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && TestMode!="localization" && TestMode!="google" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
+            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && TestMode!="localization" && TestMode!="visual" && TestMode!="google" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe" || arg == "--economy-probe")) gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
@@ -418,11 +420,11 @@ namespace PickaxeFall
             if(Paused)SaveProgress();
         }
         public bool SelectHubTab(HubTab tab) { if (!CanTrade) return false; hud.SelectTab(tab); return true; }
-        void SaveProgress()
+        bool SaveProgress()
         {
-            if (IsSimulation || !initialized) return;
-            try { Economy.Profile.run=Phase==RunPhase.Mining?CaptureRun():null;Economy.Save(); Settings?.Save(); dirty = false;nextWebSave=0; nextSave = Time.unscaledTime + 5; }
-            catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast(L.T("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС")); nextSave = Time.unscaledTime + 10;nextWebSave=nextSave; }
+            if (IsSimulation || !initialized) return false;
+            try { Economy.Profile.run=Phase==RunPhase.Mining?CaptureRun():null;Economy.Save(); Settings?.Save(); dirty = false;nextWebSave=0; nextSave = Time.unscaledTime + 5; return true; }
+            catch (Exception e) { Debug.LogWarning("Save failed: " + e.Message); hud?.Toast(L.T("НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС")); nextSave = Time.unscaledTime + 10;nextWebSave=nextSave; return false; }
         }
         void ShowStartupError(string error)
         {
@@ -433,6 +435,7 @@ namespace PickaxeFall
         void OnApplicationPause(bool pause) => SetApplicationSuspended(pause);
         void OnApplicationFocus(bool focus)
         {
+            if(focus && initialized && !IsSimulation)Platform?.Google?.PurchaseTickOnResume();
             if(Platform!=null&&Platform.IsYandex){SetApplicationSuspended(!focus);return;}
             if(!focus && initialized && !IsSimulation){hud?.CancelUiPresses();SaveProgress();}
         }

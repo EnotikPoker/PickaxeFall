@@ -224,8 +224,10 @@ namespace PickaxeFall
             return Make(width, height, pixels);
         }
 
-        public static Sprite CaveWall()
+        public static Sprite CaveWall(MapId map=MapId.Mine)
         {
+            var supplied=Resources.Load<Sprite>("Backgrounds/"+(map==MapId.Desert?"DesertCaveWall":map==MapId.Nether?"NetherCaveWall":"MineCaveWall"));
+            if(supplied)return supplied;
             const int width = 32, height = 64;
             var pixels = new Color[width * height];
             var random = new System.Random(819);

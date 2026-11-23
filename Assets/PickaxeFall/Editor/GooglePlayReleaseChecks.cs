@@ -21,6 +21,17 @@ namespace PickaxeFall.Editor
             {
                 var store=new PlaySaveStore(directory);store.Save(profile);var original=store.Checkpoint.Copy();
                 var reopened=new PlaySaveStore(directory);Check(reopened.Load().coins==0&&reopened.Load().bestDepth==250,"cold load");
+                string recovery=Path.Combine(directory,"recovery.json");
+                void ValidateRecovery(string text){if(!text.StartsWith("valid",StringComparison.Ordinal))throw new InvalidDataException();}
+                AtomicPlayFile.Write(recovery,"valid-old",ValidateRecovery);
+                AtomicPlayFile.Write(recovery,"valid-current",ValidateRecovery);
+                File.WriteAllText(recovery,"corrupt");
+                Check(AtomicPlayFile.Read(recovery,ValidateRecovery)=="valid-old","recover validated backup");
+                AtomicPlayFile.Write(recovery,"valid-new",ValidateRecovery);
+                Check(File.ReadAllText(recovery+".bak")=="valid-old","recovered backup survives next save");
+                Check(Directory.GetFiles(directory,"recovery.json.corrupt-*").Length==1,"damaged bytes retained");
+                File.WriteAllText(recovery,"corrupt-again");
+                Check(AtomicPlayFile.Read(recovery,ValidateRecovery)=="valid-old","second corruption still recovers");
                 Check(new PlaySaveStore(directory,"player-b").Load().bestDepth==0,"account isolation");
                 Check(new PlaySaveStore(directory,epoch:1).Load().bestDepth==0,"first public epoch excludes test data");
                 var ads=store.Ads;ads.StartRun();ads.Finish(101);store.Save(profile);var rewarded=ads.Copy();rewarded.rewarded=true;var paid=profile.Copy();paid.coins+=rewarded.rewardValue;store.CommitReward(paid,rewarded);
@@ -40,7 +51,7 @@ namespace PickaxeFall.Editor
                 Check(File.ReadAllText("Assets/WebGLTemplates/PickaxeFall/platform.js").Contains("pfCoreRelease"),"web release slot prepared");
                 foreach(string prefix in new[]{"Cobblestone/Cobblestone_Cobblestone_","MossyCobblestone/MossyCobblestone_MossyCobblestone_","Up_Workbench/UpgradeWorkbench_UpgradeWorkbench_"})
                     for(int i=0;i<4;i++)Check(Resources.Load<Sprite>("Blocks/World/Structures/"+prefix+i)!=null,"imported structure "+prefix+i);
-                var landscape=PixelArt.Landscape();Check(landscape.texture.width==512&&landscape.texture.height==256,"original landscape resolution");
+                var landscape=PixelArt.Landscape();Check(landscape.texture.width==256&&landscape.texture.height==128,"updated mine landscape resolution");
                 PixelArt.ReleaseGenerated(landscape);Check(landscape!=null&&landscape.texture!=null,"imported landscape not destroyed");
             }
             finally{if(Directory.Exists(directory))Directory.Delete(directory,true);}

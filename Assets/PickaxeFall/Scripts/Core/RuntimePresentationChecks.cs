@@ -71,6 +71,24 @@ namespace PickaxeFall
             check(!root.Q<Button>("unlock-Dash").enabledSelf && root.Q<Button>("unlock-Dash").text=="ОТКРЫТО","bought ability has permanent opened state");
             Press(root,"unlock-Plunge");var unlocked=new ProfileStore(game.ProfileDirectory).Load();
             check(unlocked.dashUnlocked && unlocked.plungeUnlocked,"both paid actions survive profile reload");
+            // Phone report: Nether quartz must not be mistaken for desert smoky quartz.
+            var plungeKey=new UpgradeKey(UpgradeKind.PlungeDepth);
+            game.Economy.Profile.upgrades[plungeKey.Index]=1;
+            game.Economy.Profile.resources[(int)BlockKind.Quartz]=25;
+            game.Economy.Profile.resources[(int)BlockKind.SmokyQuartz]=0;
+            game.SelectHubTab(HubTab.Shop);
+            var plungeCard=root.Q("upgrade-PlungeDepth-0");
+            var smoky=plungeCard.Q("recipe-SmokyQuartz");
+            check(smoky!=null && smoky.userData is BlockKind ingredient && ingredient==BlockKind.SmokyQuartz,"ingredient has a stable resource identity");
+            check(smoky.Q<Label>(className:"recipe-name").text==GameBalance.BlockName(BlockKind.SmokyQuartz),"smoky quartz name visible without hover");
+            check(smoky.Q(className:"recipe-icon").style.backgroundImage.value.sprite==PixelArt.ResourceIcon(BlockKind.SmokyQuartz),"ingredient icon matches its identity");
+            check(plungeCard.Q<Label>("required-SmokyQuartz").text=="0 / 1" && !plungeCard.Q<Button>("buy-PlungeDepth-0").enabledSelf,"25 Nether quartz cannot satisfy one smoky quartz");
+            game.Economy.Profile.resources[(int)BlockKind.SmokyQuartz]=1;
+            game.SelectHubTab(HubTab.Shop);
+            check(plungeCard.Q<Button>("buy-PlungeDepth-0").enabledSelf && plungeCard.Q<Label>("required-SmokyQuartz").ClassListContains("cost-enough"),"correct quartz enables purchase and turns count green");
+            yield return new WaitForSecondsRealtime(.3f);
+            Press(root,"buy-PlungeDepth-0");
+            check(game.Economy.Profile.Level(plungeKey)==2 && game.Inventory[BlockKind.Quartz]==25 && game.Inventory[BlockKind.SmokyQuartz]==0,"purchase spends only the displayed smoky quartz");
             game.Economy.Profile.coins=100000;game.SelectHubTab(HubTab.Shop);
             Press(root,"open-settings");Press(root,"settings-reset-progress");
             root.Q<TextField>("progress-reset-input").value="нет";check(!root.Q<Button>("progress-reset-confirm").enabledSelf,"reset requires exact confirmation");

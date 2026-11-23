@@ -240,7 +240,7 @@ namespace PickaxeFall
                 Display(pin,skillLock.IsOpen&&hud.game.Economy.Profile.goalKind==GoalKind.Upgrade&&hud.game.Economy.Profile.goalIndex==key.Index);
                 skillLock.Refresh();
                 bool available=hud.game.Economy.CanBuy(key,out string why)&&hud.game.CanTrade;
-                buy.SetEnabled(available);buy.text= L.T(level>=max?L.T("ПРОКАЧАНО"):L.T("УЛУЧШИТЬ"));
+                buy.SetEnabled(available);buy.text= L.T(level>=max?"ПРОКАЧАНО":available?"УЛУЧШИТЬ":"НЕДОСТУПНО");
                 buy.EnableInClassList("buy-ready",available);buy.EnableInClassList("buy-blocked",!available&&level<max);
                 resources.Clear();Display(buy,skillLock.IsOpen&&level<max);
                 if(level>=max){cost.text= L.T("");reason.text= L.T("");Display(reason,false);return;}
@@ -249,10 +249,9 @@ namespace PickaxeFall
                 cost.EnableInClassList("cost-enough",hud.game.Wallet>=price.Coins);cost.EnableInClassList("cost-short",hud.game.Wallet<price.Coins);
                 for(int i=0;i<ResourceInventory.SlotCount;i++)
                 {
-                    if(price.Resources[i]==0)continue;var kind=(BlockKind)i;bool enough=hud.game.Inventory[kind]>=price.Resources[i];
-                    var item=Box(resources,"recipe-item");item.tooltip=GameBalance.BlockName(kind);
-                    Icon(item,PixelArt.ResourceIcon(kind),"recipe-icon");
-                    item.tooltip=GameBalance.BlockName(kind)+" · "+WorldCatalog.FoundIn(kind);hud.BoldText(item,Short(hud.game.Inventory[kind])+"/"+Short(price.Resources[i]),enough?"recipe-amount cost-enough":"recipe-amount cost-short").name="required-"+kind;
+                    if(price.Resources[i]==0)continue;
+                    var kind=(BlockKind)i;
+                    hud.RecipeChip(resources,kind,hud.game.Inventory[kind],price.Resources[i]);
                 }
                 reason.text= L.T(why??"");Display(reason,!available&&skillLock.IsOpen);
             }

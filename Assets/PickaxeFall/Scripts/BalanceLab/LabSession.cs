@@ -119,7 +119,7 @@ namespace PickaxeFall.BalanceLab
             if (Running) throw new InvalidOperationException("Останови анализ перед изменением продолжения.");
             var next = JsonUtility.FromJson<LabPlan>(JsonUtility.ToJson(Plan));
             next.samples = Math.Max(Plan.samples,samples); next.workers = workers; next.seconds = seconds; next.Validate();
-            if(next.mode==4)
+            if(next.mode==4 || next.mode==6)
             {
                 foreach(var s in Scenarios)s.sampleCount=s.hourly?Math.Min(16,next.samples):next.samples;
                 LabFiles.Write(Path.Combine(DirectoryPath,"scenarios.json"),new ScenarioList {scenarios=Scenarios});
