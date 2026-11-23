@@ -62,7 +62,7 @@ namespace PickaxeFall
             if (shownEnergy != value || shownMaximum != maximum || shownSelection != game.SelectedToolIndex)
             {
                 shownEnergy = value; shownMaximum = maximum; shownSelection = game.SelectedToolIndex;
-                SetText(energyLabel, L.F("ЭНЕРГИЯ {0} / {1}", (Progression.Number(game.Energy.Value)), (Progression.Number(game.Energy.Maximum))));
+                SetText(energyLabel, L.F("ЭНЕРГИЯ {0} / {1}", Mathf.FloorToInt(game.Energy.Value), Mathf.FloorToInt(game.Energy.Maximum)));
                 energyFill.style.width = Length.Percent(game.Energy.Maximum > 0 ? 100 * game.Energy.Value / game.Energy.Maximum : 0);
             }
             if (shownUpgrades != game.RunUpgrades)

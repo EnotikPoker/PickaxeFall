@@ -20,6 +20,8 @@ namespace PickaxeFall
         }
         public bool Available {get=>IsGooglePlay?Google?.AdvertisingEnabled==true:available;private set=>available=value;}bool available;
         public bool Busy {get;private set;}
+        double adStarted;
+        public bool ServiceStalled=>(Busy && Time.realtimeSinceStartupAsDouble-adStarted>=120) || Google?.PurchaseStalled==true;
         public bool MidRunAds {get;private set;}
         public bool Authorized {get;private set;}
         public bool Conflict {get;private set;}
@@ -113,7 +115,7 @@ namespace PickaxeFall
         public void Show(string placement,bool rewarded,Action onReward,Action<bool> onClosed)
         {
             if(Busy||!Available||!rewarded&&Google?.RemoveAds==true){onClosed(false);return;}
-            Busy=true;adId=Guid.NewGuid().ToString("N");reward=onReward;closed=onClosed;rewardSent=false;game.PlatformStateChanged();
+            Busy=true;adStarted=Time.realtimeSinceStartupAsDouble;adId=Guid.NewGuid().ToString("N");reward=onReward;closed=onClosed;rewardSent=false;game.PlatformStateChanged();
 #if UNITY_WEBGL && !UNITY_EDITOR
             PF_Ad(adId,rewarded?1:0);
 #else
@@ -121,6 +123,23 @@ namespace PickaxeFall
 #endif
         }
         void CompleteAd(bool shown){if(!Busy)return;Busy=false;reward=null;var callback=closed;closed=null;game.PlatformStateChanged();callback?.Invoke(shown);}
+        public void ExitStalledService()
+        {
+            if(!ServiceStalled || !game.SaveCheckpoint())return;
+            // Do not resume gameplay under an SDK advertisement that may still open.
+            // A fresh process/page also discards delayed callbacks from the old request.
+#if UNITY_WEBGL && !UNITY_EDITOR
+            PF_Reload();
+#elif UNITY_ANDROID && !UNITY_EDITOR
+            using var process=new AndroidJavaClass("android.os.Process");
+            process.CallStatic("killProcess",process.CallStatic<int>("myPid"));
+#else
+            Application.Quit();
+#endif
+        }
+#if PICKAXEFALL_PLAY_QA && DEVELOPMENT_BUILD
+        public void QaExpireAd()=>adStarted=Time.realtimeSinceStartupAsDouble-121;
+#endif
         [Serializable] sealed class AdEvent {public string id,kind;public bool shown;}
         [UnityEngine.Scripting.Preserve]
         public void OnPlatformAd(string json)

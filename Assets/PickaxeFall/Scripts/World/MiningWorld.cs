@@ -203,7 +203,7 @@ namespace PickaxeFall
                     if (doubled) game.Benefits.DoubleBlasts++;
                     float radius = (blast.ore ? Mathf.Min(1.5f, balance.explosionRadius) : balance.explosionRadius) * (doubled ? Mathf.Sqrt(2) : 1);
                     game.Effects.Explosion(blast.center, radius);
-                    game.PhysicsScene.OverlapCircle(blast.center,radius,new ContactFilter2D().NoFilter(),blastColliders);
+                    game.PhysicsScene.OverlapCircle(blast.center,radius,ContactFilter2D.noFilter,blastColliders);
                     foreach (var collider in blastColliders)
                     {
                         var block = collider.GetComponent<MineBlock>();

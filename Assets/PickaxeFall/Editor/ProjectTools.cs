@@ -98,7 +98,7 @@ namespace PickaxeFall.Editor
             Require(balance.pickaxes[3].damage > balance.pickaxes[2].damage &&
                 balance.pickaxes[3].durability > balance.pickaxes[2].durability,
                 "Iron must be stronger and more durable than gold.");
-            foreach(var location in balance.locations)location.Validate();balance.progression.Validate();ProgressionFeatureChecks.Validate(balance);
+            foreach(var location in balance.locations)location.Validate();balance.progression.Validate();ProgressionFeatureChecks.Validate(balance);Patch085Checks.Validate(balance);
             Require(balance.pickaxes[4].durability > balance.pickaxes[0].durability+20*balance.progression.durabilitySteps[0] && balance.pickaxes[4].damage*2 > balance.pickaxes[0].damage*2+20*balance.progression.damageSteps[0],
                 "Legendary tools must have a substantial initial advantage.");
             Require(balance.BlockHealthHalfUnits(BlockKind.Deepstone, 160) > balance.BlockHealthHalfUnits(BlockKind.Deepstone, 45), "Deep layers must get progressively harder.");

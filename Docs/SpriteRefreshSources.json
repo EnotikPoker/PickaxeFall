@@ -1,0 +1,17 @@
+{
+  "archive": "New_Sprites \u2014 \u043a\u043e\u043f\u0438\u044f.rar",
+  "entries": [
+    {
+      "source": "New_Sprites \u2014 \u043a\u043e\u043f\u0438\u044f/Mine_Landscape_TEST.png",
+      "destination": "Assets/PickaxeFall/Resources/Backgrounds/MineLandscape.png",
+      "width": 256,
+      "height": 128,
+      "sha256": "97819d5a3bb0c9634ba7a308040783e05461a3acd160a3f71282e4389b959006"
+    }
+  ],
+  "skipped": [
+    "New_Sprites \u2014 \u043a\u043e\u043f\u0438\u044f/Mine_Landscape.png",
+    "New_Sprites \u2014 \u043a\u043e\u043f\u0438\u044f/Mine_LandscapeFULLSCR.png"
+  ],
+  "note": "Block textures retain the outlined artist versions from v0.8.4; the refreshed mine landscape is retained."
+}

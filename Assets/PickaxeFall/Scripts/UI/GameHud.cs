@@ -11,9 +11,10 @@ namespace PickaxeFall
     {
         static readonly BlockKind[] MilestoneOres = { BlockKind.Coal, BlockKind.Copper, BlockKind.Iron, BlockKind.Gold, BlockKind.Diamond };
         readonly GameController game;
-        readonly VisualElement root, safe, window, mineView, inventoryView, shopView, controls, sceneInfo, tabs, resultArea, roulette, pauseOverlay, modal, playfield;
+        readonly VisualElement root, safe, header, window, mineView, inventoryView, shopView, controls, sceneInfo, tabs, resultArea, roulette, pauseOverlay, modal, playfield;
         readonly Label depth, wallet, best, title, description, heroName, heroDetail, status, toast, result;
-        readonly Button action, pause, sound;
+        readonly Button action, pause, sound, hudToggle;
+        bool hudHidden;
         readonly Button[] tabButtons = new Button[3];
         readonly VisualElement[] slots;
         readonly ToolStatus[] toolStatuses = new ToolStatus[5];
@@ -28,6 +29,11 @@ namespace PickaxeFall
         {
             get
             {
+                if(hudHidden)
+                {
+                    Rect screen=root.worldBound,field=playfield.worldBound;
+                    if(FiniteBounds(screen)&&FiniteBounds(field))return new Rect((field.xMin-screen.xMin)/screen.width,1-(field.yMax-screen.yMin)/screen.height,field.width/screen.width,field.height/screen.height);
+                }
                 Rect all = root.worldBound, top = sceneInfo.worldBound, bottom = controls.worldBound;
                 if (!FiniteBounds(all) || !FiniteBounds(top) || !FiniteBounds(bottom) || bottom.yMin <= top.yMax) return new Rect(0.04f, 0.24f, 0.92f, 0.53f);
                 return new Rect(top.xMin / all.width, 1 - bottom.yMin / all.height, top.width / all.width,
@@ -44,7 +50,7 @@ namespace PickaxeFall
             var regular = Resources.Load<Font>("Fonts/Monocraft"); bold = Resources.Load<Font>("Fonts/Monocraft-Bold");
             if (regular) root.style.unityFontDefinition = FontDefinition.FromFont(regular);
             safe = Box(root, "safe"); safe.pickingMode = PickingMode.Ignore;
-            var header = Box(safe, "header"); var brand = Box(header, "brand-row");
+            header = Box(safe, "header"); var brand = Box(header, "brand-row");
             BoldText(brand, "PickaxeFall", "brand");
             var buttons = Box(brand, "header-buttons");
             profileButton=Button(buttons,L.T("УР. 1"),OpenProfile,"stone-button small-button profile-button");profileButton.name="open-profile";
@@ -79,6 +85,13 @@ namespace PickaxeFall
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
             shopView = Page(window, "shop-page"); BuildShop(shopView);
             playfield = Box(safe, "playfield"); playfield.pickingMode = PickingMode.Ignore;
+            hudToggle=Button(playfield,"",ToggleHud,"stone-button hud-toggle");hudToggle.name="toggle-hud";
+            var eye=Box(hudToggle,"hud-eye");eye.pickingMode=PickingMode.Ignore;
+            Box(eye,"hud-eye-pupil").pickingMode=PickingMode.Ignore;
+            Box(hudToggle,"hud-eye-slash").pickingMode=PickingMode.Ignore;
+            // A UI tap must never begin a mining gesture behind the button.
+            hudToggle.RegisterCallback<PointerDownEvent>(e=>e.StopPropagation());
+            hudToggle.RegisterCallback<PointerUpEvent>(e=>e.StopPropagation());
             controls = Box(safe, "mining-panel"); var toolRow = Box(controls, "tool-status-row");
             for (int i = 0; i < 5; i++) toolStatuses[i] = new ToolStatus(this, toolRow, i);
 
@@ -137,7 +150,9 @@ namespace PickaxeFall
             if(newResults)StartResults();
             if(game.Phase!=RunPhase.Finished){mineView.style.translate=new Translate(0,0,0);mineView.style.opacity=1;}
             bool active = game.Phase == RunPhase.Mining || game.Phase == RunPhase.Breaking;
-            Display(window, !active); Display(tabs, !active); Display(controls, active); Display(playfield, active);
+            if(!active)hudHidden=false;
+            ApplyHudVisibility(active);
+            Display(window, !active); Display(tabs, !active); Display(playfield, active);
             Display(mineView, CurrentTab == HubTab.Mine); window.EnableInClassList("mine-window", CurrentTab == HubTab.Mine); Display(inventoryView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Inventory); Display(shopView.GetFirstAncestorOfType<ScrollView>(), CurrentTab == HubTab.Shop);
             Display(pause, game.Phase == RunPhase.Mining); Display(pauseOverlay, game.Paused); Display(sound,game.CanTrade);
             sound.text = L.T("НАСТРОЙКИ");
@@ -168,6 +183,18 @@ namespace PickaxeFall
                     ShowRouletteTier(game.Pickaxe.Tier); action.text = L.T("ЕЩЁ ОДИН ЗАБЕГ"); break;
             }
             Tick();
+        }
+        void ToggleHud()
+        {
+            if(game.Phase!=RunPhase.Mining&&game.Phase!=RunPhase.Breaking)return;
+            CancelGesture();hudHidden=!hudHidden;ApplyHudVisibility(true);
+        }
+        void ApplyHudVisibility(bool active)
+        {
+            root.EnableInClassList("hud-hidden",hudHidden);
+            Display(header,!hudHidden);Display(sceneInfo,!hudHidden);Display(controls,active&&!hudHidden);Display(hudToggle,active);
+            hudToggle.EnableInClassList("hud-is-hidden",hudHidden);
+            hudToggle.tooltip=L.T(hudHidden?"Показать интерфейс":"Скрыть интерфейс");
         }
         public void ShowRouletteTier(int tier)
         {

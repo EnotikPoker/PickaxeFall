@@ -11,6 +11,7 @@ namespace PickaxeFall
             if(!game.CanTrade)return;
             string[] names={L.T("Шахта"),L.T("Пустыня"),L.T("Ад")};
             var card=OpenModal(L.T("Маршруты"));card.AddToClassList("map-card");
+            Text(card,L.T("Выбери, куда отправиться в следующий спуск."),"map-intro");
             var navigation=Box(card,"map-navigation");
             for(int i=0;i<3;i++){int tab=i;Button(navigation,names[i].ToUpperInvariant(),()=>OpenMaps(tab),"stone-button map-tab"+(page==i?" active":"")).name="map-page-"+i;}
             var p=game.Economy.Profile;
@@ -78,51 +79,47 @@ namespace PickaxeFall
         static Color32 RGB(byte r,byte g,byte b)=>new(r,g,b,255);
         void DrawConstruction(VisualElement art,int map,float oldStone,float oldIron,float oldObsidian)
         {
-            // All art uses one 480×240 board; block width and height share the same scale.
-            // Screen aspect ratio can never stretch a portal or a tile.
+            // Fit the entire 2:1 illustration, then size the frame to it: no side gaps or stretched tiles.
             Color sky=map==2?RGB(34,22,42):RGB(118,185,211);art.style.backgroundColor=sky;
             var board=Box(art,"construction-board");board.pickingMode=PickingMode.Ignore;
             art.RegisterCallback<GeometryChangedEvent>(_=>{
-                float scale=Mathf.Min(art.contentRect.width/480,art.contentRect.height/240);
+                float scale=art.contentRect.width/480;
+                art.style.height=240*scale+art.resolvedStyle.borderTopWidth+art.resolvedStyle.borderBottomWidth;
                 board.style.scale=new Scale(new Vector3(scale,scale,1));
             });
-            ArtPiece(board,0,0,480,240,sky);
-            if(map!=2)
-            {
-                ArtPiece(board,392,22,32,32,RGB(255,232,154));
-                ArtPiece(board,32,33,68,10,RGB(222,239,228));ArtPiece(board,50,26,31,9,RGB(222,239,228));
-                ArtPiece(board,284,48,54,8,RGB(222,239,228));
-            }
+            ArtPiece(board,0,0,480,240,Color.white,PixelArt.WorldLandscape((MapId)map));
             if(map==0)
             {
-                for(int i=0;i<12;i++)
-                {
-                    float top=108-Mathf.Abs(5.5f-i)*9;
-                    ArtPiece(board,i*44,top,45,156,RGB(105,151,131));
-                    ArtPiece(board,i*44,top+24,45,132,RGB(79,123,105));
-                }
-                for(int y=0;y<4;y++)for(int x=0;x<20;x++)
-                    ArtPiece(board,x*24,144+y*24,24,24,Color.white,PixelArt.Block(y<2?BlockKind.Dirt:BlockKind.Stone,x+y*7));
-                ArtPiece(board,0,138,480,8,RGB(91,143,57));
-                ArtPiece(board,178,100,124,140,RGB(24,33,32));
-                ArtPiece(board,190,108,100,132,RGB(17,25,27));
-                ArtPiece(board,172,94,12,116,RGB(101,65,38));ArtPiece(board,296,94,12,116,RGB(101,65,38));
-                ArtPiece(board,168,88,144,15,RGB(141,97,53));ArtPiece(board,171,90,138,4,RGB(183,133,72));
-                for(int y=112;y<209;y+=32){ArtPiece(board,174,y,8,3,RGB(171,121,61));ArtPiece(board,298,y,8,3,RGB(171,121,61));}
-                for(int y=180;y<240;y+=14)ArtPiece(board,213,y,55,5,RGB(105,78,52));
-                ArtPiece(board,221,173,4,67,RGB(158,163,146));ArtPiece(board,255,173,4,67,RGB(158,163,146));
-                ArtPiece(board,196,107,25,31,new Color32(255,197,79,35));
-                ArtPiece(board,206,101,2,13,RGB(66,58,36));ArtPiece(board,201,114,12,15,RGB(103,76,34));
-                ArtPiece(board,204,117,6,9,RGB(255,212,101));
+                // A small entrance in the foreground leaves the landscape readable.
+                ArtPiece(board,0,206,480,34,RGB(68,86,48));
+                ArtPiece(board,150,196,180,44,RGB(76,79,62));
+                ArtPiece(board,166,182,148,58,RGB(89,94,73));
+                ArtPiece(board,182,170,116,70,RGB(102,107,84));
+                ArtPiece(board,208,182,64,58,RGB(17,25,26));
+                ArtPiece(board,200,178,8,62,RGB(109,74,43));ArtPiece(board,272,178,8,62,RGB(109,74,43));
+                ArtPiece(board,196,172,88,10,RGB(167,118,64));ArtPiece(board,198,173,84,2,RGB(208,162,96));
+                ArtPiece(board,217,218,4,22,RGB(147,155,153));ArtPiece(board,259,218,4,22,RGB(147,155,153));
+                for(int y=223;y<240;y+=8)ArtPiece(board,213,y,54,3,RGB(134,94,56));
+                ArtPiece(board,211,187,18,25,new Color32(255,197,79,32));
+                ArtPiece(board,216,192,6,9,RGB(255,211,110));
                 return;
             }
             var deck=new List<VisualElement>();var supports=new List<VisualElement>();VisualElement glow=null;
             if(map==1)
             {
-                ArtPiece(board,0,148,120,92,RGB(167,117,63));ArtPiece(board,360,148,120,92,RGB(177,125,66));
-                ArtPiece(board,0,142,120,10,RGB(231,202,133));ArtPiece(board,360,142,120,10,RGB(231,202,133));
-                ArtPiece(board,120,214,240,26,RGB(90,123,121));
-                for(int i=0;i<5;i++){ArtPiece(board,8+i*23,173+(i%2)*18,13,6,RGB(146,95,50));ArtPiece(board,370+i*21,186-(i%2)*15,12,5,RGB(153,100,52));}
+                var plains=ArtPiece(board,0,0,208,240,Color.clear);plains.style.overflow=Overflow.Hidden;
+                ArtPiece(plains,0,0,480,240,Color.white,PixelArt.WorldLandscape(MapId.Mine));
+                for(int i=0;i<16;i++)
+                {
+                    float x=208+i*4;
+                    var blend=ArtPiece(board,x,0,4,240,Color.clear);blend.style.overflow=Overflow.Hidden;blend.style.opacity=1-i/15f;
+                    ArtPiece(blend,-x,0,480,240,Color.white,PixelArt.WorldLandscape(MapId.Mine));
+                }
+                ArtPiece(board,0,148,120,92,RGB(115,80,54));ArtPiece(board,360,148,120,92,RGB(177,125,66));
+                ArtPiece(board,0,142,120,10,RGB(90,146,54));ArtPiece(board,360,142,120,10,RGB(231,202,133));
+                ArtPiece(board,120,172,240,68,RGB(40,63,60));
+                ArtPiece(board,120,220,240,20,RGB(65,115,132));
+                for(int i=0;i<5;i++){ArtPiece(board,8+i*23,173+(i%2)*18,13,6,RGB(90,66,48));ArtPiece(board,370+i*21,186-(i%2)*15,12,5,RGB(153,100,52));}
                 for(int i=0;i<10;i++)
                 {
                     var segment=ArtPiece(board,120+i*24,148,24,24,Color.white,PixelArt.Block(BlockKind.Stone,i));deck.Add(segment);
@@ -133,8 +130,6 @@ namespace PickaxeFall
             }
             else
             {
-                for(int i=0;i<10;i++)ArtPiece(board,i*52,126+(i%3)*11,54,114,RGB((byte)(72+i%3*9),35,47));
-                ArtPiece(board,0,222,480,18,RGB(214,76,31));ArtPiece(board,16,228,105,5,RGB(255,169,57));ArtPiece(board,352,225,81,4,RGB(255,169,57));
                 ArtPiece(board,156,168,168,16,RGB(57,55,62));ArtPiece(board,170,184,140,11,RGB(43,44,51));
                 const int left=192,top=48,tile=24;
                 glow=ArtPiece(board,left+tile,top+tile,tile*2,tile*3,RGB(113,60,155));

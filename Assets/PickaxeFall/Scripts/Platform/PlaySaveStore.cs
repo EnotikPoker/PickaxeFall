@@ -36,7 +36,26 @@ namespace PickaxeFall
         {
             validate(text);Directory.CreateDirectory(Path.GetDirectoryName(path));string temp=path+".tmp";
             using(var s=new FileStream(temp,FileMode.Create,FileAccess.Write,FileShare.None)){var b=Encoding.UTF8.GetBytes(text);s.Write(b,0,b.Length);s.Flush(true);}
-            if(File.Exists(path))File.Replace(temp,path,path+".bak");else File.Move(temp,path);
+            bool validPrimary = false;
+            if (File.Exists(path))
+            {
+                try
+                {
+                    validate(File.ReadAllText(path));
+                    validPrimary = true;
+                }
+                catch (Exception)
+                {
+                    // Keep both the recovery copy and the damaged bytes for diagnosis.
+                    File.Move(path, path + ".corrupt-" + Guid.NewGuid().ToString("N"));
+                }
+            }
+            if (validPrimary) File.Replace(temp, path, path + ".bak");
+            else
+            {
+                if (!File.Exists(path + ".bak")) File.Copy(temp, path + ".bak");
+                File.Move(temp, path);
+            }
             if(reset)try{File.Copy(path,path+".bak",true);}catch(IOException){}
         }
     }

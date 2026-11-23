@@ -19,7 +19,14 @@ namespace PickaxeFall
         }
         void TickTreasure()
         {
-            if(treasurePanel!=null){float left=treasureUntil-Time.unscaledTime;Display(treasurePanel,left>0);treasurePanel.style.opacity=Mathf.Clamp01(left*2);}
+            if(treasurePanel!=null)
+            {
+                float left=treasureUntil-Time.unscaledTime;
+                Display(treasurePanel,left>0 && game.Phase!=RunPhase.Ready);
+                treasurePanel.style.opacity=Mathf.Clamp01(left*2);
+                // Anchor below the actual HUD control rather than an assumed screen height.
+                treasurePanel.style.top=hudToggle.worldBound.yMax-root.worldBound.yMin+18;
+            }
             if(trialLabel==null){trialLabel=BoldText(sceneInfo,"","trial-status");trialLabel.name="trial-status";}
             SetText(trialLabel,"");Display(trialLabel,false);
         }

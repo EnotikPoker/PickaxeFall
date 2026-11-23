@@ -40,6 +40,7 @@ namespace PickaxeFall
         IEnumerator Start()
         {
             yield return null;game=GetComponent<GameController>();
+            var root=GetComponent<UIDocument>().rootVisualElement;
 #if UNITY_ANDROID
             CheckReceipts();
 #endif
@@ -64,6 +65,12 @@ namespace PickaxeFall
             Check(game.Clock.Now==beforeAd&&game.Pickaxe.transform.position==position,"an ad freezes real mining time and pickaxe physics");
             Ad("reward",adId);Ad("reward",adId);Ad("close",adId);Ad("reward",adId);Ad("close",adId);
             Check(rewards==1&&closes==1&&!game.Platform.Busy,"duplicated and stale callbacks cannot double reward");
+            game.Platform.Show("qa-lost-callback",true,()=>rewards++,shown=>closes++);
+            adId=(string)calls[^1].args[0];game.Platform.QaExpireAd();yield return null;
+            Check(game.Platform.ServiceStalled && game.PlatformFrozen && root.Q("service-recovery-exit")!=null,"missing callback offers saved exit without resuming under an ad");
+            Check(rewards==1,"watchdog never invents an advertising reward");
+            Ad("close",adId);yield return null;
+            Check(!game.Platform.ServiceStalled && root.Q("service-recovery").style.display==DisplayStyle.None,"late close clears recovery overlay");
             game.SimulateMiningStep();Check(game.Clock.Now>beforeAd,"mining resumes after the ad closes");game.NewRun();
             game.Platform.Ads.StartRun();game.Platform.Ads.Finish(101);game.SaveCheckpoint();long coins=game.Economy.Profile.coins;
             Check(game.RewardAvailable,"real game offers run bonus");game.ClaimRunReward();adId=(string)calls[^1].args[0];Ad("reward",adId);Ad("reward",adId);Ad("close",adId);
@@ -99,7 +106,7 @@ namespace PickaxeFall
             client.DeleteCloud();Click("УДАЛИТЬ");Cloud("deleted",owner:"player-a");Check(client.SignedIn,"wrong-owner deletion ignored");Cloud("deleted",owner:"player-b");
             Check(!client.SignedIn&&client.Store.Load().coins==0,"cloud deletion keeps device save and disconnects");
             game.ChangeLanguage("en");yield return null;
-            var root=GetComponent<UIDocument>().rootVisualElement;root.Query<TextElement>().ForEach(t=>Check(t.text=="Русский"||!System.Text.RegularExpressions.Regex.IsMatch(t.text??"","[А-Яа-яЁё]"),"English Play settings: "+t.text));
+            root.Query<TextElement>().ForEach(t=>Check(t.text=="Русский"||!System.Text.RegularExpressions.Regex.IsMatch(t.text??"","[А-Яа-яЁё]"),"English Play settings: "+t.text));
             client.ChooseAudience();yield return null;client.QaDialog.Query<TextElement>().ForEach(t=>Check(!System.Text.RegularExpressions.Regex.IsMatch(t.text??"","[А-Яа-яЁё]"),"English age screen"));Age(16);
             Check(!client.AdvertisingEnabled&&calls[^1].method=="blockAds","changing age disables all ads until process restart");Click("ПРОДОЛЖИТЬ");
             Debug.Log("PICKAXEFALL_GOOGLE_RUNTIME_OK: "+checks+" checks; real UI, age, ad rewards, cloud conflicts, account isolation, deletion and English.");Application.Quit(0);

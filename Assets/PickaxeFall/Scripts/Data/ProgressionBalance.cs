@@ -12,7 +12,7 @@ namespace PickaxeFall
         public bool worldRecipes=true;
         public void ExpandSlots()
         {
-            basePrices=Extend(basePrices,new[]{200,300,350,35});growth=Extend(growth,new[]{1.35,1.35,1.40,1.25});chanceSteps=Extend(chanceSteps,new[]{0.0,0.0,.02,.01});recipeMultipliers=Extend(recipeMultipliers,new[]{1f,1f,1f,1f});
+            basePrices=Extend(basePrices,new[]{200,300,350,10});growth=Extend(growth,new[]{1.35,1.35,1.40,1.16});chanceSteps=Extend(chanceSteps,new[]{0.0,0.0,.02,.02});recipeMultipliers=Extend(recipeMultipliers,new[]{1f,1f,1f,.35f});
             if(sellPrices.Length==21){Array.Resize(ref sellPrices,ResourceInventory.SlotCount);foreach(var k in ResourceInventory.Materials)if((int)k>=23)sellPrices[(int)k]=WorldCatalog.Price(k);}
             teamMaterials=ExpandRows(teamMaterials);plungeMaterials=ExpandRows(plungeMaterials);
         }

@@ -12,9 +12,11 @@ namespace PickaxeFall
     public sealed class PlayPurchases:IGamePurchases,IDisposable
     {
         readonly PlayReleaseConfig config;readonly string path;bool started,connected,disposed,productsReady;
+        double purchaseStarted, resumeCheckAt=double.PositiveInfinity;
         public bool RemoveAds {get;private set;}
         public bool Ready {get;private set;}
         public bool Busy {get;private set;}
+        public bool TimedOut=>Busy && Time.realtimeSinceStartupAsDouble-purchaseStarted>=120;
         public string Price {get;private set;}="";
         public string Status {get;private set;}="Магазин пока недоступен";
         public event Action Changed;
@@ -44,12 +46,27 @@ namespace PickaxeFall
             Connect();
 #endif
         }
-        public void Tick(){}
+        public void Resume()
+        {
+            if(started && !disposed)resumeCheckAt=Time.realtimeSinceStartupAsDouble+.75;
+        }
+        public void Tick()
+        {
+            if(disposed || Time.realtimeSinceStartupAsDouble<resumeCheckAt || !Application.isFocused)return;
+            resumeCheckAt=double.PositiveInfinity;
+#if PICKAXEFALL_GOOGLE_PLAY && UNITY_ANDROID && !UNITY_EDITOR
+            // A pending purchase can complete while the native store has focus.
+            // Keep Busy until the authoritative query returns; never grant on a timer.
+            if(!connected){started=false;Start();return;}
+            try{controller.FetchPurchases();}
+            catch(Exception){Busy=false;Status="Не удалось проверить покупки. Сохранённое право осталось на устройстве.";Signal();}
+#endif
+        }
         public void Buy()
         {
             if(!Ready||Busy||RemoveAds)return;
 #if PICKAXEFALL_GOOGLE_PLAY && UNITY_ANDROID && !UNITY_EDITOR
-            Busy=true;Status="Открываем Google Play…";Signal();
+            Busy=true;purchaseStarted=Time.realtimeSinceStartupAsDouble;Status="Открываем Google Play…";Signal();
             try{controller.PurchaseProduct(PlayReleaseConfig.Product);}catch(Exception){Busy=false;Status="Не удалось открыть покупку";Signal();}
 #endif
         }

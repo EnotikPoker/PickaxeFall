@@ -16,6 +16,7 @@ namespace PickaxeFall
         public bool Frozen {get;private set;}
         public bool AdvertisingEnabled {get;private set;}
         public bool TransactionBusy=>purchases?.Busy??false;
+        public bool PurchaseStalled=>purchases?.TimedOut??false;
         public bool RemoveAds=>purchases?.RemoveAds??false;
         public string Price=>purchases?.Price??"";
         public string Status {get;private set;}="Прогресс сохраняется на устройстве";
@@ -189,7 +190,7 @@ namespace PickaxeFall
         [Serializable] sealed class AchievementMessage{public string kind,id,owner;}
         public void Show(){if(SignedIn)Native("achievements");}
         public void Buy()=>purchases?.Buy();public void RestorePurchases()=>purchases?.Restore();
-        public void PurchaseTickOnResume()=>purchases?.Restore();
+        public void PurchaseTickOnResume()=>purchases?.Resume();
         public void Dispose(){purchases?.Dispose();if(dialog)UnityEngine.Object.Destroy(dialog.gameObject);}
         VisualElement Dialog(string title)
         {

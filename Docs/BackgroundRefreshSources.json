@@ -1,0 +1,41 @@
+{
+  "archive": "07_Backgrounds.rar",
+  "entries": [
+    {
+      "source": "07_Backgrounds/Desert_CaveWall.png",
+      "destination": "Assets/PickaxeFall/Resources/Backgrounds/DesertCaveWall.png",
+      "width": 64,
+      "height": 128,
+      "sha256": "fc02a13370a9798eb6653bb3542b36ddcdacde6f9e59755d0a7375a378320cc8"
+    },
+    {
+      "source": "07_Backgrounds/Desert_Landscape.png",
+      "destination": "Assets/PickaxeFall/Resources/Backgrounds/DesertLandscape.png",
+      "width": 256,
+      "height": 128,
+      "sha256": "d6eb1e7538007166c39f78669df2d6e7efdbdc5f07ebe32b8232fc2e6425dd38"
+    },
+    {
+      "source": "07_Backgrounds/Mine_CaveWall.png",
+      "destination": "Assets/PickaxeFall/Resources/Backgrounds/MineCaveWall.png",
+      "width": 64,
+      "height": 128,
+      "sha256": "2ceb2dfbb90681f90f278cd8b88ab46bfed81d53fd863b7894bc261b984d06a3"
+    },
+    {
+      "source": "07_Backgrounds/Nether_CaveWall.png",
+      "destination": "Assets/PickaxeFall/Resources/Backgrounds/NetherCaveWall.png",
+      "width": 64,
+      "height": 128,
+      "sha256": "54eb14d5f90413b1a2a1788bd700e6bec3c60c539cd921f4d94fd054f4a2ca06"
+    },
+    {
+      "source": "07_Backgrounds/Nether_Landscape.png",
+      "destination": "Assets/PickaxeFall/Resources/Backgrounds/NetherLandscape.png",
+      "width": 256,
+      "height": 128,
+      "sha256": "9461ca3d783842e77a91abb40c72d48162baccfdbdb49472d590b0c294076091"
+    }
+  ],
+  "skipped": []
+}

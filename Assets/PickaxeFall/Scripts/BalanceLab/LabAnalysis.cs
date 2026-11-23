@@ -72,14 +72,37 @@ namespace PickaxeFall.BalanceLab
             foreach (int seed in sources[0].Keys.Where(seed => sources.All(s => s.ContainsKey(seed))))
             {
                 var row = new LabResult { id = scenario.id+"-"+seed, scenario = scenario.id, seed = seed };
+                var outcomes = new List<LabOutcome>();
                 for (int tier = 0; tier < 5; tier++)
                 {
                     var x = sources[tier][seed]; double w = session.Manifest.roulette[tier];
                     row.seconds += w*x.seconds; row.depth += w*x.depth; row.value += w*x.value; row.blocks += w*x.blocks;
                     row.strikes += w*x.strikes; row.tools += w*x.tools; row.benches += w*x.benches; row.abilities += w*x.abilities; row.censored += w*x.censored;
+                    row.upgradeBenches += w*x.upgradeBenches;
+                    row.restoredWear += w*x.restoredWear;
+                    row.lavaWear += w*x.lavaWear;
+                    row.energySpent += w*x.energySpent;
+                    row.waterSeconds += w*x.waterSeconds;
+                    row.lavaSeconds += w*x.lavaSeconds;
+                    row.lavaWearSaved += w*x.lavaWearSaved;
+                    row.treasureBonuses += w*x.treasureBonuses;
+                    row.bonusEarth += w*x.bonusEarth;
+                    row.chests += w*x.chests;
+                    row.trials += w*x.trials;
+                    row.failedTrials += w*x.failedTrials;
+                    row.trialSeconds += w*x.trialSeconds;
+                    row.trialWear += w*x.trialWear;
+                    row.slowMiningSeconds += w*x.slowMiningSeconds;
+                    if (x.outcomes != null && x.outcomes.Length > 0)
+                    {
+                        foreach (var outcome in x.outcomes)
+                            outcomes.Add(new LabOutcome { weight = w*outcome.weight, depth = outcome.depth, seconds = outcome.seconds });
+                    }
+                    else outcomes.Add(new LabOutcome { weight = w, depth = x.depth, seconds = x.seconds });
                     for (int i = 0; i < ResourceInventory.SlotCount; i++) row.resources[i] += w*x.resources[i];
                     for (int i = 0; i < Progression.KindCount; i++) { row.attempts[i] += w*x.attempts[i]; row.successes[i] += w*x.successes[i]; }
                 }
+                row.outcomes = outcomes.ToArray();
                 result.Add(row);
             }
             return result.OrderBy(r => r.seed).ToList();

@@ -65,11 +65,12 @@ namespace PickaxeFall.BalanceLab
                 {
                     foreach(var scenario in custom.Scenarios.Where(x=>x.mask!=0))
                     {
-                        var row=new LabResult { id=scenario.id+"-42",scenario=scenario.id,seed=42,seconds=10,value=10+scenario.tier };
+                        var row=new LabResult { id=scenario.id+"-42",scenario=scenario.id,seed=42,seconds=10,value=10+scenario.tier,depth=new double[]{6,13,37,56,100}[scenario.tier] };
                         custom.Results.Add(row.id,row);
                     }
                     var weighted=new LabAnalysis(custom).View(-1,0,0,false).First(x=>x.scenario.mask!=0);
                     Check(weighted.Count==1 && Math.Abs(weighted.rows[0].value-10.92)<1e-9,"custom multi-tier weighted profile");
+                    Check(weighted.Percentile(.5)==13 && weighted.Percentile(.95)==56,"weighted percentiles preserve the actual roulette distribution");
                 }
                 var savedPrice=manifest.prices.First(p=>p.key==0 && p.level==1);savedPrice.coins+=100;
                 Check(new LabAnalysis(session).Cost(new LabAnalysis(session).Get(damage)).coins==130,"history uses captured costs, not current economy");savedPrice.coins-=100;
@@ -78,6 +79,9 @@ namespace PickaxeFall.BalanceLab
                 loaded.Plan.diagnostic=true; Check(LabComparison.Describe(session,loaded,0,0,0,false).Contains("несовместимы"),"diagnostic reports cannot masquerade as real comparisons");
                 using(var worlds=LabSession.Create(Path.Combine(path,"worlds"),new LabPlan{mode=6,samples=1,seconds=900,maps=new[]{true,true,true}},manifest))
                 {
+                    long initial=worlds.Total;
+                    worlds.ContinueWith(2,1,900);
+                    Check(worlds.Total==initial*2,"continuing world audit expands actual sample coverage");
                     var campaign=worlds.Scenarios.First(x=>x.hourly);var row=new LabResult{id="world-export-test",scenario=campaign.id,seed=1,profileLevelTimes=new double[]{0,-1,-1,-1,-1},profileSkillsBlocked=new double[4],profileMiningBlocked=new double[4],profileCoinsBlocked=new double[4],finalProfileLevel=1};worlds.Results.Add(row.id,row);
                     var physical=worlds.Scenarios.First(x=>!x.hourly);var empty=new LabResult{id="physical-export-test",scenario=physical.id,seed=1,profileLevelTimes=Array.Empty<double>(),profileSkillsBlocked=Array.Empty<double>(),profileMiningBlocked=Array.Empty<double>(),profileCoinsBlocked=Array.Empty<double>()};worlds.Results.Add(empty.id,empty);
                     new LabAnalysis(worlds).Export(worlds.DirectoryPath);

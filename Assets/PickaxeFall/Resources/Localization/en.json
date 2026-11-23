@@ -2211,6 +2211,38 @@
     {
       "ru": "портал.",
       "en": "portal."
+    },
+    {
+      "ru": "Выбери, куда отправиться в следующий спуск.",
+      "en": "Choose your next destination."
+    },
+    {
+      "ru": "Показать интерфейс",
+      "en": "Show HUD"
+    },
+    {
+      "ru": "Скрыть интерфейс",
+      "en": "Hide HUD"
+    },
+    {
+      "ru": "НЕДОСТУПНО",
+      "en": "UNAVAILABLE"
+    },
+    {
+      "ru": "Сервис не отвечает",
+      "en": "Service is not responding"
+    },
+    {
+      "ru": "СОХРАНИТЬ И ЗАКРЫТЬ",
+      "en": "SAVE AND CLOSE"
+    },
+    {
+      "ru": "ПЕРЕЗАГРУЗИТЬ",
+      "en": "RELOAD"
+    },
+    {
+      "ru": "Перезапусти игру. Перед этим сохраним прогресс.",
+      "en": "Restart the game. Your progress will be saved first."
     }
   ]
 }
