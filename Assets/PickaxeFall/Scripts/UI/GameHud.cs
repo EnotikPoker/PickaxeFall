@@ -80,6 +80,7 @@ namespace PickaxeFall
             runGrid = new ResourceGrid(resultArea, "run-resources", true);BuildPlatformControls();
             action = Button(mineView, L.T("КРУТИТЬ РУЛЕТКУ"), MainAction, "stone-button primary"); action.name = "main-action";action.AddToClassList("reliable-button");
             reliablePresses.Add(new ReliablePress(action,()=>{game.Audio?.Ui(UiSound.Tap);MainAction();},false));
+            journalShortcut=Button(mineView,L.T("ДНЕВНИК ШАХТЁРА"),()=>OpenJournal(),"stone-button journal-shortcut");journalShortcut.name="open-journal";
             Button(mineView,L.T("КАРТЫ"),()=>OpenMaps(0),"stone-button secondary").name="open-maps";
             Text(mineView, L.T("Приёмы — в магазине. Верстак чинит, улучшающий повышает тип."), "footnote");
             inventoryView = Page(window, "inventory-page"); BuildInventory(inventoryView);
@@ -141,6 +142,7 @@ namespace PickaxeFall
         void Refresh()
         {
             if (!game.Pickaxe) return;
+            TickJournalShortcut();
             root.Q<Label>("map-heading").text= L.T(WorldCatalog.Name(game.CurrentMap).ToUpperInvariant());
             title.text=L.T("Спуск · ")+WorldCatalog.Name(game.CurrentMap);
             if(game.Phase is RunPhase.Ready or RunPhase.Equipped)startingRecords[(int)game.CurrentMap]=game.BestDepth;

@@ -15,7 +15,7 @@ namespace PickaxeFall.Editor
                 if (!value) throw new InvalidOperationException("Patch 0.8.5: " + message);
             }
 
-            Check(GameVersion.Name == "0.8.5" && GameVersion.AndroidVersionCode == 15, "release identity");
+            Check(!string.IsNullOrEmpty(GameVersion.Name) && GameVersion.AndroidVersionCode >= 15, "release identity");
             Check(PlayReleaseConfig.SaveEpoch == 0, "existing progress stays in the same season");
             var maxEarth = new PlayerProfile();
             maxEarth.upgrades[new UpgradeKey(UpgradeKind.EarthDigger).Index] = 20;

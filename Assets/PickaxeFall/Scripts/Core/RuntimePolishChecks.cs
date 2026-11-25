@@ -31,7 +31,7 @@ namespace PickaxeFall
             }
             game.Economy.Profile.upgrades[new UpgradeKey(UpgradeKind.HeatShield).Index]=10;game.BeginProbeRun(0,8127,1);var tool=game.SelectedTool;tool.DebugPlace(new Vector2(.65f,6.5f),new Vector2(5,5));tool.Body.rotation=0;Physics2D.SyncTransforms();game.World.Liquids.DebugSet(0,-7,BlockKind.Lava);
             int wear=tool.Durability;for(int i=0;i<30;i++){game.Clock.Advance();tool.PhysicsTick();}
-            check(tool.Durability==wear-2&&game.Benefits.LavaWearSaved>1.9f,"heat shield halves lava wear even at partial contact");
+            check(tool.Durability==wear-3&&game.Benefits.LavaWearSaved>2.9f,"heat shield halves lava wear even at partial contact");
             game.FinishRun();game.NewRun();
             game.Economy.Profile.mapRecords[0]=10;game.BeginProbeRun(0,8127,1);game.SelectedTool.DebugPlace(new Vector2(0,-10.1f),Vector2.zero);game.FinishRun();yield return new WaitForSecondsRealtime(1);
             check(!root.Q<Label>(className:"toast").text.StartsWith("НОВЫЙ РЕКОРД"),"equal depth is not a new record");

@@ -32,6 +32,7 @@ namespace PickaxeFall
                 Check(tool.Durability==game.PreviewDurability(4) && tool.DamageHalfUnits==84,"diamond-to-diamond full repair preserves purchases");
                 game.Pickaxes[1].RepairAndUpgrade(3);
                 Check(game.Pickaxes[1].DamageHalfUnits==28 && game.Pickaxes[1].MaxDurability==game.PreviewDurability(3),"iron uses iron levels without stacking wood/diamond");
+                var hot=tool.Capture();hot.lavaHeat=.8f;hot.lavaWear=.4f;tool.Restore(hot);
                 tool.DebugPlace(new Vector2(0,-99),new Vector2(1,-2),23);game.Pickaxes[1].DebugPlace(new Vector2(3,-102),new Vector2(-1,-3),-18);
                 game.StepMiningWorld();
                 var chest=game.World.DebugSetCell(-10,100,BlockKind.Chest);chest.DestroyBlock(tool);
@@ -76,6 +77,8 @@ namespace PickaxeFall
                 var tool=game.Pickaxes[i];var expected=s.tools[i];
                 Check(tool.Tier==expected.tier && tool.Durability==expected.durability && tool.Body.position==expected.position && tool.Body.linearVelocity==expected.velocity && tool.Body.rotation==expected.rotation,"tool pose, velocity, type and durability "+i);
             }
+            Check(JsonUtility.ToJson(game.Economy.Profile.journal)==JsonUtility.ToJson(data.profile.journal),"daily progress and statistics restore exactly");
+            Check(game.Pickaxes[0].Capture().lavaHeat==s.tools[0].lavaHeat && game.Pickaxes[0].Capture().lavaWear==s.tools[0].lavaWear,"lava heat and fractional wear restore exactly");
             Check(game.Pickaxes[0].AbilityActive,"unfinished dash duration and remaining penetration restore");
             for(int i=0;i<64;i++)Check(game.Rolls.Roll(UpgradeKind.Fortune,.37)==data.rolls[i],"effect RNG continues exactly "+i);
             int ticks=game.Clock.Ticks;float energy=game.Energy.Value;game.SimulateMiningStep();Check(game.Clock.Ticks==ticks && game.Energy.Value==energy,"paused restore cannot advance physics/energy");

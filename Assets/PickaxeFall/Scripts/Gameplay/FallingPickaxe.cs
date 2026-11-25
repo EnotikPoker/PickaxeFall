@@ -17,7 +17,7 @@ namespace PickaxeFall
         Vector2 incomingVelocity;
         float incomingAngular, lastReboundTime, abilityUntil, momentumUntil, spawnX, nextTrail;
         int step, remaining;
-        float lavaWear,waterImmersion,lavaImmersion;
+        float lavaWear,lavaHeat,waterImmersion,lavaImmersion;
         Vector2[][] shapePaths;
         readonly Vector2[] clipA=new Vector2[16],clipB=new Vector2[16];
         public float OpaqueArea {get;private set;}
@@ -72,7 +72,7 @@ namespace PickaxeFall
         public void Equip(int tier, int toolIndex = 0, float x = 0)
         {
             Tier = OriginalTier = Mathf.Clamp(tier, 0, game.Balance.pickaxes.Length - 1); ToolIndex = toolIndex; spawnX = x;
-            Durability = MaxDurability;lavaWear=0;InWater=false; SetArt(); visual.color = Color.white; visual.enabled = true;
+            Durability = MaxDurability;lavaWear=0;lavaHeat=0;InWater=false; SetArt(); visual.color = Color.white; visual.enabled = true;
             TotalStrikes = NaturalStrikes = HopCount = 0; physicsRandom = new System.Random(unchecked(game.Seed ^ tier * 73856093 ^ (toolIndex + 1) * 19349663));
             body.mass = Stats.mass; ResetPose();
         }
@@ -135,13 +135,30 @@ namespace PickaxeFall
             body.linearVelocity*=Mathf.Exp(-drag*game.Clock.Delta);
             body.angularVelocity*=Mathf.Exp(-(game.Balance.waterSpinDrag*waterImmersion+game.Balance.lavaSpinDrag*lavaImmersion)*game.Clock.Delta);
             material.bounciness=game.Balance.restitution*(1-.35f*waterImmersion-.5f*lavaImmersion);
-            if(lavaImmersion>0.00001f)
+            bool touchingLava = lavaImmersion > 0.00001f;
+            float baseWear = 0;
+            if (touchingLava)
             {
-                float baseWear=game.Balance.lavaWearPerSecond*game.Clock.Delta;
-                game.Benefits.LavaWearSaved+=baseWear*(1-game.RunUpgrades.LavaWearMultiplier);
-                lavaWear+=baseWear*game.RunUpgrades.LavaWearMultiplier;
-                int loss=Mathf.FloorToInt(lavaWear+0.00001f);lavaWear=Mathf.Max(0,lavaWear-loss);
-                #if PICKAXEFALL_DEVTOOLS
+                // Charge a small initial burn once per cooled contact episode.
+                // A bouncing tip remains hot, so it cannot charge this every frame.
+                if (lavaHeat <= 0) baseWear += game.Balance.lavaWearPerSecond * .25f;
+                lavaHeat = 1.25f;
+                baseWear += game.Balance.lavaWearPerSecond * game.Clock.Delta;
+            }
+            else if (lavaHeat > 0)
+            {
+                float burningTime = Mathf.Min(lavaHeat, game.Clock.Delta);
+                baseWear += game.Balance.lavaWearPerSecond * .5f * burningTime;
+                lavaHeat = Mathf.Max(0, lavaHeat - game.Clock.Delta);
+            }
+            visual.color = lavaHeat > 0 ? Color.Lerp(Color.white, new Color(1, .48f, .22f), .5f * lavaHeat / 1.25f) : Color.white;
+            if (baseWear > 0)
+            {
+                game.Benefits.LavaWearSaved += baseWear * (1 - game.RunUpgrades.LavaWearMultiplier);
+                lavaWear += baseWear * game.RunUpgrades.LavaWearMultiplier;
+                int loss = Mathf.FloorToInt(lavaWear + .00001f);
+                lavaWear = Mathf.Max(0, lavaWear - loss);
+#if PICKAXEFALL_DEVTOOLS
                 if(game.DeveloperInfiniteWear)loss=0;
 #endif
                 if(loss>0){int lost=Mathf.Min(loss,Durability);Durability-=lost;game.Benefits.LavaWear+=lost;if(Durability<=0){CancelAbility();game.OnPickaxeExhausted(this);return;}}
@@ -284,13 +301,13 @@ namespace PickaxeFall
         public void Stop() { CancelAbility(); body.linearVelocity = Vector2.zero; body.angularVelocity = 0; body.simulated = false; SetSelected(false); }
         public ToolSnapshot Capture()=>new ToolSnapshot
         {
-            lavaWear=lavaWear,tier=Tier,originalTier=OriginalTier,index=ToolIndex,alive=IsAlive,durability=Durability,strikes=TotalStrikes,naturalStrikes=NaturalStrikes,hops=HopCount,step=step,
+            lavaWear=lavaWear,lavaHeat=lavaHeat,tier=Tier,originalTier=OriginalTier,index=ToolIndex,alive=IsAlive,durability=Durability,strikes=TotalStrikes,naturalStrikes=NaturalStrikes,hops=HopCount,step=step,
             position=body.position,velocity=body.linearVelocity,rotation=body.rotation,angularVelocity=body.angularVelocity,incomingVelocity=incomingVelocity,incomingAngular=incomingAngular,
             lastRebound=lastReboundTime,remaining=remaining,ability=(int)ability,abilityUntil=abilityUntil,momentumUntil=momentumUntil,nextTrail=nextTrail,contacts=impacts.Capture()
         };
         public void Restore(ToolSnapshot s)
         {
-            Equip(s.tier,s.index);lavaWear=s.lavaWear;OriginalTier=s.originalTier;Durability=Mathf.Clamp(s.durability,0,MaxDurability);
+            Equip(s.tier,s.index);lavaWear=s.lavaWear;lavaHeat=s.lavaHeat;OriginalTier=s.originalTier;Durability=Mathf.Clamp(s.durability,0,MaxDurability);
             TotalStrikes=s.strikes;NaturalStrikes=s.naturalStrikes;HopCount=s.hops;step=s.step;
             transform.SetPositionAndRotation(s.position,Quaternion.Euler(0,0,s.rotation));body.position=s.position;body.rotation=s.rotation;
             body.linearVelocity=s.velocity;body.angularVelocity=s.angularVelocity;incomingVelocity=s.incomingVelocity;incomingAngular=s.incomingAngular;

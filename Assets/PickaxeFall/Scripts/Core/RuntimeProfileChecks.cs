@@ -16,7 +16,7 @@ namespace PickaxeFall
         }
         public static IEnumerator Run(GameController game,VisualElement root,Action<bool,string> check)
         {
-            check(game.Economy.Profile.profileLevel==1&&game.Economy.Profile.version==8,"new profile starts level one");
+            check(game.Economy.Profile.profileLevel==1&&game.Economy.Profile.version==9,"new profile starts level one");
             game.BeginProbeRun(0,8127,1);yield return null;
             check(root.Q("run-energy").parent.resolvedStyle.display==DisplayStyle.None,"energy panel hidden before ability purchase");
             game.FinishRun();yield return new WaitForSeconds(1);game.NewRun();

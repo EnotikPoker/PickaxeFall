@@ -70,6 +70,10 @@ namespace PickaxeFall
         public void RecordMined(BlockKind kind)
         {
             kind=ResourceInventory.DropKind(kind);if(!ResourceInventory.IsResource(kind))return;
+            RefreshDailyTasks();
+            Profile.journal.Record(DailyGoal.MineBlocks);
+            Profile.journal.Record(DailyGoal.MineResource, 1, kind);
+            if (Progression.IsOre(kind)) Profile.journal.Record(DailyGoal.MineOre);
             Profile.lifetimeMined[(int)kind]=checked(Profile.lifetimeMined[(int)kind]+1);
         }
         public bool TrySetGoal(GoalKind kind,int index=0)
@@ -117,7 +121,8 @@ namespace PickaxeFall
             if(Profile.goalKind==GoalKind.None){LastError=L.T("Сначала выбери цель.");return false;}
             try{
                 var amounts=SurplusQuote(out long value);if(value==0){LastError=L.T("Лишних ресурсов пока нет.");return false;}
-                var next=Profile.Copy();next.coins=checked(next.coins+value);
+                RefreshDailyTasks();
+                var next=Profile.Copy();next.coins=checked(next.coins+value);RecordSale(next,value);
                 foreach(var kind in ResourceInventory.Materials)next.resources[(int)kind]-=amounts[(int)kind];return Commit(next);
             }catch(OverflowException){LastError=L.T("Слишком большая сумма.");return false;}
         }

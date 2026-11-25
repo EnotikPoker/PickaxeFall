@@ -82,8 +82,9 @@ namespace PickaxeFall
         {
             if (!ResourceInventory.IsResource(kind) || quantity < 1 || quantity > Profile.resources[(int)kind])
             { LastError = L.T("Укажи целое количество от 1 до имеющегося."); return false; }
+            RefreshDailyTasks();
             var next = Profile.Copy();
-            try { next.coins = checked(next.coins + checked(quantity * Config.sellPrices[(int)kind])); }
+            try { long value = checked(quantity * Config.sellPrices[(int)kind]); next.coins = checked(next.coins + value); RecordSale(next, value); }
             catch (OverflowException) { LastError = L.T("Слишком большая сумма."); return false; }
             next.resources[(int)kind] -= quantity; return Commit(next);
         }
@@ -100,8 +101,9 @@ namespace PickaxeFall
         }
         public bool TrySellAll()
         {
+            RefreshDailyTasks();
             var next = Profile.Copy();
-            try { long value = InventoryValue(); if (value == 0) { LastError = L.T("Рюкзак пуст."); return false; } next.coins = checked(next.coins + value); }
+            try { long value = InventoryValue(); if (value == 0) { LastError = L.T("Рюкзак пуст."); return false; } next.coins = checked(next.coins + value); RecordSale(next, value); }
             catch (OverflowException) { LastError = L.T("Слишком большая сумма."); return false; }
             Array.Clear(next.resources, 0, next.resources.Length); return Commit(next);
         }

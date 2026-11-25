@@ -26,7 +26,7 @@ namespace PickaxeFall
                 // A migration write failure must never fall back to an older, poorer profile.
                 if (migrated)
                 {
-                    string snapshot=path+(result.resetNotice?".pre-v6.bak":".pre-v8.bak");
+                    string snapshot=path+(result.resetNotice?".pre-v6.bak":".pre-v"+result.version+".bak");
                     if(!File.Exists(snapshot))File.WriteAllText(snapshot,json);
                     Save(result);
                     // Recovery after the intentional season reset must use the new profile.
@@ -49,7 +49,7 @@ namespace PickaxeFall
         {
             migrated = false;
             // Missing JSON fields must not inherit the defaults of a new, empty player.
-            var profile = new PlayerProfile { version = 0, coins = -1, bestDepth = -1, resources = null, upgrades = null, profileLevel=0,lifetimeMined=null,revealed=null,discovered=null,mapRecords=null,selectedMap=(MapId)(-1) };
+            var profile = new PlayerProfile { version = 0, coins = -1, bestDepth = -1, resources = null, upgrades = null, profileLevel=0,lifetimeMined=null,revealed=null,discovered=null,mapRecords=null,selectedMap=(MapId)(-1),journal=null };
             JsonUtility.FromJsonOverwrite(json, profile);
             if(profile.version>=2 && profile.version<=5)
             {
@@ -71,6 +71,7 @@ namespace PickaxeFall
                 if(profile.upgrades?.Length!=25 || profile.revealed?.Length!=27)throw new InvalidOperationException("Invalid v7 skill arrays.");
                 Array.Resize(ref profile.upgrades,Progression.KeyCount);Array.Resize(ref profile.revealed,Progression.RevealCount);profile.version=8;migrated=true;
             }
+            if(profile.version==8){profile.journal=new ProfileJournal();profile.version=9;migrated=true;}
             if(!string.IsNullOrEmpty(profile.activeRunJson)){
                 profile.run=JsonUtility.FromJson<RunSnapshot>(profile.activeRunJson);
                 if(profile.run.version<4 && profile.run.loot?.Length==21)Array.Resize(ref profile.run.loot,ResourceInventory.SlotCount);

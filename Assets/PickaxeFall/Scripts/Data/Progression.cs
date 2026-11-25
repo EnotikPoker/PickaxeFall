@@ -19,7 +19,8 @@ namespace PickaxeFall
     [Serializable]
     public sealed class PlayerProfile
     {
-        public int version = 8;
+        public int version = 9;
+        public ProfileJournal journal = new();
         public bool[] discovered = new bool[ResourceInventory.SlotCount];
         public MapId selectedMap;
         public int[] mapRecords = new int[3];
@@ -39,14 +40,14 @@ namespace PickaxeFall
         // optional snapshot as a JSON string so a finished run stays truly absent.
         [NonSerialized] public RunSnapshot run;
         public string activeRunJson;
-        public PlayerProfile Copy() => new() { version = version, coins = coins, bestDepth = bestDepth,discovered=(bool[])discovered.Clone(),selectedMap=selectedMap,mapRecords=(int[])mapRecords.Clone(),
+        public PlayerProfile Copy() => new() { version = version, journal = journal.Copy(), coins = coins, bestDepth = bestDepth,discovered=(bool[])discovered.Clone(),selectedMap=selectedMap,mapRecords=(int[])mapRecords.Clone(),
             profileLevel=profileLevel, lifetimeMined=(long[])lifetimeMined.Clone(), revealed=(bool[])revealed.Clone(),
             bridgeStone=bridgeStone,bridgeIron=bridgeIron,portalObsidian=portalObsidian,goalKind=goalKind,goalIndex=goalIndex,resetNotice=resetNotice,
             resources = (long[])resources.Clone(), upgrades = (int[])upgrades.Clone(), dashUnlocked=dashUnlocked,plungeUnlocked=plungeUnlocked,run=run,activeRunJson=activeRunJson };
         public int Level(UpgradeKey key) => key.IsValid ? upgrades[key.Index] : 0;
         public void Validate()
         {
-            if (version != 8 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != Progression.KeyCount)
+            if (version != 9 || coins < 0 || bestDepth < 0 || resources == null || resources.Length != ResourceInventory.SlotCount || upgrades == null || upgrades.Length != Progression.KeyCount)
                 throw new InvalidOperationException("Invalid player profile.");
             if(profileLevel<1 || profileLevel>5 || lifetimeMined?.Length!=ResourceInventory.SlotCount || revealed?.Length!=Progression.RevealCount || bridgeStone<0 || bridgeStone>1000 || bridgeIron<0 || bridgeIron>50 || portalObsidian<0 || portalObsidian>10 || !ProfileRules.ValidGoal(goalKind,goalIndex))throw new InvalidOperationException("Invalid profile progression.");
             if(discovered?.Length!=ResourceInventory.SlotCount || mapRecords?.Length!=3 || !Enum.IsDefined(typeof(MapId),selectedMap))throw new InvalidOperationException("Invalid world progression.");
@@ -57,6 +58,8 @@ namespace PickaxeFall
             for(int i=0;i<resources.Length;i++)if(!ResourceInventory.IsResource((BlockKind)i) && resources[i]!=0)throw new InvalidOperationException("Invalid reserved resource slots.");
             foreach (var key in Progression.Keys)
                 if (Level(key) < 0 || Level(key) > Progression.MaxLevel(key.Kind)) throw new InvalidOperationException("Invalid upgrade level.");
+            if (journal == null) throw new InvalidOperationException("Missing profile journal.");
+            journal.Validate();
             run?.Validate();
         }
     }

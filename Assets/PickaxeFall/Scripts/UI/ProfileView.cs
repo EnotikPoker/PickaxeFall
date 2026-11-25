@@ -89,9 +89,7 @@ namespace PickaxeFall
         }
         void OpenMiningStatistics()
         {
-            var card=OpenModal(L.T("Накопленная добыча"));card.AddToClassList("profile-dialog");
-            foreach(var material in ResourceInventory.Materials)RecipeLine(card,material,game.Economy.Profile.lifetimeMined[(int)material],0);
-            Button(card,L.T("НАЗАД К ПРОФИЛЮ"),OpenProfile,"stone-button compact-button");
+            OpenJournal(2);
         }
         void RecipeLine(VisualElement parent,BlockKind kind,long have,long need)
         {

@@ -43,7 +43,7 @@ namespace PickaxeFall
             for(int i=0;i<tools.Length;i++)
             {
                 var t=tools[i];
-                if(t==null || t.index!=i || t.tier<0 || t.tier>4 || t.originalTier<0 || t.originalTier>4 || t.durability<0 || !Finite(t.position.x) || !Finite(t.position.y) || !Finite(t.velocity.x) || !Finite(t.velocity.y) || !Finite(t.rotation) || !Finite(t.angularVelocity) || !Finite(t.lavaWear) || t.lavaWear<0 || t.lavaWear>=1)throw new InvalidOperationException(L.T("Повреждена кирка сохранённого спуска."));
+                if(t==null || t.index!=i || t.tier<0 || t.tier>4 || t.originalTier<0 || t.originalTier>4 || t.durability<0 || !Finite(t.position.x) || !Finite(t.position.y) || !Finite(t.velocity.x) || !Finite(t.velocity.y) || !Finite(t.rotation) || !Finite(t.angularVelocity) || !Finite(t.lavaHeat) || t.lavaHeat<0 || t.lavaHeat>1.25f || !Finite(t.lavaWear) || t.lavaWear<0 || t.lavaWear>=1)throw new InvalidOperationException(L.T("Повреждена кирка сохранённого спуска."));
                 alive|=t.alive && t.durability>0;
             }
             if(!alive || !tools[selectedTool].alive)throw new InvalidOperationException(L.T("В сохранённом спуске нет выбранной живой кирки."));
@@ -66,7 +66,7 @@ namespace PickaxeFall
         public int tier,originalTier,index,durability,strikes,naturalStrikes,hops,step,remaining,ability;
         public bool alive;
         public Vector2 position,velocity,incomingVelocity;
-        public float rotation,angularVelocity,incomingAngular,lastRebound,abilityUntil,momentumUntil,nextTrail,lavaWear;
+        public float rotation,angularVelocity,incomingAngular,lastRebound,abilityUntil,momentumUntil,nextTrail,lavaWear,lavaHeat;
         public ContactSnapshot[] contacts;
     }
     [Serializable] public sealed class ContactSnapshot

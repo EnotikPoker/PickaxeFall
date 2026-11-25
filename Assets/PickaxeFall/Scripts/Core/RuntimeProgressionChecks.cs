@@ -31,7 +31,7 @@ namespace PickaxeFall
             check(tool.InWater && tool.DamageHalfUnits==Mathf.RoundToInt(dry*.7f),"water reduces current damage by thirty percent");
             game.World.Liquids.DebugSet(0,10,BlockKind.Water,0);tool.PhysicsTick();check(!tool.InWater&&tool.DamageHalfUnits==dry,"damage restores after leaving water");
             game.World.Liquids.DebugSet(0,10,BlockKind.Lava,8);int before=tool.Durability;
-            for(int i=0;i<60;i++)tool.PhysicsTick();check(tool.Durability==before-8,"lava spends eight durability per second, independent of collisions");
+            for(int i=0;i<60;i++)tool.PhysicsTick();check(tool.Durability==before-10,"lava initial burn plus eight durability per second, independent of collisions");
             game.World.Liquids.DebugSet(0,10,BlockKind.Lava,0);
             game.World.Liquids.DebugSet(2,10,BlockKind.Lava,8);game.World.Liquids.DebugSet(1,10,BlockKind.Water,8);
             while(game.Clock.Ticks%6!=0)game.Clock.Advance();game.World.Liquids.Tick();

@@ -21,6 +21,7 @@ namespace PickaxeFall
         void AwardTreasure(int x,int row,FallingPickaxe source,bool trial=false)
         {
             if(trial)Benefits.Trials++;else Benefits.Chests++;
+            if(!IsSimulation){var journal=Economy.Profile.journal;if(trial)journal.trialsWon=ProfileJournal.Add(journal.trialsWon,1);else journal.chests=ProfileJournal.Add(journal.chests,1);}
             bool temple=!trial && balance.map==MapId.Desert && World.Generator.TryFeature(row/64,out int cx,out int cy,out _) && row==cy+5 && x==cx-2;
             bool extra=!trial && RollEffect(UpgradeKind.TreasureHunter);if(extra)Benefits.TreasureBonuses++;
             var loot=ChestLoot.Roll(balance,Seed,x,row,trial,temple,extra);

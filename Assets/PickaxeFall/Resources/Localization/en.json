@@ -205,8 +205,16 @@
       "en": "Play Games will connect after app setup"
     },
     {
+      "ru": "{0} ч {1} мин {2} с",
+      "en": "{0} h {1} min {2} s"
+    },
+    {
       "ru": "«Землекоп» даёт больше земли и песка. «Подводник» уменьшает штраф воды, «Термозащита» — износ в лаве. «Искатель сокровищ» добавляет добычу из сундуков.",
       "en": "Digger gives extra dirt and sand. Diver reduces the water penalty; Heat Shield reduces lava wear. Treasure Hunter adds chest loot."
+    },
+    {
+      "ru": "«Землекоп» иногда даёт ещё один блок при прямой добыче.",
+      "en": "Earth Digger sometimes grants an extra block from a direct hit."
     },
     {
       "ru": "» уровня ",
@@ -245,6 +253,14 @@
       "en": "Basalt"
     },
     {
+      "ru": "Базальт и чернит в аду.",
+      "en": "Basalt and blackstone in the Nether."
+    },
+    {
+      "ru": "Базальтовый слой ада.",
+      "en": "The basalt layer of the Nether."
+    },
+    {
       "ru": "Без персонализации",
       "en": "Without personalization"
     },
@@ -267,6 +283,10 @@
     {
       "ru": "Более сильный направленный рывок.",
       "en": "A stronger directional dash."
+    },
+    {
+      "ru": "Больше всего блоков за спуск",
+      "en": "Most blocks in one run"
     },
     {
       "ru": "Больше кирок при выпадении отряда.",
@@ -301,12 +321,24 @@
       "en": "Cobblestone"
     },
     {
+      "ru": "В ПРОЦЕССЕ",
+      "en": "IN PROGRESS"
+    },
+    {
       "ru": "В облаке",
       "en": "Cloud save"
     },
     {
       "ru": "В разделе «Карты» внеси материалы в мост или портал. Можно строить частями. Готовая локация остаётся открытой навсегда.",
       "en": "Open Maps and contribute materials to the bridge or portal. You can build in parts. An unlocked location stays open."
+    },
+    {
+      "ru": "В редких полых жеодах под землёй.",
+      "en": "Inside rare hollow geodes underground."
+    },
+    {
+      "ru": "В рюкзаке",
+      "en": "In backpack"
     },
     {
       "ru": "В рюкзаке: {0}\nЦена: {1} монет за шт.",
@@ -377,6 +409,10 @@
       "en": "Workbenches"
     },
     {
+      "ru": "Верхний слой ада, среди незерака.",
+      "en": "The upper Nether layer, among netherrack."
+    },
+    {
       "ru": "Ветвь ещё недоступна или уже открыта.",
       "en": "This branch is locked or already unlocked."
     },
@@ -429,8 +465,16 @@
       "en": "Gateway to the Nether"
     },
     {
+      "ru": "Время под землёй",
+      "en": "Time underground"
+    },
+    {
       "ru": "Все ветви доступны",
       "en": "All branches available"
+    },
+    {
+      "ru": "Всего добыто блоков",
+      "en": "Total blocks mined"
     },
     {
       "ru": "Всё добытое — твоё",
@@ -447,6 +491,10 @@
     {
       "ru": "Выбери сохранение",
       "en": "Choose a save"
+    },
+    {
+      "ru": "Выбери, куда отправиться в следующий спуск.",
+      "en": "Choose your next destination."
     },
     {
       "ru": "Выбираем кирку",
@@ -493,6 +541,10 @@
       "en": "250 metres deep"
     },
     {
+      "ru": "Глубинносланцевый слой обычной шахты.",
+      "en": "The deepslate layer of the mine."
+    },
+    {
       "ru": "Глубинный сланец",
       "en": "Deepslate"
     },
@@ -515,6 +567,14 @@
     {
       "ru": "ДАЛЕЕ",
       "en": "NEXT"
+    },
+    {
+      "ru": "ДНЕВНИК · НАГРАДЫ: {0}",
+      "en": "JOURNAL · REWARDS: {0}"
+    },
+    {
+      "ru": "ДНЕВНИК ШАХТЁРА",
+      "en": "MINER'S JOURNAL"
     },
     {
       "ru": "ДОБЫЧА",
@@ -565,8 +625,24 @@
       "en": "A new level requires coins, lifetime mining totals and the listed skills. Mining totals are never spent."
     },
     {
+      "ru": "Дневник шахтёра",
+      "en": "Miner's journal"
+    },
+    {
+      "ru": "До новых заданий: {0}",
+      "en": "New tasks in: {0}"
+    },
+    {
       "ru": "Добавляет кирку в выпавший отряд. Сам шанс отряда не меняется.",
       "en": "Adds a pickaxe to a lucky squad. Does not change squad chance."
+    },
+    {
+      "ru": "Добудь {0} блоков. Бонусные ресурсы не считаются.",
+      "en": "Mine {0} blocks. Bonus drops do not count."
+    },
+    {
+      "ru": "Добудь блоков этого вида: {0}.",
+      "en": "Mine {0} blocks of this type."
     },
     {
       "ru": "Добытая прямым ударом руда может вызвать небольшой взрыв. Добыча остаётся в рюкзаке.",
@@ -575,6 +651,10 @@
     {
       "ru": "Добытая руда может вызвать взрыв.",
       "en": "Mined ore may trigger an explosion."
+    },
+    {
+      "ru": "Добыто блоков",
+      "en": "Blocks mined"
     },
     {
       "ru": "Добыча в рюкзаке. Продай лишнее и усиль кирки.",
@@ -587,6 +667,10 @@
     {
       "ru": "Дорога в пустыню",
       "en": "Road to the desert"
+    },
+    {
+      "ru": "Достигни {0} м на любой карте.",
+      "en": "Reach {0} m on any map."
     },
     {
       "ru": "Древние обломки",
@@ -609,12 +693,28 @@
       "en": "Still ahead"
     },
     {
+      "ru": "Ещё один спуск",
+      "en": "One more run"
+    },
+    {
       "ru": "Железная",
       "en": "Iron"
     },
     {
       "ru": "Железо",
       "en": "Iron"
+    },
+    {
+      "ru": "Жилы в обычной шахте; более ценные руды встречаются глубже.",
+      "en": "Veins in the mine. More valuable ores appear deeper down."
+    },
+    {
+      "ru": "ЗАБРАТЬ НАГРАДУ",
+      "en": "CLAIM REWARD"
+    },
+    {
+      "ru": "ЗАДАНИЯ",
+      "en": "TASKS"
     },
     {
       "ru": "ЗАКРЫТЬ",
@@ -625,8 +725,28 @@
       "en": "QUIT GAME"
     },
     {
+      "ru": "Завершено спусков",
+      "en": "Runs completed"
+    },
+    {
+      "ru": "Заверши {0} спуска. Продолженный спуск считается один раз.",
+      "en": "Finish {0} runs. A resumed run counts only once."
+    },
+    {
       "ru": "Заверши выбор текущей кирки перед сменой карты",
       "en": "Finish choosing your pickaxe before changing maps"
+    },
+    {
+      "ru": "Загорается от касания и может поджечь соседний динамит.",
+      "en": "Lights up on contact and can ignite nearby TNT."
+    },
+    {
+      "ru": "Задание ещё не выполнено или награда уже получена.",
+      "en": "This task is unfinished or its reward was already claimed."
+    },
+    {
+      "ru": "Задания обновились. Проверь новый список.",
+      "en": "Tasks have refreshed. Check the new list."
     },
     {
       "ru": "Замшелый булыжник",
@@ -647,6 +767,10 @@
     {
       "ru": "Звуковые эффекты: Kenney и artisticdude · CC0.\nИнтерфейс: PickaxeFall · CC0.\n\nМузыка: Kevin MacLeod (incompetech.com)\nDreams Become Real\nEastern Thought\nOssuary 5 — Rest\n\nCreative Commons Attribution 4.0. Громкость и переходы адаптированы для игры.",
       "en": "Sound effects: Kenney and artisticdude · CC0.\nInterface sounds: PickaxeFall · CC0.\n\nMusic: Kevin MacLeod (incompetech.com)\nDreams Become Real\nEastern Thought\nOssuary 5 — Rest\n\nCreative Commons Attribution 4.0. Volume and transitions adapted for this game.\nhttps://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "ru": "Здесь остаются все находки, даже если ты их продал.",
+      "en": "Your discoveries stay here, even after you sell them."
     },
     {
       "ru": "Землекоп",
@@ -697,6 +821,18 @@
       "en": "Treasure Hunter"
     },
     {
+      "ru": "Использовано верстаков",
+      "en": "Workbenches used"
+    },
+    {
+      "ru": "Использовано приёмов",
+      "en": "Abilities used"
+    },
+    {
+      "ru": "Исследуй эту карту, чтобы открыть запись.",
+      "en": "Explore this map to unlock the entry."
+    },
+    {
       "ru": "КАРТЫ",
       "en": "MAPS"
     },
@@ -707,6 +843,14 @@
     {
       "ru": "КИРКИ",
       "en": "PICKAXES"
+    },
+    {
+      "ru": "КОЛЛЕКЦИЯ",
+      "en": "COLLECTION"
+    },
+    {
+      "ru": "КОЛЛЕКЦИЯ МИНЕРАЛОВ",
+      "en": "MINERAL COLLECTION"
     },
     {
       "ru": "КРУТИТЬ РУЛЕТКУ",
@@ -725,12 +869,20 @@
       "en": "Stone"
     },
     {
+      "ru": "Каменный слой обычной шахты.",
+      "en": "The stone layer of the mine."
+    },
+    {
       "ru": "Камень",
       "en": "Stone"
     },
     {
       "ru": "Кварц",
       "en": "Quartz"
+    },
+    {
+      "ru": "Кварц из ада. Не заменяет дымчатый кварц из пустыни.",
+      "en": "Nether quartz. It cannot replace smoky quartz from the desert."
     },
     {
       "ru": "Киноварь",
@@ -777,6 +929,10 @@
       "en": "Amethyst Crystals"
     },
     {
+      "ru": "Кристаллы дают и оболочка жеоды, и кристаллы внутри неё.",
+      "en": "Both the geode shell and its inner crystals drop amethyst."
+    },
+    {
       "ru": "Крути рулетку, добывай и улучшай снаряжение.",
       "en": "Spin, mine and upgrade your gear."
     },
@@ -785,12 +941,20 @@
       "en": "Spin the wheel. Each pickaxe's chance is shown below its icon. Once chosen, press Start Descent."
     },
     {
+      "ru": "Курс на глубину",
+      "en": "Going deeper"
+    },
+    {
       "ru": "ЛЕГЕНДАРНАЯ",
       "en": "LEGENDARY"
     },
     {
       "ru": "ЛИЦЕНЗИЯ CC BY 4.0",
       "en": "CC BY 4.0 LICENSE"
+    },
+    {
+      "ru": "ЛИЧНЫЕ РЕКОРДЫ",
+      "en": "PERSONAL RECORDS"
     },
     {
       "ru": "ЛИШНЕЕ ПРОДАНО",
@@ -897,6 +1061,10 @@
       "en": "You can contribute in parts."
     },
     {
+      "ru": "Монет от продажи",
+      "en": "Coins from sales"
+    },
+    {
       "ru": "Мост в пустыню",
       "en": "Bridge to the Desert"
     },
@@ -915,6 +1083,10 @@
     {
       "ru": "НАЗАД",
       "en": "BACK"
+    },
+    {
+      "ru": "НАЗАД В КОЛЛЕКЦИЮ",
+      "en": "BACK TO COLLECTION"
     },
     {
       "ru": "НАЗАД К ПРОФИЛЮ",
@@ -941,8 +1113,16 @@
       "en": "START DESCENT ↓"
     },
     {
+      "ru": "НЕ НАЙДЕНО",
+      "en": "UNDISCOVERED"
+    },
+    {
       "ru": "НЕ УДАЛОСЬ СОХРАНИТЬ ПРОГРЕСС",
       "en": "COULD NOT SAVE PROGRESS"
+    },
+    {
+      "ru": "НЕДОСТУПНО",
+      "en": "UNAVAILABLE"
     },
     {
       "ru": "НЕОБЫЧНАЯ",
@@ -995,6 +1175,10 @@
     {
       "ru": "Нажми на ресурс, чтобы продать выбранное количество или весь запас этого вида.",
       "en": "Tap a resource to sell a chosen amount or all of that type."
+    },
+    {
+      "ru": "Найдено: {0} / {1}",
+      "en": "Discovered: {0} / {1}"
     },
     {
       "ru": "Накапливай запас до трёх применений.",
@@ -1093,12 +1277,20 @@
       "en": "Netherrack"
     },
     {
+      "ru": "Незерак и базальт в аду.",
+      "en": "Netherrack and basalt in the Nether."
+    },
+    {
       "ru": "Неизвестная способность",
       "en": "Unknown ability"
     },
     {
       "ru": "Неизвестное улучшение",
       "en": "Unknown upgrade"
+    },
+    {
+      "ru": "Неизвестный минерал",
+      "en": "Unknown mineral"
     },
     {
       "ru": "Неизвестный навык",
@@ -1165,6 +1357,10 @@
       "en": "Your new choice applies after you fully restart the game. Ads are disabled until then."
     },
     {
+      "ru": "Новый список в 00:00 UTC · 03:00 МСК. Награды забирай до смены дня. За пропуск дня ничего не теряешь.",
+      "en": "New tasks at 00:00 UTC. Claim rewards before the day ends. No penalty for skipping a day."
+    },
+    {
       "ru": "Новый старт · ",
       "en": "A fresh start · "
     },
@@ -1207,6 +1403,10 @@
     {
       "ru": "ОТМЕНА",
       "en": "CANCEL"
+    },
+    {
+      "ru": "Оба каменных слоя пустыни; в тёмном кварците чаще.",
+      "en": "Both rocky desert layers; more common in dark quartzite."
     },
     {
       "ru": "Облако недоступно",
@@ -1261,6 +1461,14 @@
       "en": "Unlocked forever"
     },
     {
+      "ru": "Открыто ресурсов: {0} / {1}",
+      "en": "Resources discovered: {0} / {1}"
+    },
+    {
+      "ru": "Открыто сундуков",
+      "en": "Chests opened"
+    },
+    {
       "ru": "Открыть в Play Games",
       "en": "Open in Play Games"
     },
@@ -1281,8 +1489,16 @@
       "en": "Squad: {0}% · {1} pickaxes on success"
     },
     {
+      "ru": "Очень прочный. Добывается любой киркой и нужен для портала.",
+      "en": "Very tough. Any pickaxe can mine it. Used to build the portal."
+    },
+    {
       "ru": "ПАУЗА",
       "en": "PAUSE"
+    },
+    {
+      "ru": "ПЕРЕЗАГРУЗИТЬ",
+      "en": "RELOAD"
     },
     {
       "ru": "ПО ЭКРАНУ",
@@ -1311,6 +1527,10 @@
     {
       "ru": "ПОКА БЕЗ ОБЛАКА",
       "en": "STAY OFFLINE FOR NOW"
+    },
+    {
+      "ru": "ПОЛУЧЕНО",
+      "en": "CLAIMED"
     },
     {
       "ru": "ПОЛЬЗА УЛУЧШЕНИЙ",
@@ -1405,8 +1625,16 @@
       "en": "First emerald"
     },
     {
+      "ru": "Перезапусти игру. Перед этим сохраним прогресс.",
+      "en": "Restart the game. Your progress will be saved first."
+    },
+    {
       "ru": "Песок",
       "en": "Sand"
+    },
+    {
+      "ru": "Песчаниковый слой пустыни.",
+      "en": "The sandstone layer of the desert."
     },
     {
       "ru": "Песчанник",
@@ -1465,6 +1693,10 @@
       "en": "Break more blocks with one plunge."
     },
     {
+      "ru": "Показать интерфейс",
+      "en": "Show HUD"
+    },
+    {
       "ru": "Покупка не завершена. Деньги и прогресс проверяет Google Play.",
       "en": "Purchase incomplete. Google Play manages the payment."
     },
@@ -1487,6 +1719,10 @@
     {
       "ru": "Политика конфиденциальности",
       "en": "Privacy policy"
+    },
+    {
+      "ru": "Получено ежедневных наград",
+      "en": "Daily rewards claimed"
     },
     {
       "ru": "Польза улучшений",
@@ -1565,6 +1801,10 @@
       "en": "Progress is saved on this device"
     },
     {
+      "ru": "Продай ресурсы на {0} монет. Награды заданий не считаются.",
+      "en": "Sell resources for {0} coins. Task rewards do not count."
+    },
+    {
       "ru": "Продать ",
       "en": "Sell "
     },
@@ -1581,8 +1821,16 @@
       "en": "Sell resources reserved for your goal?"
     },
     {
+      "ru": "Пройдено испытаний спавнера",
+      "en": "Spawner challenges won"
+    },
+    {
       "ru": "Профиль",
       "en": "Profile"
+    },
+    {
+      "ru": "Пустынный минерал. В рецептах не заменяется кварцем из ада.",
+      "en": "A desert mineral. Nether quartz cannot replace it in recipes."
     },
     {
       "ru": "Пустыня",
@@ -1605,6 +1853,10 @@
       "en": "RECORD"
     },
     {
+      "ru": "РЕКОРДЫ",
+      "en": "RECORDS"
+    },
+    {
       "ru": "РЕСУРСЫ ПРОДАНЫ",
       "en": "RESOURCES SOLD"
     },
@@ -1621,6 +1873,10 @@
       "en": "BACKPACK SOLD"
     },
     {
+      "ru": "Разбей {0} блоков любой руды.",
+      "en": "Break {0} ore blocks of any kind."
+    },
+    {
       "ru": "Разбей сундук, чтобы забрать находки. Содержимое появится сбоку и сразу попадёт в рюкзак. Награды зависят от карты и глубины.",
       "en": "Break a chest to collect its contents. Finds appear at the side and go straight into your backpack. Rewards depend on the map and depth."
     },
@@ -1629,12 +1885,20 @@
       "en": "Squad Size"
     },
     {
+      "ru": "Разработка породы",
+      "en": "Breaking ground"
+    },
+    {
       "ru": "Разреши сохранение данных сайта в браузере и перезагрузи страницу.",
       "en": "Allow this site to save data in your browser, then reload the page."
     },
     {
       "ru": "Разрешить",
       "en": "Allow"
+    },
+    {
+      "ru": "Редкая находка. Пригодится для дорогих улучшений.",
+      "en": "A rare find. Useful for advanced upgrades."
     },
     {
       "ru": "Реклама и конфиденциальность",
@@ -1659,6 +1923,10 @@
     {
       "ru": "Рельсы",
       "en": "Rails"
+    },
+    {
+      "ru": "Рудная смена",
+      "en": "Ore shift"
     },
     {
       "ru": "Русский",
@@ -1705,6 +1973,10 @@
       "en": "UNPIN GOAL"
     },
     {
+      "ru": "СОХРАНИТЬ И ЗАКРЫТЬ",
+      "en": "SAVE AND CLOSE"
+    },
+    {
       "ru": "СПАВНЕР · 30 НАЖАТИЙ ЗА 8 СЕКУНД",
       "en": "SPAWNER · 30 TAPS IN 8 SECONDS"
     },
@@ -1733,6 +2005,14 @@
       "en": "CHEST OPENED"
     },
     {
+      "ru": "Самая дорогая добыча за спуск",
+      "en": "Most valuable haul"
+    },
+    {
+      "ru": "Самый долгий спуск",
+      "en": "Longest run"
+    },
+    {
       "ru": "Сбережено в лаве: {0}\nБонусов сундука: {1}\nБонусов землекопа: {2}\nАктивных действий: {3}\nБлоков пробито: {4}\nДополнительная руда: {5}\nСбережено прочности: {6}\nСильных ударов: {7}\nБлоков добыто осколками: {8}\nВзрывных находок: {9}\nДвойных верстаков: {10}\nУсиленных взрывов: {11}\nСпасений: {12}\nВосстановлено прочности: {13}\nПолучено энергии: {14}",
       "en": "Lava wear saved: {0}\nChest bonuses: {1}\nDigger bonuses: {2}\nAbilities used: {3}\nBlocks pierced: {4}\nBonus ore: {5}\nDurability saved: {6}\nStrong hits: {7}\nShrapnel blocks: {8}\nExplosive finds: {9}\nDouble workbenches: {10}\nBoosted blasts: {11}\nRescues: {12}\nDurability restored: {13}\nEnergy recovered: {14}"
     },
@@ -1757,6 +2037,10 @@
       "en": "Service is temporarily unavailable"
     },
     {
+      "ru": "Сервис не отвечает",
+      "en": "Service is not responding"
+    },
+    {
       "ru": "Сила рывка",
       "en": "Dash Power"
     },
@@ -1777,12 +2061,20 @@
       "en": "How old are you?"
     },
     {
+      "ru": "Скрыть интерфейс",
+      "en": "Hide HUD"
+    },
+    {
       "ru": "Сланец",
       "en": "Deepslate"
     },
     {
       "ru": "Следующая ступень — ",
       "en": "Next level — "
+    },
+    {
+      "ru": "Следующие показатели считаются с версии 0.8.6. Старые рекорды глубины и добыча сохранены.",
+      "en": "These statistics are tracked from version 0.8.6. Previous depth records and mining totals are preserved."
     },
     {
       "ru": "Слишком большая сумма.",
@@ -1849,6 +2141,10 @@
       "en": "Saved to cloud"
     },
     {
+      "ru": "Сохраняй для улучшений или продавай в рюкзаке.",
+      "en": "Keep it for upgrades or sell it from your backpack."
+    },
+    {
       "ru": "Спавнер",
       "en": "Spawner"
     },
@@ -1885,6 +2181,14 @@
       "en": "GOOGLE PLAY TEST · purchases and family ads require account setup"
     },
     {
+      "ru": "ТРИ ДЕЛА НА СЕГОДНЯ",
+      "en": "THREE TASKS FOR TODAY"
+    },
+    {
+      "ru": "Там, где вода встретилась с лавой.",
+      "en": "Where water meets lava."
+    },
+    {
       "ru": "Твой рюкзак",
       "en": "Your backpack"
     },
@@ -1913,12 +2217,20 @@
       "en": "Dark Quartzite"
     },
     {
+      "ru": "Тёмный кварцит в глубине пустыни.",
+      "en": "Dark quartzite deep in the desert."
+    },
+    {
       "ru": "У каждого вида кирки свои урон и прочность. На карточке видно, что даст покупка. Зелёным отмечено то, на что уже хватает ресурсов.",
       "en": "Each pickaxe type has its own damage and durability. Cards show what an upgrade adds. Green requirements mean you have enough resources."
     },
     {
       "ru": "У кирки появляются +количество и значок ресурса. Одновременная добыча одного вида объединяется, чтобы не закрывать шахту.",
       "en": "Small resource icons and quantities appear beside the pickaxe. Matching finds are combined to keep the mine clear."
+    },
+    {
+      "ru": "У поверхности.",
+      "en": "Near the surface."
     },
     {
       "ru": "УДАЛИТЬ",
@@ -2009,6 +2321,10 @@
       "en": "Hits at first available depth"
     },
     {
+      "ru": "Удачная торговля",
+      "en": "A good trade"
+    },
+    {
       "ru": "Укажи доступное целое количество.",
       "en": "Enter an available whole amount."
     },
@@ -2073,12 +2389,20 @@
       "en": "Goal: "
     },
     {
+      "ru": "Цена продажи",
+      "en": "Sale price"
+    },
+    {
       "ru": "Частота кадров",
       "en": "Frame rate"
     },
     {
       "ru": "Чернит",
       "en": "Blackstone"
+    },
+    {
+      "ru": "Чернит в глубине ада.",
+      "en": "Blackstone deep in the Nether."
     },
     {
       "ru": "ШАХТА",
@@ -2211,38 +2535,6 @@
     {
       "ru": "портал.",
       "en": "portal."
-    },
-    {
-      "ru": "Выбери, куда отправиться в следующий спуск.",
-      "en": "Choose your next destination."
-    },
-    {
-      "ru": "Показать интерфейс",
-      "en": "Show HUD"
-    },
-    {
-      "ru": "Скрыть интерфейс",
-      "en": "Hide HUD"
-    },
-    {
-      "ru": "НЕДОСТУПНО",
-      "en": "UNAVAILABLE"
-    },
-    {
-      "ru": "Сервис не отвечает",
-      "en": "Service is not responding"
-    },
-    {
-      "ru": "СОХРАНИТЬ И ЗАКРЫТЬ",
-      "en": "SAVE AND CLOSE"
-    },
-    {
-      "ru": "ПЕРЕЗАГРУЗИТЬ",
-      "en": "RELOAD"
-    },
-    {
-      "ru": "Перезапусти игру. Перед этим сохраним прогресс.",
-      "en": "Restart the game. Your progress will be saved first."
     }
   ]
 }

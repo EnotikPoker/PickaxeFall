@@ -102,7 +102,8 @@ namespace PickaxeFall
 #if PICKAXEFALL_PLAY_QA
             if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--google-check"))TestMode="google";
 #endif
-            if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--localization-check"))TestMode="localization";
+            if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--journal-checks"))TestMode="journal";
+            else if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--localization-check"))TestMode="localization";
             else if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--visual-checks"))TestMode="visual";
             else if(Array.Exists(Environment.GetCommandLineArgs(),a=>a=="--input-checks"))TestMode="input";
             else if (Array.Exists(Environment.GetCommandLineArgs(), a => a == "--smoke-test")) TestMode = "smoke";
@@ -134,6 +135,7 @@ namespace PickaxeFall
                 message.AddToClassList("fatal-error"); errorDocument.rootVisualElement.Add(message); yield break;
             }
             if(Economy.Profile.resetNotice){Settings.SetTutorialSeen(false);Settings.Save();}
+            InitializeJournal();
             Economy.ReserveSteps=Settings.ReserveSteps;
             Inventory = new ResourceInventory(Economy); RunUpgrades = new RunUpgrades(Economy.Profile,balance.progression);
             rouletteRandom = new System.Random(Guid.NewGuid().GetHashCode());
@@ -158,12 +160,13 @@ namespace PickaxeFall
             if(TestMode.StartsWith("touch",StringComparison.Ordinal))gameObject.AddComponent<RuntimeTouchProbe>();
             if(TestMode=="input")gameObject.AddComponent<RuntimeInputLightingChecks>();
             if(TestMode=="localization")gameObject.AddComponent<RuntimeLocalizationChecks>();
+            if(TestMode=="journal")gameObject.AddComponent<RuntimeJournalRunner>();
             if(TestMode=="visual")gameObject.AddComponent<RuntimeVisualChecks>();
 #if PICKAXEFALL_PLAY_QA
             if(TestMode=="google")gameObject.AddComponent<RuntimeGooglePlayChecks>();
 #endif
             if(TestMode.StartsWith("save",StringComparison.Ordinal))gameObject.AddComponent<RuntimeResumeCheck>();
-            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && TestMode!="localization" && TestMode!="visual" && TestMode!="google" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
+            else if (TestMode.Length > 0 && TestMode != "smoke" && TestMode != "probe" && TestMode!="input" && TestMode!="localization" && TestMode!="visual" && TestMode!="journal" && TestMode!="google" && !TestMode.StartsWith("touch",StringComparison.Ordinal)) gameObject.AddComponent<RuntimePreview>();
             if (Array.Exists(Environment.GetCommandLineArgs(), arg => arg == "--balance-probe" || arg == "--economy-probe")) gameObject.AddComponent<RuntimeBalanceProbe>();
 #endif
         }
@@ -276,7 +279,7 @@ namespace PickaxeFall
         public void SimulateMiningStep(Action<GameController> policy = null)
         {
             if (Phase != RunPhase.Mining || WorldFrozen) return;
-            Clock.Advance(); if(!IsSimulation&&Platform!=null&&Platform.HasAdvertising)Platform.Ads.Advance(Clock.Delta);if(Clock.Now-lastMinedTime>15)Benefits.SlowMiningSeconds+=Clock.Delta; Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
+            Clock.Advance(); TickJournal(); if(!IsSimulation&&Platform!=null&&Platform.HasAdvertising)Platform.Ads.Advance(Clock.Delta);if(Clock.Now-lastMinedTime>15)Benefits.SlowMiningSeconds+=Clock.Delta; Energy.Regenerate(Clock.Delta, RunUpgrades); StepMiningWorld(); World.Liquids.Tick(); World.TickTrials(); policy?.Invoke(this);
             foreach (var tool in tools) if (tool.IsAlive) tool.PhysicsTick();
             if(WorldFrozen)return;
             Physics2D.SyncTransforms(); PhysicsScene.Simulate(Clock.Delta);
@@ -310,7 +313,7 @@ namespace PickaxeFall
                 direction = Mathf.Abs(direction.x) > Mathf.Abs(direction.y) ? new Vector2(Mathf.Sign(direction.x), 0) : new Vector2(0, Mathf.Sign(direction.y));
             }
             if (!SelectedTool.StartAbility(kind, direction)) return false;
-            Audio?.Play("dash");Benefits.EnergySpent+=AbilityCost(kind);Energy.TrySpend(AbilityCost(kind)); Benefits.Abilities++; return true;
+            Audio?.Play("dash");Benefits.EnergySpent+=AbilityCost(kind);Energy.TrySpend(AbilityCost(kind)); Benefits.Abilities++; if(!IsSimulation)Economy.Profile.journal.abilities=ProfileJournal.Add(Economy.Profile.journal.abilities,1); return true;
         }
         public void OnPhysicalHit(FallingPickaxe source, bool strong)
         {
@@ -326,6 +329,7 @@ namespace PickaxeFall
             {
                 if (source == null) return false;
                 WorkbenchesUsed++;
+                if(!IsSimulation)Economy.Profile.journal.workbenches=ProfileJournal.Add(Economy.Profile.journal.workbenches,1);
                 bool doubled=RollEffect(UpgradeKind.DoubleBench),upgrading=block.Kind==BlockKind.UpgradeWorkbench;
                 int steps=balance.rulesVersion<2?(doubled?2:1):upgrading?(doubled?2:1):doubled?1:0;
                 int before=source.Durability,tierBefore=source.Tier,maximumBefore=source.MaxDurability;
@@ -382,6 +386,7 @@ namespace PickaxeFall
             {
                 if (tool.IsAlive) { Depth = Mathf.Max(Depth, Mathf.FloorToInt(-tool.transform.position.y)); tool.BreakApart(); }
             }
+            RecordFinishedRun();
             hud.CancelUiPresses();
             Phase = RunPhase.Breaking; Paused = false; RefreshTimeScale();
             if(Platform!=null&&Platform.HasAdvertising)Platform.Ads.Finish(PotentialSaleValue);
